@@ -1,0 +1,64 @@
+defmodule Doorman.User do
+  use Ecto.Schema
+
+  import Ecto.Changeset
+
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+
+  @derive {Poison.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at]}
+
+  schema "users" do
+    field :username, :string
+    field :fullname, :string
+    field :email, :string
+    field :password, :string, virtual: true
+    field :enc_password, :string
+    field :perms, :map
+    field :requested_email, :string
+    field :provider, :map
+    field :confirmation_token, :string
+    field :attrs, :map
+
+    timestamps
+  end
+
+  @required_fields ~w(username)
+  @optional_fields ~w(password email fullname enc_password perms requested_email provider attrs)
+
+  @doc """
+  Creates a changeset based on the `model` and `params`.
+
+  If no params are provided, an invalid changeset is returned
+  with no validation performed.
+  """
+  def changeset(model, params \\ :empty) do
+    model
+    |> cast(params, @required_fields, @optional_fields)
+    |> validate_format(:email, ~r/@/)
+    |> validate_length(:password, min: 6)
+    |> validate_length(:username, min: 1)
+    |> validate_confirmation(:password, message: "Password does not match")
+    |> update_change(:email, &String.downcase/1) #Lowercase email, so we can check for duplicates
+    |> unique_constraint(:email, message: "Email already taken")
+    |> unique_constraint(:username, message: "Username already taken")
+    |> encrypt_changeset()
+  end
+
+  def encrypt_password(password) do
+    Comeonin.Bcrypt.hashpwsalt(password)
+  end
+
+  def check_password(user, password) do
+    Comeonin.Bcrypt.checkpw(password, user.enc_password)
+  end
+
+  defp encrypt_changeset(current_changeset) do
+     case current_changeset do
+      %Ecto.Changeset{valid?: true, changes: %{password: password}} ->
+        put_change(current_changeset, :enc_password, encrypt_password(password))
+      _ ->
+        current_changeset
+    end
+  end
+end
