@@ -1,5 +1,4 @@
 defmodule Doorman.Authenticator do
-
   alias Doorman.{Repo, User}
 
   defp random_bytes() do
@@ -8,7 +7,7 @@ defmodule Doorman.Authenticator do
 
   def create_user(user_map) do
     #Only accept very few keys when creating user
-    user = Map.take(user_map, ["username", "password", "password_confirmation", "fullname"])
+    user = Map.take(user_map, ["username", "password", "password_confirmation", "fullname", "locale"])
     user = Map.put(user, "requested_email", Map.get(user_map, "email"))
     user = Map.put(user, "confirmation_token", random_bytes())
     #Make sure user does not try to set permissions

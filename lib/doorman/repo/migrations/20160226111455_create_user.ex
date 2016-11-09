@@ -10,6 +10,7 @@ defmodule Doorman.Repo.Migrations.CreateUser do
       add :id, :uuid, primary_key: true
       add :username, :string, null: false
       add :fullname, :string
+      add :locale, :string
       add :email, :string, null: true
       add :requested_email, :string
       add :enc_password, :string, null: false

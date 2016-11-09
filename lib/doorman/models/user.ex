@@ -11,6 +11,7 @@ defmodule Doorman.User do
   schema "users" do
     field :username, :string
     field :fullname, :string
+    field :locale, :string
     field :email, :string
     field :password, :string, virtual: true
     field :enc_password, :string
@@ -24,7 +25,7 @@ defmodule Doorman.User do
   end
 
   @required_fields ~w(username)
-  @optional_fields ~w(password email fullname enc_password perms requested_email provider attrs)
+  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs)
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -36,11 +37,15 @@ defmodule Doorman.User do
     model
     |> cast(params, @required_fields, @optional_fields)
     |> validate_format(:email, ~r/@/)
+    |> validate_format(:requested_email, ~r/@/)
     |> validate_length(:password, min: 6)
     |> validate_length(:username, min: 1)
     |> validate_confirmation(:password, message: "Password does not match")
     |> update_change(:email, &String.downcase/1) #Lowercase email, so we can check for duplicates
+    |> update_change(:requested_email, &String.downcase/1) #Lowercase email, so we can check for duplicates
+    |> update_change(:username, &String.downcase/1) #Lowercase username, so we can check for duplicates
     |> unique_constraint(:email, message: "Email already taken")
+    |> unique_constraint(:requested_email, message: "Email already requested")
     |> unique_constraint(:username, message: "Username already taken")
     |> encrypt_changeset()
   end

@@ -2,7 +2,6 @@ defmodule Doorman.Session do
   alias Doorman.{Repo, User}
 
 
-
   def authenticate(%{"email" => email, "password" => password}) do
     user = Repo.get_by(User, email: String.downcase(email))
 

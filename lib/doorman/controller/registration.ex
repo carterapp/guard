@@ -33,7 +33,7 @@ defmodule Doorman.Controller.Registration do
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
       user ->  
       ##Mailer.send_password_reset(user, Authenticator.generate_password_reset_claim(user))
-        json conn, %{ok: true, user: user}
+        json conn, %{ok: true}
     end
   end
 

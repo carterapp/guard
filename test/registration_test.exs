@@ -10,6 +10,16 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 201
   end
 
+  test 'registering same user twice' do
+    response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "testuser"}})
+    assert response.status == 201
+
+    response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "testuser"}})
+    assert response.status == 422
+ 
+  end
+
+
   test 'registering user and dropping account' do
     response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "testuser", "password": "secret"}})
     assert response.status == 201
