@@ -1,23 +1,29 @@
 defmodule Doorman.Session do
   alias Doorman.{Repo, User}
 
-
-  def authenticate(%{"email" => email, "password" => password}) do
-    user = Repo.get_by(User, email: String.downcase(email))
-
+  defp check_password_with_message(user, password) do
     case check_password(user, password) do
       true -> {:ok, user}
       _ -> {:error, "wrong password"}
     end
+
+  end
+
+  def authenticate(%{"email" => email, "password" => password}) do
+    user = Repo.get_by(User, email: String.downcase(email))
+
+    if user == nil do
+      check_password_with_message(Repo.get_by(User, requested_email: String.downcase(email)), password)
+    else
+      check_password_with_message(user, password)
+    end
+
   end
 
   def authenticate(%{"username" => username, "password" => password}) do
     user = Repo.get_by(User, username: username)
 
-    case check_password(user, password) do
-      true -> {:ok, user}
-      _ -> {:error, "wrong password"}
-    end
+    check_password_with_message(user, password)
   end
 
   def authenticate({:jwt, jwt}) do

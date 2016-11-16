@@ -6,9 +6,23 @@ defmodule Doorman.Authenticator do
   end
 
   def create_user(user_map) do
+    email = Map.get(user_map, "email")
+    if email != nil do
+      case Repo.get_by(User, email: String.downcase(email)) do
+        user -> 
+        {:error, %{email: "taken"}, nil}
+        nil -> 
+        do_create_user(user_map, email)
+      end
+    else
+      do_create_user(user_map, email)
+    end
+  end
+
+  defp do_create_user(user_map, email) do
     #Only accept very few keys when creating user
     user = Map.take(user_map, ["username", "password", "password_confirmation", "fullname", "locale"])
-    user = Map.put(user, "requested_email", Map.get(user_map, "email"))
+    user = Map.put(user, "requested_email", email)
     user = Map.put(user, "confirmation_token", random_bytes())
     #Make sure user does not try to set permissions
     user = Map.delete(user, "perms")

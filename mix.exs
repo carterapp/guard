@@ -21,7 +21,7 @@ defmodule Doorman.Mixfile do
   def application do
     [mod: {Doorman, []},
      applications: [:logger,
-      :ecto, :guardian, :mailgun, :comeonin,
+      :ecto, :guardian, :bamboo, :comeonin,
       :postgrex]]
   end
 
@@ -41,7 +41,7 @@ defmodule Doorman.Mixfile do
      {:gettext, "== 0.11.0"},
      #{:gettext, "~> 0.12.1"},
      {:ecto, "~> 2.0.5"},
-     {:mailgun, "~> 0.1.2"},
+     {:bamboo, "~> 0.7"},
      {:comeonin, "~> 2.6.0"},
      {:postgrex, ">= 0.12.1", only: :test}]
   end
