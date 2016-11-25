@@ -9,10 +9,8 @@ defmodule Doorman.Authenticator do
     email = Map.get(user_map, "email")
     if email != nil do
       case Repo.get_by(User, email: String.downcase(email)) do
-        user -> 
-        {:error, %{email: "taken"}, nil}
-        nil -> 
-        do_create_user(user_map, email)
+        nil -> do_create_user(user_map, email)
+        _user -> {:error, %{email: "taken"}, nil}
       end
     else
       do_create_user(user_map, email)
@@ -78,6 +76,28 @@ defmodule Doorman.Authenticator do
 
   def change_password(user, new_password) do
     update_user(user, %{"password" => new_password})
+  end
+
+  def bump_to_admin(email) do
+    case get_by_email(email) do
+      nil -> {:error}
+      user -> Repo.update(User.changeset(user, %{"perms" => %{"admin" => ["read", "write"]}}))
+    end
+  end
+
+  def drop_admin(email) do
+    case get_by_email(email) do
+      nil -> {:error}
+      user -> Repo.update(User.changeset(user, %{"perms" => %{}}))
+    end
+  end
+
+
+  def get_by_email(email) do
+    case Repo.get_by(User, email: String.downcase(email)) do
+      nil -> Repo.get_by(User, requested_email: String.downcase(email))
+      confirmed -> confirmed
+    end
   end
 
   def get_by_username(username) do

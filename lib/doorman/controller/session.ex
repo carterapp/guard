@@ -7,7 +7,7 @@ defmodule Doorman.Controller.Session do
       {:ok, jwt, _full_claims} ->
         conn
         |> put_status(:created)
-        |> json(%{jwt: jwt, user: user})
+        |> json(%{jwt: jwt, user: user, perms: user.perms})
       {:error, error} ->
         send_error(conn, error)
     end
