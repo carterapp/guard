@@ -22,3 +22,16 @@ port: 5433,
 pool_size: 10,
 pool: Ecto.Adapters.SQL.Sandbox
 
+config :doorman, Doorman.Mailer,
+adapter: Bamboo.MailgunAdapter,
+api_key: "key-6d27afe37db34dcac9e615d6f678992e",
+domain: "codenaut.com",
+
+default_sender: "biowatch@codenaut.com",
+templates: %{
+  welcome: %{
+    subject: &Doorman.MailTestContent.welcome_subject/2,
+    html_body: &Doorman.MailTestContent.welcome_html_body/2,
+    text_body: &Doorman.MailTestContent.welcome_text_body/2,
+  }
+}
