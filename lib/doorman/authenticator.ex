@@ -1,5 +1,5 @@
 defmodule Doorman.Authenticator do
-  alias Doorman.{Repo, User}
+  alias Doorman.{Repo, User, Mailer}
 
   defp random_bytes() do
     (:crypto.hash :sha512, (:crypto.strong_rand_bytes 512)) |> Base.encode64
@@ -15,6 +15,13 @@ defmodule Doorman.Authenticator do
     else
       do_create_user(user_map, email)
     end
+  end
+
+  defp send_welcome_email(email, user) do
+    if email != nil do
+      Mailer.send_welcome_email(user)
+    end
+
   end
 
   defp do_create_user(user_map, email) do

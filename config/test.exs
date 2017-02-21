@@ -30,8 +30,8 @@ domain: "codenaut.com",
 default_sender: "biowatch@codenaut.com",
 templates: %{
   welcome: %{
-    subject: &Doorman.MailTestContent.welcome_subject/2,
-    html_body: &Doorman.MailTestContent.welcome_html_body/2,
-    text_body: &Doorman.MailTestContent.welcome_text_body/2,
+    subject: &Doorman.MailTestContent.welcome_subject/3,
+    html_body: &Doorman.MailTestContent.welcome_html_body/3,
+    text_body: &Doorman.MailTestContent.welcome_text_body/3,
   }
 }

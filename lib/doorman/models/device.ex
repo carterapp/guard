@@ -17,8 +17,8 @@ defmodule Doorman.Device do
     timestamps
   end
 
-  @required_fields ~w(token platform)
-  @optional_fields ~w(user_id last_sent)
+  @required_fields ~w(token platform)a
+  @optional_fields ~w(user_id last_sent)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -28,7 +28,8 @@ defmodule Doorman.Device do
   """
   def changeset(model, params \\ :empty) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
+    |> validate_required(@required_fields)
   end
 
 end

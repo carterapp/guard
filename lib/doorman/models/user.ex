@@ -24,8 +24,8 @@ defmodule Doorman.User do
     timestamps
   end
 
-  @required_fields ~w(username)
-  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs)
+  @required_fields ~w(username)a
+  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -35,7 +35,8 @@ defmodule Doorman.User do
   """
   def changeset(model, params \\ :empty) do
     model
-    |> cast(params, @required_fields, @optional_fields)
+    |> cast(params, @required_fields++ @optional_fields)
+    |> validate_required(@required_fields)
     |> validate_format(:email, ~r/@/)
     |> validate_format(:requested_email, ~r/@/)
     |> validate_length(:password, min: 6)

@@ -4,14 +4,14 @@ defmodule Doorman.Mailer do
   import Bamboo.Email
 
 
-  def create_mail(type, to, locale, meta) do
+  def create_mail(type, to, locale, user, meta \\ %{}) do
     template = Map.get(email_setup[:templates], type)
     new_email(
               to: to,
               from: email_setup[:default_sender],
-              subject: template.subject.(locale, meta),
-              html_body: template.html_body.(locale, meta),
-              text_body: template.text_body.(locale, meta)
+              subject: template.subject.(locale, user, meta),
+              html_body: template.html_body.(locale, user, meta),
+              text_body: template.text_body.(locale, user, meta)
             )
   end
   
@@ -21,12 +21,24 @@ defmodule Doorman.Mailer do
     |> deliver_now
   end
 
+  def send_confirm_email(user, token) do
+    Logger.debug "Sending welcome mail to #{user.requested_email}" 
+    create_mail(:confirm, user.requested_email, user.locale, user)
+    |> deliver_now
+  end
+
+
   def send_reset_password_link(user, token) do
     Logger.debug "Sending reset mail to #{user.email}"
+    create_mail(:reset, user.email, user.locale, user, %{token: token})
+    |> deliver_now
+ 
   end
 
   def send_login_link(user, token) do
     Logger.debug "Sending login mail to #{user.email}"
+    create_mail(:login, user.email, user.locale, user, %{token: token})
+    |> deliver_now
   end
 
   defp email_setup do
