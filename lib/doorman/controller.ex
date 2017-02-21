@@ -1,4 +1,5 @@
 defmodule Doorman.Controller do
+  require Logger
   use Phoenix.Controller
 
   defmacro resources do
@@ -34,9 +35,10 @@ defmodule Doorman.Controller do
   end
 
   def send_error(conn, error, status_code \\ :unprocessable_entity) do
-      conn 
-      |> put_status(status_code)
-      |> json(translate_error(error))
+    Logger.error("#{inspect error}")
+    conn 
+    |> put_status(status_code)
+    |> json(%{error: translate_error(error)})
   end
 
   def unauthenticated(conn, %{reason: {:error, reason}}) do

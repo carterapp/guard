@@ -1,6 +1,15 @@
 defmodule Doorman.Controller.Session do
   use Phoenix.Controller
-  import Doorman.Controller, only: [send_error: 2]
+  import Doorman.Controller, only: [send_error: 2, send_error: 3]
+
+  def call(conn, opts) do
+    try do
+      super(conn, opts)
+    rescue
+      error -> send_error(conn, error, :internal_error)
+    end
+  end
+
 
   defp process_session(conn, {:ok, user}) do
     case Guardian.encode_and_sign(user, :token, perms: user.perms || %{}) do

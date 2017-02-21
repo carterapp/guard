@@ -23,9 +23,7 @@ pool_size: 10,
 pool: Ecto.Adapters.SQL.Sandbox
 
 config :doorman, Doorman.Mailer,
-adapter: Bamboo.MailgunAdapter,
-api_key: "key-6d27afe37db34dcac9e615d6f678992e",
-domain: "codenaut.com",
+adapter: Bamboo.TestAdapter,
 
 default_sender: "biowatch@codenaut.com",
 templates: %{

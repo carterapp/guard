@@ -2,9 +2,18 @@ defmodule Doorman.Controller.Registration do
   require Logger
   use Phoenix.Controller
   alias Doorman.{Repo, User, Authenticator, Device}
-  import Doorman.Controller, only: [send_error: 2]
+  import Doorman.Controller, only: [send_error: 2, send_error: 3]
+
+  def call(conn, opts) do
+    try do
+      super(conn, opts)
+    rescue
+      error -> send_error(conn, error, :internal_server_error)
+    end
+  end
 
   def create(conn, %{"user" => user}) do
+    user.()
     case Authenticator.create_user(user) do
       {:ok, user, jwt} -> 
       conn 

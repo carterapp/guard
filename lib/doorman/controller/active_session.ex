@@ -2,8 +2,18 @@ defmodule Doorman.Controller.ActiveSession do
   use Phoenix.Controller
   alias Doorman.{Controller, Authenticator}
   require Logger
+  import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
   plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller
+
+  def call(conn, opts) do
+    try do
+      super(conn, opts)
+    rescue
+      error -> send_error(conn, error, :internal_error)
+    end
+  end
+
 
   def show(conn, _) do
     case Authenticator.current_claims(conn) do

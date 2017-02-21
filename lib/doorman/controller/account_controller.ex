@@ -1,9 +1,17 @@
 defmodule Doorman.Controller.Account do
   use Phoenix.Controller
   alias Doorman.{Authenticator, User}
-  import Doorman.Controller, only: [send_error: 2]
+  import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
   plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller
+
+  def call(conn, opts) do
+    try do
+      super(conn, opts)
+    rescue
+      error -> send_error(conn, error, :internal_error)
+    end
+  end
 
 
   def update(conn, params) do
