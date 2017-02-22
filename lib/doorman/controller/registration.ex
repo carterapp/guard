@@ -13,7 +13,6 @@ defmodule Doorman.Controller.Registration do
   end
 
   def create(conn, %{"user" => user}) do
-    user.()
     case Authenticator.create_user(user) do
       {:ok, user, jwt} -> 
       conn 
@@ -94,7 +93,7 @@ defmodule Doorman.Controller.Registration do
     end
   end
 
-  def unregister_device(conn, %{"device" => %{"platform" => platform, "token" => token}}) do
+  def unregister_device(conn, %{"platform" => platform, "token" => token}) do
     user = Authenticator.current_user conn
     existing = find_device(token, platform)
     if (existing == nil) do

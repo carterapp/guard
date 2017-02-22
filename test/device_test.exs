@@ -9,14 +9,13 @@ defmodule Doorman.DeviceTest do
     response = send_json(:post, "/doorman/registration/device", device)
     assert response.status == 201
 
-    response = send_json(:delete, "/doorman/registration/device", device)
+    response = send_json(:delete, "/doorman/registration/device/android/magic")
     assert response.status == 200
 
-    response = send_json(:delete, "/doorman/registration/device", device)
+    response = send_json(:delete, "/doorman/registration/device/android/magic")
     assert response.status == 404
 
-    device2 = %{"device"=> %{"token": "moremagic", "platform": "android"}}
-    response = send_json(:delete, "/doorman/registration/device", device2)
+    response = send_json(:delete, "/doorman/registration/device/android/moremagic")
     assert response.status == 404
   end
 end 

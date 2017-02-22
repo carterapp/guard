@@ -11,7 +11,7 @@ defmodule Doorman.Controller do
       post "/registration/link", Doorman.Controller.Registration, :send_login_link #Send magic link
       
       post "/registration/device", Doorman.Controller.Registration, :register_device #Register for push
-      delete "/registration/device", Doorman.Controller.Registration, :unregister_device #Unregister for push
+      delete "/registration/device/:platform/:token", Doorman.Controller.Registration, :unregister_device #Unregister for push
 
       post "/session", Doorman.Controller.Session, :create #Login
       get "/session", Doorman.Controller.ActiveSession, :show #Show current session
