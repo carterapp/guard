@@ -11,7 +11,7 @@ defmodule Doorman.Device do
   schema "devices" do
     field :token, :string
     field :platform, :string
-    field :user_id, :string
+    field :user_id, :binary_id
     field :last_sent, Ecto.DateTime
 
     timestamps
