@@ -64,13 +64,24 @@ defmodule Doorman.Controller.Registration do
     user = Authenticator.current_user conn
     existing = find_device(token, platform)
     if (existing == nil || existing.user_id == nil) do
+      model = if existing == nil do
+        %Device{}
+      else
+        existing
+      end
       device = if user != nil do
         device = Map.put(device, "user_id", user.id)
       else 
         device
       end
-      changeset = Device.changeset(%Device{}, device)
-      case Repo.insert(changeset) do
+      changeset = Device.changeset(model, device)
+      res = if existing == nil do
+        Repo.insert(changeset)
+      else 
+        Repo.update(changeset)
+      end
+
+      case res do
         {:ok, updated_device} -> 
         conn 
         |> put_status(:created)

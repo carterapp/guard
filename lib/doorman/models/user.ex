@@ -4,7 +4,6 @@ defmodule Doorman.User do
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
 
   @derive {Poison.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at]}
 
@@ -21,7 +20,7 @@ defmodule Doorman.User do
     field :confirmation_token, :string
     field :attrs, :map
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(username)a

@@ -33,9 +33,9 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 401
 
     device = %{"device"=> %{"token": "magic", "platform": "android"}}
+    response = send_json(:post, "/doorman/registration/device", device)
     response = send_auth_json(:post, "/doorman/registration/device", Map.get(json_body, "jwt"), device)
     assert response.status == 201
-
 
     response = send_auth_json(:delete, "/doorman/account", Map.get(json_body, "jwt"))
     assert response.status == 200

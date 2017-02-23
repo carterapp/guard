@@ -4,7 +4,6 @@ defmodule Doorman.Device do
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
-  @foreign_key_type :binary_id
 
   @derive {Poison.Encoder, only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
 
@@ -14,7 +13,7 @@ defmodule Doorman.Device do
     field :user_id, :binary_id
     field :last_sent, Ecto.DateTime
 
-    timestamps
+    timestamps()
   end
 
   @required_fields ~w(token platform)a
