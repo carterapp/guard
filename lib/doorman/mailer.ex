@@ -5,10 +5,10 @@ defmodule Doorman.Mailer do
 
 
   def create_mail(type, to, locale, user, meta \\ %{}) do
-    template = Map.get(email_setup[:templates], type)
+    template = Map.get(email_setup()[:templates], type)
     new_email(
               to: to,
-              from: email_setup[:default_sender],
+              from: email_setup()[:default_sender],
               subject: template.subject.(locale, user, meta),
               html_body: template.html_body.(locale, user, meta),
               text_body: template.text_body.(locale, user, meta)
@@ -22,8 +22,8 @@ defmodule Doorman.Mailer do
   end
 
   def send_confirm_email(user, token) do
-    Logger.debug "Sending welcome mail to #{user.requested_email}" 
-    create_mail(:confirm, user.requested_email, user.locale, user)
+    Logger.debug "Sending confirmation mail to #{user.requested_email}" 
+    create_mail(:confirm, user.requested_email, user.locale, user, %{token: token})
     |> deliver_now
   end
 

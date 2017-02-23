@@ -1,7 +1,7 @@
 defmodule Doorman.Controller.Registration do
   require Logger
   use Phoenix.Controller
-  alias Doorman.{Repo, User, Authenticator, Device}
+  alias Doorman.{Repo, User, Authenticator, Device, Mailer}
   import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
   def call(conn, opts) do
@@ -40,7 +40,7 @@ defmodule Doorman.Controller.Registration do
         Logger.debug "Failed to send link to unknown user #{username}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
       user ->  
-      ##Mailer.send_password_reset(user, Authenticator.generate_password_reset_claim(user))
+        Mailer.send_reset_password_link(user, Authenticator.generate_password_reset_claim(user))
         json conn, %{ok: true}
     end
   end
@@ -51,7 +51,7 @@ defmodule Doorman.Controller.Registration do
         Logger.debug "Failed to send link to unknown user #{username}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
       user -> 
-      ##Mailer.send_login_link(user, Authenticator.generate_login_claim(user))
+        Mailer.send_login_link(user, Authenticator.generate_login_claim(user))
         json conn, %{ok: true, user: user}
     end
   end
@@ -70,7 +70,7 @@ defmodule Doorman.Controller.Registration do
         existing
       end
       device = if user != nil do
-        device = Map.put(device, "user_id", user.id)
+        Map.put(device, "user_id", user.id)
       else 
         device
       end
@@ -110,6 +110,7 @@ defmodule Doorman.Controller.Registration do
     if (existing == nil) do
       conn
       |> put_status(:not_found)
+      |> json(%{device: nil})
     else 
       if existing.user_id == nil || existing.user_id == user.id do
         case Repo.delete(existing) do
@@ -121,6 +122,7 @@ defmodule Doorman.Controller.Registration do
       else 
         conn
         |> put_status(:not_found)
+        |> json(%{device: nil})
       end
     end
 

@@ -6,17 +6,17 @@ defmodule Doorman.Repo.Migrations.CreateDevice do
   end
 
   def change do
-    create table(device_table, primary_key: false) do
+    create table(device_table(), primary_key: false) do
       add :id, :uuid, primary_key: true
       add :token, :string, null: false
       add :platform, :string, null: false
       add :user_id, :uuid
       add :last_sent, :datetime
 
-      timestamps
+      timestamps()
     end
 
-    create unique_index(device_table, [:token, :platform])
+    create unique_index(device_table(), [:token, :platform])
 
   end
 end

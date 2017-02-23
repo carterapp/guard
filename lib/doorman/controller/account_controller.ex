@@ -20,7 +20,7 @@ defmodule Doorman.Controller.Account do
     changes = Enum.reduce(params, %{},
       fn ({k,v}, sum)->
         if MapSet.member?(updatable_fields, k) do 
-          sum = Map.put(sum,k,v)
+          Map.put(sum,k,v)
         else 
           sum
         end

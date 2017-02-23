@@ -2,7 +2,7 @@ defmodule Doorman.Controller.ActiveSession do
   use Phoenix.Controller
   alias Doorman.{Controller, Authenticator}
   require Logger
-  import Doorman.Controller, only: [send_error: 2, send_error: 3]
+  import Doorman.Controller, only: [send_error: 3]
 
   plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller
 

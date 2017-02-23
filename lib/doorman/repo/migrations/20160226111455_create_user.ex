@@ -6,7 +6,7 @@ defmodule Doorman.Repo.Migrations.CreateUser do
   end
 
   def change do
-    create table(users_table, primary_key: false) do
+    create table(users_table(), primary_key: false) do
       add :id, :uuid, primary_key: true
       add :username, :string, null: false
       add :fullname, :string
@@ -19,11 +19,11 @@ defmodule Doorman.Repo.Migrations.CreateUser do
       add :confirmation_token, :string
       add :attrs, :map
 
-      timestamps
+      timestamps()
     end
 
-    create unique_index(users_table, [:username])
-    create unique_index(users_table, [:email])
+    create unique_index(users_table(), [:username])
+    create unique_index(users_table(), [:email])
 
   end
 end
