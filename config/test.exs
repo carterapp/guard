@@ -27,9 +27,5 @@ adapter: Bamboo.TestAdapter,
 
 default_sender: "biowatch@codenaut.com",
 templates: %{
-  welcome: %{
-    subject: &Doorman.MailTestContent.welcome_subject/3,
-    html_body: &Doorman.MailTestContent.welcome_html_body/3,
-    text_body: &Doorman.MailTestContent.welcome_text_body/3,
-  }
+  welcome: Doorman.MailTestContent
 }
