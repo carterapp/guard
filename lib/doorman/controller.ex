@@ -34,7 +34,22 @@ defmodule Doorman.Controller do
     end
   end
 
-  def send_error(conn, error, status_code \\ :unprocessable_entity) do
+  def send_error(conn, %{message: message, plug_status: status_code}=error) do
+    send_error(conn, error)
+  end
+def send_error(conn, error) do
+    send_error(conn, error, :unprocessable_entity)
+  end
+
+
+  def send_error(conn, %{message: message, plug_status: status_code}=error, _) do
+    Logger.error("#{inspect error}")
+    conn 
+    |> put_status(status_code)
+    |> json(%{error: translate_error(message)})
+  end
+
+    def send_error(conn, error, status_code) do
     Logger.error("#{inspect error}")
     conn 
     |> put_status(status_code)
