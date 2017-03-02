@@ -12,7 +12,7 @@ defmodule Doorman.Controller.Session do
 
 
   defp process_session(conn, {:ok, user}) do
-    case Guardian.encode_and_sign(user, :token, perms: user.perms || %{}) do
+    case Guardian.encode_and_sign(user, :access, perms: user.perms || %{}) do
       {:ok, jwt, _full_claims} ->
         conn
         |> put_status(:created)

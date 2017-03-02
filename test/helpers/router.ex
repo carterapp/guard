@@ -15,7 +15,7 @@ defmodule Doorman.Router do
   end
 
   pipeline :authenticated do
-    plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller
+    plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller, typ: "access"
   end
 
   pipeline :admin do

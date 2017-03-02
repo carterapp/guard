@@ -20,7 +20,7 @@ defmodule Doorman.Controller do
 
       put "/account", Doorman.Controller.Account, :update #Update current account
       delete "/account", Doorman.Controller.Account, :delete #Delete account
-      put "/account/password", Doorman.Controller.Account, :update_password #Update password for current account
+      put "/account/password", Doorman.Controller.PasswordReset, :update_password #Update password for current account
 
     end
   end

@@ -43,7 +43,7 @@ defmodule Doorman.Authenticator do
 
     case Repo.insert(changeset) do
       {:ok, user} ->
-        {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, :token)
+        {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, :access)
         send_welcome_email(email, user)
         {:ok, user, jwt}
 

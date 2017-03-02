@@ -117,6 +117,7 @@ defmodule Doorman.RegistrationTest do
     #password_reset token
     user =  Authenticator.get_by_username("new_user")
     {:ok, resetToken, _claims} = Authenticator.generate_password_reset_claim(user)
+
     response = send_auth_json(:put, "/doorman/account/password", resetToken, %{"new_password": "testing", "new_password_confirmation": "testing"})
     assert response.status == 200
     response = send_auth_json(:put, "/doorman/account/password", resetToken, %{"new_password": "testing", "new_password_confirmation": "testing_blah"})

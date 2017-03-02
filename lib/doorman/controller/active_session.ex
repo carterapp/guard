@@ -4,7 +4,7 @@ defmodule Doorman.Controller.ActiveSession do
   require Logger
   import Doorman.Controller, only: [send_error: 3]
 
-  plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller
+  plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller, typ: "access"
 
   def call(conn, opts) do
     try do
