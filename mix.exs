@@ -41,6 +41,8 @@ defmodule Doorman.Mixfile do
      {:ecto, "~> 2.1.3"},
      {:bamboo, "~> 0.8"},
      {:comeonin, "~> 3.0.1"},
+     {:tesla, "~> 0.6.0"},
+     {:poison, ">= 1.0.0"},
      {:postgrex, ">= 0.13.1", only: :test}]
   end
 end
