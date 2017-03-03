@@ -2,6 +2,8 @@ defmodule Doorman.Pusher.Server do
   use GenServer
   use Tesla
   require Logger
+  import Ecto.Query
+  adapter Tesla.Adapter.Hackney
 
   def start_link(name, config) do
     GenServer.start_link(__MODULE__, config, name: name)
@@ -35,7 +37,7 @@ defmodule Doorman.Pusher.Server do
   end
 
   def handle_cast({:user, user, message}, state) do
-    devices = Doorman.Repo.all(Doorman.Device, user_id: user.id)
+    devices = Doorman.Repo.all(from d in Doorman.Device, where: d.user_id==^user.id)
     if length(devices) > 0 do
       reg_ids = Enum.map(devices, fn(d) -> d.token end)
       do_post(state.client, state.options, Map.merge(message, %{registration_ids: reg_ids}))
@@ -44,6 +46,7 @@ defmodule Doorman.Pusher.Server do
   end
 
   def handle_cast({:message, message}, state) do
+    Logger.info("Sending messages")
     resp = do_post(state.client, state.options, message)
     Logger.info "#{inspect resp}"
     

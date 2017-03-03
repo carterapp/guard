@@ -22,7 +22,7 @@ defmodule Doorman.Mixfile do
     [mod: {Doorman, []},
      applications: [:logger,
       :ecto, :guardian, :bamboo, :comeonin,
-      :postgrex]]
+      :postgrex, :hackney, :tesla]]
   end
 
   # Dependencies can be Hex packages:
