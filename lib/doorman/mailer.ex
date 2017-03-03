@@ -5,14 +5,18 @@ defmodule Doorman.Mailer do
 
 
   def create_mail(type, to, locale, user, meta \\ %{}) do
-    module = Map.get(email_setup()[:templates], type)
-    new_email(
-              to: to,
-              from: email_setup()[:default_sender],
-              subject: apply(module, :subject, [locale, user, meta]),
-              html_body: apply(module, :html_body, [locale, user, meta]),
-              text_body: apply(module, :text_body, [locale, user, meta])
-            )
+    mail_conf = email_setup();
+    if mail_conf != nil do
+      module = Map.get(email_setup()[:templates], type)
+      new_email(
+                to: to,
+                from: email_setup()[:default_sender],
+                subject: apply(module, :subject, [locale, user, meta]),
+                html_body: apply(module, :html_body, [locale, user, meta]),
+                text_body: apply(module, :text_body, [locale, user, meta])
+              )
+    end
+
   end
   
   def send_welcome_email(user) do

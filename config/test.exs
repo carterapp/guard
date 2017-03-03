@@ -29,3 +29,7 @@ default_sender: "biowatch@codenaut.com",
 templates: %{
   welcome: Doorman.MailTestContent
 }
+
+config :doorman, Doorman.Pusher,
+token: "bad_token",
+dry_run: true
