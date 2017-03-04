@@ -40,13 +40,13 @@ defmodule Doorman.Pusher.Server do
     devices = Doorman.Repo.all(from d in Doorman.Device, where: d.user_id==^user.id)
     if length(devices) > 0 do
       reg_ids = Enum.map(devices, fn(d) -> d.token end)
-      do_post(state.client, state.options, Map.merge(message, %{registration_ids: reg_ids}))
+      resp = do_post(state.client, state.options, Map.merge(message, %{registration_ids: reg_ids}))
+      Logger.info "#{inspect resp}"
     end
     {:noreply, state}
   end
 
   def handle_cast({:message, message}, state) do
-    Logger.info("Sending messages")
     resp = do_post(state.client, state.options, message)
     Logger.info "#{inspect resp}"
     
