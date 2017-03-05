@@ -29,7 +29,7 @@ defmodule Doorman.Controller do
     quote do
       put "/users/:userid", Doorman.Controller.Registration, :update #Update given user
       delete "/users/:userid", Doorman.Controller.Registration, :delete #Delete given user
-      get "/users", Doorman.Controller.Registratiom, :index #Show all registered uses
+      get "/users", Doorman.Controller.Registration, :index #Show all registered uses
       get "/audit/:user_id", Doorman.Controller.Audit, :audit_trail #Show audit trail for user
     end
   end
