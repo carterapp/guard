@@ -26,6 +26,13 @@ defmodule Doorman.Session do
     check_password_with_message(user, password)
   end
 
+  def authenticate(%{"token" => token}) do
+    case Guardian.decode_and_verify(jwt) do
+      {:ok, claims} -> user_from_claim(claims)
+      _ -> {:error, "bad token"}
+    end
+  end
+
   def authenticate({:jwt, jwt}) do
     case Guardian.decode_and_verify(jwt) do
       {:ok, claims} -> user_from_claim(claims)
