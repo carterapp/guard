@@ -34,8 +34,14 @@ defmodule Doorman.Controller.Registration do
     end 
   end
 
-  def send_password_reset(conn, %{"username" => username}) do
-    case Authenticator.get_by_username(username) do
+  def send_password_reset(conn, %{"username" => username, "email" => email}) do
+    user = if username == nil do
+      Authenticator.get_by_username(username)
+    else
+      Authenticator.get_by_email(email)
+    end
+
+    case user do
       nil -> 
         Logger.debug "Failed to send link to unknown user #{username}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
@@ -45,8 +51,14 @@ defmodule Doorman.Controller.Registration do
     end
   end
 
-  def send_login_link(conn, %{"username" => username}) do
-    case Authenticator.get_by_username(username) do
+  def send_login_link(conn, %{"username" => username, "email" => email}) do
+    user = if username == nil do
+      Authenticator.get_by_username(username)
+    else
+      Authenticator.get_by_email(email)
+    end
+
+    case user do
       nil ->
         Logger.debug "Failed to send link to unknown user #{username}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
