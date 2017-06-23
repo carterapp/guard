@@ -54,7 +54,7 @@ defmodule Doorman.RegistrationTest do
     response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "august", "email": "jalp@codenaut.com", "password": "not_very_secret"}})
     assert response.status == 201
     
-    response = send_json(:post, "/doorman/registration/link", %{"username" => "august"})
+    response = send_json(:post, "/doorman/registration/link?username=august")
     assert response.status == 200
 
     response = send_json(:post, "/doorman/session", %{"session" => %{"username" => "august", "password": "not_very_secret"}})

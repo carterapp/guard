@@ -47,10 +47,15 @@ defmodule Doorman.Controller.Registration do
         Logger.debug "Failed to send link to unknown user #{name}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
       user ->  
-        Mailer.send_reset_password_link(user, Authenticator.generate_password_reset_claim(user))
-        json conn, %{ok: true}
+        case Authenticator.generate_password_reset_claim(user) do
+          {:ok, token, _} -> 
+            Mailer.send_reset_password_link(user, token)
+            json conn, %{ok: true}
+          _ -> 
+            Logger.debug "Failed to generate claim for #{name}"
+            json conn, %{ok: true} #Do not allow people to probe which users are on the system 
+        end
     end
-
   end
 
   def send_login_link(conn, %{"username" => username}) do
@@ -68,8 +73,14 @@ defmodule Doorman.Controller.Registration do
         Logger.debug "Failed to send link to unknown user #{name}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
       user -> 
-        Mailer.send_login_link(user, Authenticator.generate_login_claim(user))
-        json conn, %{ok: true, user: user}
+        case Authenticator.generate_login_claim(user) do
+          {:ok, token, _} -> 
+            Mailer.send_login_link(user, token)
+            json conn, %{ok: true, user: user}
+          _ -> 
+            Logger.debug "Failed to generate claim for #{name}"
+            json conn, %{ok: true} #Do not allow people to probe which users are on the system 
+        end
     end
   end
 
