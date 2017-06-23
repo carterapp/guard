@@ -34,39 +34,45 @@ defmodule Doorman.Controller.Registration do
     end 
   end
 
-  def send_password_reset(conn, %{"username" => username, "email" => email}) do
-    user = if username == nil do
-      Authenticator.get_by_username(username)
-    else
-      Authenticator.get_by_email(email)
-    end
+  def send_password_reset(conn, %{"username" => username}) do
+      send_password_reset(conn, Authenticator.get_by_username(username), username)
+  end
+  def send_password_reset(conn, %{"email" => email}) do
+    send_password_reset(conn, Authenticator.get_by_email(email), email)
+  end
 
+  def send_password_reset(conn, user, name) do
     case user do
       nil -> 
-        Logger.debug "Failed to send link to unknown user #{username}"
+        Logger.debug "Failed to send link to unknown user #{name}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
       user ->  
         Mailer.send_reset_password_link(user, Authenticator.generate_password_reset_claim(user))
         json conn, %{ok: true}
     end
+
   end
 
-  def send_login_link(conn, %{"username" => username, "email" => email}) do
-    user = if username == nil do
-      Authenticator.get_by_username(username)
-    else
-      Authenticator.get_by_email(email)
-    end
+  def send_login_link(conn, %{"username" => username}) do
+    send_login_link(conn, Authenticator.get_by_username(username), username)
+  end
+  def send_login_link(conn, %{"email" => email}) do
 
+    send_login_link(conn, Authenticator.get_by_username(email), email)
+  end
+
+
+  def send_login_link(conn, user, name) do
     case user do
       nil ->
-        Logger.debug "Failed to send link to unknown user #{username}"
+        Logger.debug "Failed to send link to unknown user #{name}"
         json conn, %{ok: true} #Do not allow people to probe which users are on the system 
       user -> 
         Mailer.send_login_link(user, Authenticator.generate_login_claim(user))
         json conn, %{ok: true, user: user}
     end
   end
+
 
   defp find_device(token, platform) do
     Repo.get_by(Device, token: token, platform: platform)

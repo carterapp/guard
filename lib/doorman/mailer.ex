@@ -18,6 +18,7 @@ defmodule Doorman.Mailer do
     end
 
   end
+
   
   def send_welcome_email(user) do
     Logger.debug "Sending welcome mail to #{user.requested_email}" 
@@ -33,16 +34,22 @@ defmodule Doorman.Mailer do
 
 
   def send_reset_password_link(user, token) do
-    Logger.debug "Sending reset mail to #{user.email}"
-    create_mail(:reset, user.email, user.locale, user, %{token: token})
+    email = user_email(user)
+    Logger.debug "Sending reset mail to #{email}"
+    create_mail(:reset, email, user.locale, user, %{token: token})
     |> deliver_now
  
   end
 
   def send_login_link(user, token) do
-    Logger.debug "Sending login mail to #{user.email}"
-    create_mail(:login, user.email, user.locale, user, %{token: token})
+    email = user_email(user)
+    Logger.debug "Sending login mail to #{email}"
+    create_mail(:login, email, user.locale, user, %{token: token})
     |> deliver_now
+  end
+
+  def user_email(user) do
+    user.email || user.requested_email  
   end
 
   defp email_setup do

@@ -27,7 +27,10 @@ adapter: Bamboo.TestAdapter,
 
 default_sender: "biowatch@codenaut.com",
 templates: %{
-  welcome: Doorman.MailTestContent
+  welcome: Doorman.MailTestContent,
+  login: Doorman.MailTestContent,
+  reset: Doorman.MailTestContent,
+  confirm: Doorman.MailTestContent
 }
 
 config :doorman, Doorman.Pusher,
