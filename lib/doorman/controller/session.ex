@@ -6,7 +6,7 @@ defmodule Doorman.Controller.Session do
     try do
       super(conn, opts)
     rescue
-      error -> send_error(conn, error, :internal_error)
+      error -> send_error(conn, error, :internal_server_error)
     end
   end
 
