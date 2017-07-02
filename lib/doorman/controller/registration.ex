@@ -67,7 +67,7 @@ defmodule Doorman.Controller.Registration do
     if existing_user do
       send_login_link(conn, existing_user, email)
     else
-      create(conn, user)
+      create(conn, %{"user" => user})
     end
   end
 

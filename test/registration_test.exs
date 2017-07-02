@@ -89,6 +89,9 @@ defmodule Doorman.RegistrationTest do
 
     response = send_json(:post, "/doorman/registration/link?username=a_user")
     assert response.status == 200
+    
+    response = send_json(:post, "/doorman/registration/link?email=createondemand@codenaut.com")
+    assert response.status == 201
 
   end
 
