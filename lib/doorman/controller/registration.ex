@@ -62,8 +62,7 @@ defmodule Doorman.Controller.Registration do
     send_login_link(conn, Authenticator.get_by_username(username), username)
   end
   def send_login_link(conn, %{"email" => email}) do
-
-    send_login_link(conn, Authenticator.get_by_username(email), email)
+    send_login_link(conn, Authenticator.get_by_email(email), email)
   end
 
 

@@ -10,9 +10,15 @@ defmodule Doorman.Controller.Session do
     end
   end
 
+  defp process_perms(perms) do
+    Enum.to_list(perms)
+    |> Enum.map(fn({k,v}) -> {k, Enum.map(v, fn(v) -> String.to_atom(v) end)} end)
+    |> Enum.into(%{})
+  end
 
   defp process_session(conn, {:ok, user}) do
-    case Guardian.encode_and_sign(user, :access, perms: user.perms || %{}) do
+    perms = process_perms(user.perms)
+    case Guardian.encode_and_sign(user, :access, perms: perms || %{}) do
       {:ok, jwt, _full_claims} ->
         conn
         |> put_status(:created)
