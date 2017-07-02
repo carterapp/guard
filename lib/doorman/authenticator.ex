@@ -26,7 +26,7 @@ defmodule Doorman.Authenticator do
 
   defp send_welcome_email(email, user) do
     if email != nil do
-      token = generate_login_claim(user)
+      {:ok, token, _} = generate_login_claim(user)
       Mailer.send_welcome_email(user, token)
     end
 
