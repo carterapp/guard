@@ -7,6 +7,13 @@ defmodule Doorman.Authenticator do
 
   def create_user(user_map) do
     email = Map.get(user_map, "email")
+    username = Map.get(user_map, "username")
+    
+    user_map = if username == nil do
+       Map.put(user_map, "username", email)
+    else
+      user_map
+    end
     if email != nil do
       case Repo.get_by(User, email: String.downcase(email)) do
         nil -> do_create_user(user_map, email)
@@ -19,7 +26,8 @@ defmodule Doorman.Authenticator do
 
   defp send_welcome_email(email, user) do
     if email != nil do
-      Mailer.send_welcome_email(user)
+      token = generate_login_claim(user)
+      Mailer.send_welcome_email(user, token)
     end
 
   end

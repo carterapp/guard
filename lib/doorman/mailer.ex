@@ -20,7 +20,7 @@ defmodule Doorman.Mailer do
   end
 
   
-  def send_welcome_email(user) do
+  def send_welcome_email(user, token) do
     Logger.debug "Sending welcome mail to #{user.requested_email}" 
     create_mail(:welcome, user.requested_email, user.locale, user)
     |> deliver_now

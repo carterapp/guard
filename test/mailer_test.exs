@@ -3,7 +3,7 @@ defmodule Doorman.MailerTest do
   
 
   test 'welcome_mail' do
-    Doorman.Mailer.send_welcome_email(%{requested_email: "jalp@codenaut.com", locale: "en"})
+    Doorman.Mailer.send_welcome_email(%{requested_email: "jalp@codenaut.com", locale: "en"}, "dummy")
   end
 
   

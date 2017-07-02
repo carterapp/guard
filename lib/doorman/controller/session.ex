@@ -11,9 +11,13 @@ defmodule Doorman.Controller.Session do
   end
 
   defp process_perms(perms) do
-    Enum.to_list(perms)
-    |> Enum.map(fn({k,v}) -> {k, Enum.map(v, fn(v) -> String.to_atom(v) end)} end)
-    |> Enum.into(%{})
+    if perms do
+      Enum.to_list(perms)
+      |> Enum.map(fn({k,v}) -> {k, Enum.map(v, fn(v) -> String.to_atom(v) end)} end)
+      |> Enum.into(%{})
+    else
+      nil
+    end
   end
 
   defp process_session(conn, {:ok, user}) do
