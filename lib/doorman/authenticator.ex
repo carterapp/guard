@@ -5,6 +5,11 @@ defmodule Doorman.Authenticator do
     (:crypto.hash :sha512, (:crypto.strong_rand_bytes 512)) |> Base.encode64
   end
 
+  def create_user(username, password) do
+    map = %{"username" => username, "password" => password}
+    create_user(map)
+  end
+
   def create_user(user_map) do
     email = Map.get(user_map, "email")
     username = Map.get(user_map, "username")
@@ -48,6 +53,7 @@ defmodule Doorman.Authenticator do
     end
 
     changeset = User.changeset(%User{}, user)
+
 
     case Repo.insert(changeset) do
       {:ok, user} ->
@@ -94,15 +100,15 @@ defmodule Doorman.Authenticator do
     update_user(user, %{"password" => new_password})
   end
 
-  def bump_to_admin(email) do
-    case get_by_email(email) do
+  def bump_to_admin(username) do
+    case get_by_username(username) do
       nil -> {:error}
       user -> Repo.update(User.changeset(user, %{"perms" => %{"admin" => ["read", "write"]}}))
     end
   end
 
-  def drop_admin(email) do
-    case get_by_email(email) do
+  def drop_admin(username) do
+    case get_by_username(username) do
       nil -> {:error}
       user -> Repo.update(User.changeset(user, %{"perms" => %{}}))
     end
