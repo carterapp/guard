@@ -40,13 +40,13 @@ defmodule Doorman.User do
     |> validate_format(:requested_email, ~r/@/)
     |> validate_length(:password, min: 6)
     |> validate_length(:username, min: 1)
-    |> validate_confirmation(:password, message: "Password does not match")
+    |> validate_confirmation(:password, message: "password_mismatch")
     |> update_change(:email, &String.downcase/1) #Lowercase email, so we can check for duplicates
     |> update_change(:requested_email, &String.downcase/1) #Lowercase email, so we can check for duplicates
     |> update_change(:username, &String.downcase/1) #Lowercase username, so we can check for duplicates
-    |> unique_constraint(:email, message: "Email already taken")
-    |> unique_constraint(:requested_email, message: "Email already requested")
-    |> unique_constraint(:username, message: "Username already taken")
+    |> unique_constraint(:email, message: "email_taken")
+    |> unique_constraint(:requested_email, message: "email_requested")
+    |> unique_constraint(:username, message: "username_taken")
     |> encrypt_changeset()
   end
 

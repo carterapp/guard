@@ -19,14 +19,7 @@ defmodule Doorman.Authenticator do
     else
       user_map
     end
-    if email != nil do
-      case Repo.get_by(User, email: String.downcase(email)) do
-        nil -> do_create_user(user_map, email)
-        _user -> {:error, %{email: "taken"}, nil}
-      end
-    else
-      do_create_user(user_map, email)
-    end
+    do_create_user(user_map, email)
   end
 
   defp send_welcome_email(email, user) do
