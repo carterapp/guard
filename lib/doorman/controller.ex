@@ -9,6 +9,7 @@ defmodule Doorman.Controller do
 
       post "/registration/reset", Doorman.Controller.Registration, :send_password_reset #Request a password reset
       post "/registration/link", Doorman.Controller.Registration, :send_login_link #Send magic link
+      post "/registration/check", Doorman.Controller.Registration, :check_account #Send magic link
       
       post "/registration/device", Doorman.Controller.Registration, :register_device #Register for push
       delete "/registration/device/:platform/:token", Doorman.Controller.Registration, :unregister_device #Unregister for push

@@ -12,6 +12,28 @@ defmodule Doorman.Controller.Registration do
     end
   end
 
+  defp check_user(conn, user) do
+    case user do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{ok: false})
+      _ ->
+        conn
+        |> put_status(:ok)
+        |> json(%{ok: true})
+    end
+  end
+
+  def check_account(conn, %{"username" => username}) do
+    check_user(conn, Authenticator.get_by_username(username))
+  end
+
+  def check_account(conn, %{"email" => email}) do
+    check_user(conn, Authenticator.get_by_email(email))
+  end
+
+
   def create(conn, %{"user" => user}) do
     case Authenticator.create_user(user) do
       {:ok, user, jwt} -> 
