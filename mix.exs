@@ -35,14 +35,15 @@ defmodule Doorman.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:guardian, "~> 0.14.4"},
-     {:phoenix, "~>1.2.4"},
+    [{:guardian, "~> 0.14.5"},
+     {:phoenix, "~>1.3.0"},
      {:gettext, "~> 0.13.1"},
-     {:ecto, "~> 2.1.4"},
+     {:ecto, "~> 2.1.6"},
      {:bamboo, "~> 0.8"},
-     {:comeonin, "~> 3.0.1"},
-     {:tesla, "~> 0.6.0"},
-     {:poison, ">= 1.0.0"},
+     {:comeonin, "~> 4.0.0"},
+     {:bcrypt_elixir, "~> 0.12"},
+     {:tesla, "~> 0.7.1"},
+     {:poison, ">= 3.1.0"},
      {:postgrex, ">= 0.13.3", only: :test}]
   end
 end

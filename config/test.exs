@@ -36,3 +36,5 @@ templates: %{
 config :doorman, Doorman.Pusher,
 token: "bad_token",
 dry_run: true
+
+config :plug, :validate_header_keys_during_test, true
