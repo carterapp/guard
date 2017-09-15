@@ -118,6 +118,7 @@ defmodule Doorman.Controller.Registration do
 
   def register_device(conn, %{"device" => %{"platform" => platform, "token" => token} = device}) do
     user = Authenticator.current_user conn
+    Logger.debug "Registering '#{token}'"
     existing = find_device(token, platform)
     if (existing == nil || existing.user_id == nil) do
       model = if existing == nil do

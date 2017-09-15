@@ -1,5 +1,5 @@
 defmodule Doorman.Authenticator do
-  alias Doorman.{Repo, User, Mailer}
+  alias Doorman.{Repo, User, Mailer, Device}
 
   defp random_bytes() do
     (:crypto.hash :sha512, (:crypto.strong_rand_bytes 512)) |> Base.encode64
@@ -130,6 +130,10 @@ defmodule Doorman.Authenticator do
 
   def generate_password_reset_claim(user = %User{}) do
     Guardian.encode_and_sign(user, :password_reset, ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
+  end
+
+  def get_user_devices(user) do
+    Repo.get(Device, user_id: user.id)
   end
 
   def current_claims(conn)  do
