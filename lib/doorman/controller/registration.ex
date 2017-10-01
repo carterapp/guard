@@ -71,7 +71,7 @@ defmodule Doorman.Controller.Registration do
       user ->  
         case Authenticator.generate_password_reset_claim(user) do
           {:ok, token, _} -> 
-            user = Authenticator.generate_pin(user)
+            {:ok, user} = Authenticator.generate_pin(user)
             Mailer.send_reset_password_link(user, token)
             json conn, %{ok: true}
           _ -> 
