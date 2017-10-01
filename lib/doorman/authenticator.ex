@@ -152,5 +152,14 @@ defmodule Doorman.Authenticator do
 
   end
 
+  def generate_pin(user) do
+    pin = to_string(Enum.random(100000..999999))
+    update_user(user, %{"pin" => pin, "pin_timestamp" => DateTime.utc_now()})
+  end
+
+  def clear_pin(user) do
+    update_user(user, %{"pin" => nil, "pin_timestamp" => nil})
+  end
+
 end
 

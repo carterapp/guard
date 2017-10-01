@@ -36,6 +36,7 @@ defmodule Doorman.Controller.PasswordReset do
 
     end
   end
+  
 
   def update_password(conn, %{"new_password" => new_password, "new_password_confirmation" => new_password_confirmation}) do
     case Authenticator.current_claim_type(conn) do

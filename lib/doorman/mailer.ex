@@ -36,7 +36,7 @@ defmodule Doorman.Mailer do
   def send_reset_password_link(user, token) do
     email = user_email(user)
     Logger.debug "Sending reset mail to #{email}"
-    create_mail(:reset, email, user.locale, user, %{token: token})
+    create_mail(:reset, email, user.locale, user, %{token: token, user: user})
     |> deliver_now
  
   end

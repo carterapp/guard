@@ -19,12 +19,14 @@ defmodule Doorman.User do
     field :provider, :map
     field :confirmation_token, :string
     field :attrs, :map
+    field :pin, :string
+    field :pin_timestamp, :utc_datetime
 
     timestamps()
   end
 
   @required_fields ~w(username)a
-  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs)a
+  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin pin_timestamp)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -57,6 +59,15 @@ defmodule Doorman.User do
   def check_password(user, password) do
     Comeonin.Bcrypt.checkpw(password, user.enc_password)
   end
+  
+  def check_pin(user, pin) do
+    pin_valid_time = 60 * 60 #Pin valid for one hour
+    user.pin != nil 
+      && user.pin_timestamp != nil 
+      && DateTime.diff(DateTime.utc_now(), user.pin_timestamp) < pin_valid_time 
+      && pin == user.pin
+  end
+
 
   defp encrypt_changeset(current_changeset) do
      case current_changeset do

@@ -71,6 +71,7 @@ defmodule Doorman.Controller.Registration do
       user ->  
         case Authenticator.generate_password_reset_claim(user) do
           {:ok, token, _} -> 
+            user = Authenticator.generate_pin(user)
             Mailer.send_reset_password_link(user, token)
             json conn, %{ok: true}
           _ -> 
@@ -108,6 +109,25 @@ defmodule Doorman.Controller.Registration do
             Logger.debug "Failed to generate claim for #{name}"
             json conn, %{ok: true} #Do not allow people to probe which users are on the system 
         end
+    end
+  end
+
+  def update_password(conn, %{"username" => username, "pin" => pin, "new_password" => new_password, "new_password_confirmation" => new_password_confirmation}) do
+    user = Authenticator.get_by_username(username)
+    case User.check_pin(user, pin) do
+      true ->
+        case Authenticator.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) do
+          {:ok, _user} -> 
+            Authenticator.clear_pin(user)
+            json(conn, %{ok: true})
+          {:error, error, _changeset} ->
+            send_error(conn, error)
+        end
+      false ->
+        conn
+        |> put_status(:precondition_failed)
+        |> json(%{ok: false})
+
     end
   end
 
