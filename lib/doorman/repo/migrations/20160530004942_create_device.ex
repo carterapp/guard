@@ -11,7 +11,7 @@ defmodule Doorman.Repo.Migrations.CreateDevice do
       add :token, :string, null: false
       add :platform, :string, null: false
       add :user_id, :uuid
-      add :last_sent, :datetime
+      add :last_sent, :utc_datetime
 
       timestamps()
     end
