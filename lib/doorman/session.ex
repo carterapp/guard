@@ -4,7 +4,7 @@ defmodule Doorman.Session do
   defp check_password_with_message(user, password) do
     case check_password(user, password) do
       true -> {:ok, user}
-      _ -> {:error, "wrong password"}
+      _ -> {:error, "wrong_password"}
     end
 
   end
@@ -36,12 +36,12 @@ defmodule Doorman.Session do
   def authenticate({:jwt, jwt}) do
     case Guardian.decode_and_verify(jwt) do
       {:ok, claims} -> user_from_claim(claims)
-      _ -> {:error, "bad token"}
+      _ -> {:error, "bad_token"}
     end
   end
   
   def authenticate(_) do
-    {:error, "missing credentials"}
+    {:error, "missing_credentials"}
   end
 
 

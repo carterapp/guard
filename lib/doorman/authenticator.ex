@@ -77,16 +77,27 @@ defmodule Doorman.Authenticator do
     Guardian.Plug.current_resource(conn)
   end
 
+  def confirm_email_pin(user, pin) do
+    if pin == user.pin do
+      update_user(user, %{"email" => user.requested_email})
+    else
+      {:error, "wrong_pin"}
+    end
+
+  end
   def confirm_email(user, confirmation_token) do 
     if confirmation_token == user.confirmation_token do
       update_user(user, %{"email" => user.requested_email})
     else 
-      {:error, "Wrong confirmation token"}
+      {:error, "wrong_confirmation_token"}
     end
   end
 
   def change_email(user, email) do
-    update_user(user, %{"confirmation_token" => random_bytes(), "requested_email" => email})
+    pin = to_string(Enum.random(100000..999999))
+    update_user(user, %{"confirmation_token" => random_bytes(), 
+    "pin" => pin, "pin_timestamp" => DateTime.utc_now(),
+    "requested_email" => email})
   end
 
   def change_password(user, new_password) do
