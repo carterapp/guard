@@ -29,7 +29,7 @@ defmodule Doorman.Session do
   def authenticate(%{"token" => token}) do
     case Guardian.decode_and_verify(token) do
       {:ok, claims} -> user_from_claim(claims)
-      _ -> {:error, "bad token"}
+      _ -> {:error, "bad_token"}
     end
   end
 
@@ -48,7 +48,7 @@ defmodule Doorman.Session do
   defp user_from_claim(claims) do
     case claims do 
       %{"sub" => "User:" <> user_id} -> {:ok, Repo.get(User, user_id)}
-      _ -> {:error, "bad claims"}
+      _ -> {:error, "bad_claims"}
     end
 
   end
