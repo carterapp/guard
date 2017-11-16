@@ -127,7 +127,7 @@ defmodule Doorman.Authenticator do
   end
 
   def get_by_username(username) do
-    Repo.get_by(User, username: username)
+    Repo.get_by(User, username: String.downcase(username))
   end
 
   def get_by_id(id) do
