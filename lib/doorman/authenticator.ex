@@ -10,6 +10,10 @@ defmodule Doorman.Authenticator do
     create_user(map)
   end
 
+  def create_user_by_email(email) do
+    create_user%{"username" => email}
+  end
+
   def create_user(user_map) do
     email = Map.get(user_map, "email")
     username = Map.get(user_map, "username")
@@ -101,7 +105,7 @@ defmodule Doorman.Authenticator do
   end
 
   def change_password(user, new_password) do
-    update_user(user, %{"password" => new_password})
+    update_user(user, %{password: new_password})
   end
 
   def bump_to_admin(username) do
