@@ -108,6 +108,24 @@ defmodule Doorman.Authenticator do
     update_user(user, %{password: new_password})
   end
 
+  def add_perms(user, perms) do
+    case user do
+      nil -> {:error}
+      user -> 
+        old_perms = user.perms || %{}
+        Repo.update(User.changeset(user, %{"perms" => Map.merge(old_perms, perms)})) 
+    end
+  end
+
+  def drop_perm(user, name) do
+    case user do
+      nil -> {:error}
+      user -> 
+        perms = user.perms || %{}
+        Repo.update(User.changeset(user, %{"perms" => Map.delete(perms, name)}))
+    end
+  end
+
   def bump_to_admin(username) do
     case get_by_username(username) do
       nil -> {:error}

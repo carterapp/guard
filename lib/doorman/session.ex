@@ -1,29 +1,36 @@
 defmodule Doorman.Session do
   alias Doorman.{Repo, User}
 
-  defp check_password_with_message(user, password) do
+  defp check_password_with_message(user, password, params) do
     case check_password(user, password) do
-      true -> {:ok, user}
+      true -> 
+        case params do
+        %{"perm" => perm} ->
+          if Map.has_key?(user.perms || %{}, perm) do
+            {:ok, user}
+          else 
+            {:error, :forbidden}
+          end
+         _ -> {:ok, user}
+        end
       _ -> {:error, "wrong_password"}
     end
-
   end
 
-  def authenticate(%{"email" => email, "password" => password}) do
+
+  def authenticate(params = %{"email" => email, "password" => password}) do
     user = Repo.get_by(User, email: String.downcase(email))
-
     if user == nil do
-      check_password_with_message(Repo.get_by(User, requested_email: String.downcase(email)), password)
+      check_password_with_message(Repo.get_by(User, requested_email: String.downcase(email)), password, params)
     else
-      check_password_with_message(user, password)
+      check_password_with_message(user, password, params)
     end
-
   end
 
-  def authenticate(%{"username" => username, "password" => password}) do
+  def authenticate(params = %{"username" => username, "password" => password}) do
     user = Repo.get_by(User, username: username)
 
-    check_password_with_message(user, password)
+    check_password_with_message(user, password, params)
   end
 
   def authenticate(%{"token" => token}) do
