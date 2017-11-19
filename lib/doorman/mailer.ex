@@ -15,10 +15,24 @@ defmodule Doorman.Mailer do
                 html_body: apply(module, :html_body, [locale, user, meta]),
                 text_body: apply(module, :text_body, [locale, user, meta])
               )
+    else
+      {:error, :no_configuration} 
     end
-
   end
 
+
+  def send_unverified_user_mail(user, type, meta \\ %{}) do
+    Logger.debug "Sending #{type} mail to #{user.requested_email}" 
+    create_mail(type, user.requested_email, user.locale, user, meta)
+    |> deliver_now
+  end
+
+  def send_user_mail(user, type, meta \\ %{}) do
+    email = user_email(user)
+    Logger.debug "Sending #{type} mail to #{email}" 
+    create_mail(type, email, user.locale, user, meta)
+    |> deliver_now
+  end
   
   def send_welcome_email(user, token) do
     Logger.debug "Sending welcome mail to #{user.requested_email}" 
@@ -38,7 +52,6 @@ defmodule Doorman.Mailer do
     Logger.debug "Sending reset mail to #{email}"
     create_mail(:reset, email, user.locale, user, %{token: token, user: user})
     |> deliver_now
- 
   end
 
   def send_login_link(user, token) do

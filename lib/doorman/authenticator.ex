@@ -83,7 +83,7 @@ defmodule Doorman.Authenticator do
 
   def confirm_email_pin(user, pin) do
     if pin == user.pin do
-      update_user(user, %{"email" => user.requested_email})
+      update_user(user, %{"email" => user.requested_email, "pin" => nil, "pin_timestamp" => nil})
     else
       {:error, "wrong_pin"}
     end
