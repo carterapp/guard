@@ -20,7 +20,11 @@ defmodule Doorman.Plug.AuditLogger do
     case Authenticator.current_claims(conn) do
       { :ok, _claims } ->
         user = Guardian.Plug.current_resource(conn)
-        Logger.metadata(user_id: user.id)
+        if user do
+          Logger.metadata(user_id: user.id)
+        else
+          Logger.metadata(user_id: "no_user")
+        end
         conn
       _ -> 
         conn
