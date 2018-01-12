@@ -26,6 +26,9 @@ defmodule Doorman.RegistrationTest do
 
     response = send_json(:post, "/doorman/session", %{"session" => %{"username" => "testuser", "password": "secret"}})
     assert response.status == 201
+    
+    response = send_json(:post, "/doorman/session", %{"session" => %{"username" => "TESTuser", "password": "secret"}})
+    assert response.status == 201
 
     json_body = Poison.decode!(response.resp_body)
 

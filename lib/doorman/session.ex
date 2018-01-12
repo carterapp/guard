@@ -1,5 +1,5 @@
 defmodule Doorman.Session do
-  alias Doorman.{Repo, User}
+  alias Doorman.{Repo, User, Authenticator}
 
   defp check_password_with_message(user, password, params) do
     case check_password(user, password) do
@@ -28,7 +28,7 @@ defmodule Doorman.Session do
   end
 
   def authenticate(params = %{"username" => username, "password" => password}) do
-    user = Repo.get_by(User, username: username)
+    user = Authenticator.get_by_username(username)
 
     check_password_with_message(user, password, params)
   end
