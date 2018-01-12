@@ -24,6 +24,8 @@ defmodule Doorman.Plug.FilteringLogger do
     filter = opts[:filter]
     if !filter || filter.(conn) do
       Plug.Logger.call(conn, level)
+    else
+      conn
     end
   end
 
