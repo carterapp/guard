@@ -11,8 +11,13 @@ defmodule Doorman.Authenticator do
   end
 
   def create_user_by_email(email) do
-    create_user%{"username" => email}
+    create_user%{"email" => email, "username" => email}
   end
+
+  def create_user_by_mobile(mobile) do
+    create_user%{"mobile" => mobile, "username" => mobile}
+  end
+
 
   def create_user(user_map) do
     email = Map.get(user_map, "email")
@@ -26,12 +31,15 @@ defmodule Doorman.Authenticator do
     do_create_user(user_map, email)
   end
 
-  defp send_welcome_email(email, user) do
-    if email != nil do
-      {:ok, token, _} = generate_login_claim(user)
-      Mailer.send_welcome_email(user, token)
-    end
 
+  def send_welcome_email(user) do
+    {:ok, token, _} = generate_login_claim(user)
+    Mailer.send_welcome_email(user, token)
+  end
+
+  def send_confirmation_email(user) do
+    {:ok, token, _} = generate_login_claim(user)
+    Mailer.send_confirmation_email(user)
   end
 
   defp do_create_user(user_map, email) do
@@ -55,7 +63,6 @@ defmodule Doorman.Authenticator do
     case Repo.insert(changeset) do
       {:ok, user} ->
         {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, :access)
-        send_welcome_email(email, user)
         {:ok, user, jwt}
 
       {:error, changeset} ->
