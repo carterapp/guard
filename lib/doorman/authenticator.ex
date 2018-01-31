@@ -37,9 +37,9 @@ defmodule Doorman.Authenticator do
     Mailer.send_welcome_email(user, token)
   end
 
-  def send_confirmation_email(user) do
+  def send_confirm_email(user) do
     {:ok, token, _} = generate_login_claim(user)
-    Mailer.send_confirmation_email(user)
+    Mailer.send_confirm_email(user, token)
   end
 
   defp do_create_user(user_map, email) do
