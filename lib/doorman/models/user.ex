@@ -5,13 +5,15 @@ defmodule Doorman.User do
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
-  @derive {Poison.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at]}
+  @derive {Poison.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at, :mobile, :requested_mobile]}
 
   schema "users" do
     field :username, :string
     field :fullname, :string
     field :locale, :string
     field :email, :string
+    field :mobile, :string
+    field :requested_mobile, :string
     field :password, :string, virtual: true
     field :enc_password, :string
     field :perms, :map
@@ -26,7 +28,7 @@ defmodule Doorman.User do
   end
 
   @required_fields ~w(username)a
-  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin pin_timestamp)a
+  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin pin_timestamp mobile requested_mobile)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.

@@ -34,11 +34,13 @@ defmodule Doorman.Authenticator do
 
   def send_welcome_email(user) do
     {:ok, token, _} = generate_login_claim(user)
+    {:ok, user} = generate_pin(user)
     Mailer.send_welcome_email(user, token)
   end
 
   def send_confirm_email(user) do
     {:ok, token, _} = generate_login_claim(user)
+    {:ok, user} = generate_pin(user)
     Mailer.send_confirm_email(user, token)
   end
 
@@ -46,6 +48,8 @@ defmodule Doorman.Authenticator do
     #Only accept very few keys when creating user
     user = Map.take(user_map, ["username", "password", "password_confirmation", "fullname", "locale"])
     user = Map.put(user, "requested_email", email)
+    mobile = Map.get(user_map, "mobile")
+    user = Map.put(user, "requested_mobile", mobile)
     user = Map.put(user, "confirmation_token", random_bytes())
     #Make sure user does not try to set permissions
     user = Map.delete(user, "perms")
@@ -64,7 +68,6 @@ defmodule Doorman.Authenticator do
       {:ok, user} ->
         {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, :access)
         {:ok, user, jwt}
-
       {:error, changeset} ->
         {:error, Repo.changeset_errors(changeset), changeset}
     end
@@ -88,8 +91,16 @@ defmodule Doorman.Authenticator do
     Guardian.Plug.current_resource(conn)
   end
 
+  def confirm_mobile_pin(user, pin) do
+    if !is_nil(pin) && pin == user.pin do
+      update_user(user, %{"mobile" => user.requested_mobile, "pin" => nil, "pin_timestamp" => nil})
+    else
+      {:error, "wrong_pin"}
+    end
+  end
+
   def confirm_email_pin(user, pin) do
-    if pin == user.pin do
+    if !is_nil(pin) && pin == user.pin do
       update_user(user, %{"email" => user.requested_email, "pin" => nil, "pin_timestamp" => nil})
     else
       {:error, "wrong_pin"}
