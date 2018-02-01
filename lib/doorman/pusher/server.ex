@@ -1,7 +1,6 @@
 defmodule Doorman.Pusher.Server do
   use GenServer
   use Tesla
-  require Logger
   import Ecto.Query
   adapter Tesla.Adapter.Hackney
 
@@ -9,12 +8,12 @@ defmodule Doorman.Pusher.Server do
     GenServer.start_link(__MODULE__, config, name: name)
   end
 
-  def send_user_message(pid, user, message) do
-    GenServer.cast(pid, {:user, user, message})
+  def send_user_message(pid, user, message, callback) do
+    GenServer.cast(pid, {:user, user, message, callback})
   end
 
-  def send_message(pid, message) do
-    GenServer.cast(pid, {:message, message})
+  def send_message(pid, message, callback) do
+    GenServer.cast(pid, {:message, message, callback})
   end
 
   def status(pid) do
@@ -33,38 +32,48 @@ defmodule Doorman.Pusher.Server do
   end
 
   def handle_call({:status}, _from, state) do
-    {:reply, :ok, state}
+    {:reply, {:ok, state}, state}
   end
 
-  def handle_cast({:user, user, message}, state) do
+  def handle_cast({:user, user, message, callback}, state) do
     devices = Doorman.Repo.all(from d in Doorman.Device, where: d.user_id==^user.id)
     if length(devices) > 0 do
       Enum.each(devices, fn(d) -> 
-        resp = do_post(state.client, state.options, Map.merge(message, %{to: d.token}))
-        Logger.info "#{d.token} #{inspect resp.body}"
-        if resp.body != nil do
-          #Delete device if 
-          if resp.body["failure"] == 1 do
-            Doorman.Repo.delete(d)
+        resp = try do
+          resp = do_post(state.client, state.options, Map.merge(message, %{to: d.token}))
+          if resp.body != nil do
+            if resp.body["failure"] == 1 do
+              Doorman.Repo.delete(d)
+            end
           end
+          resp
+        rescue 
+          error -> {:error, error}
         end
-      end)
+        if !is_nil(callback) do
+          callback.(resp)
+        end
+     end)
     end
-    {:noreply, state}
+    {:noreply, state, :hibernate}
   end
 
-  def handle_cast({:message, message}, state) do
-    resp = do_post(state.client, state.options, message)
-    Logger.info "#{inspect resp}"
-    
-    {:noreply, state}
+  def handle_cast({:message, message, callback}, state) do
+    resp = try do
+       do_post(state.client, state.options, message)
+    rescue 
+      error -> {:error, error}
+    end 
+
+    if !is_nil(callback) do
+      callback.(resp)
+    end
+    {:noreply, state, :hibernate}
   end
 
   defp do_post(client, options, message) do
     msg = Map.merge(options, message)
     post(client, "/send", msg)
   end
-
-
 
 end
