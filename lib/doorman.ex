@@ -17,6 +17,13 @@ defmodule Doorman do
     else 
       children
     end
+    sms_conf = Application.get_env(:doorman, Doorman.Sms)
+    children = if sms_conf != nil do
+      [supervisor(Doorman.Sms.Server, [Doorman.Sms.Server, sms_conf]) | children]
+    else 
+      children
+    end
+ 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Doorman.Supervisor]
