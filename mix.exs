@@ -21,7 +21,7 @@ defmodule Doorman.Mixfile do
   def application do
     [mod: {Doorman, []},
      applications: [:logger,
-      :ecto, :guardian, :bamboo, :comeonin,
+      :ecto, :guardian, :bamboo, :comeonin, :inets,
       :postgrex, :hackney, :tesla, :poison, :bcrypt_elixir]]
   end
 

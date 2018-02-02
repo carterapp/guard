@@ -5,7 +5,7 @@ defmodule Doorman do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    Logger.info "Waking up doorman"
+    Logger.info "Waking up Doorman"
     children = [
       # Start the Ecto repository
       supervisor(Doorman.Repo, []),
@@ -13,12 +13,14 @@ defmodule Doorman do
 
     pusher_conf = Application.get_env(:doorman, Doorman.Pusher)
     children = if pusher_conf != nil do
+      Logger.info "Adding Pusher supervisor"
       [supervisor(Doorman.Pusher.Server, [Doorman.Pusher.Server, pusher_conf]) | children]
     else 
       children
     end
     sms_conf = Application.get_env(:doorman, Doorman.Sms)
     children = if sms_conf != nil do
+      Logger.info "Adding SMS supervisor"
       [supervisor(Doorman.Sms.Server, [Doorman.Sms.Server, sms_conf]) | children]
     else 
       children
