@@ -9,6 +9,7 @@ defmodule Doorman do
     children = [
       # Start the Ecto repository
       supervisor(Doorman.Repo, []),
+      supervisor(Doorman.Presence, []),
     ]
 
     pusher_conf = Application.get_env(:doorman, Doorman.Pusher)
