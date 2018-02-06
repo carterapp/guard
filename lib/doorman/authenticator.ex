@@ -126,6 +126,50 @@ defmodule Doorman.Authenticator do
     update_user(user, %{password: new_password})
   end
 
+  @doc """
+    Check that the given user has all the provider permissions
+
+
+  ## Examples
+  
+  iex> Doorman.Authenticator.has_perms?(user, %{"admin" => ["read", "write"]})
+  false
+  """
+  def has_perms?(user, %{}=required_perms) do
+    Enum.reduce_while(required_perms, true, fn {key, ps}, acc -> 
+      case Map.get(user.perms, key) do
+        nil -> {:halt, false}
+        users_perms -> user_has_perm = Enum.reduce_while(ps, true, fn p, acc ->
+          if Enum.any?(users_perms, fn up -> p == up end) do
+            {:cont, true}
+          else
+            {:halt, false}
+          end
+        end)
+        if user_has_perm do
+          {:cont, true}
+        else 
+          {:halt, false}
+        end
+      end
+    end)
+  end
+
+  def has_perms?(user, [_|_] = perm_names) do
+    Enum.reduce_while(perm_names, true, fn v, acc -> 
+      if has_perms?(user, v) do
+        {:cont, true}
+      else
+        {:cont, false}
+      end
+    end) 
+  end
+
+  def has_perms?(user, perm_name) do
+    Map.has_key?(user.perms, perm_name)
+  end
+
+
   def add_perms(user, perms) do
     case user do
       nil -> {:error}
@@ -174,6 +218,22 @@ defmodule Doorman.Authenticator do
     Repo.get(User, id)
 
   end
+  def get_by_email!(email) do
+    case Repo.get_by(User, email: String.downcase(email)) do
+      nil -> Repo.get_by!(User, requested_email: String.downcase(email))
+      confirmed -> confirmed
+    end
+  end
+
+  def get_by_username!(username) do
+    Repo.get_by!(User, username: String.downcase(username))
+  end
+
+  def get_by_id!(id) do
+    Repo.get!(User, id)
+
+  end
+
 
   def generate_login_claim(user = %User{}) do
     Guardian.encode_and_sign(user, :login, ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
