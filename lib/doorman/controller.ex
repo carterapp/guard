@@ -50,33 +50,7 @@ defmodule Doorman.Controller do
     |> json(%{error: translate_error(error)})
   end
 
-  def unauthenticated(conn, %{reason: {:error, reason}}) do
-    conn
-    |> put_status(:unauthorized)
-    |> json(%{error: translate_error(reason)})
-  end
-
-
-  def unauthenticated(conn, _params) do
-    conn
-    |> put_status(:unauthorized)
-    |> json(%{error: "unauthenticated"})
-  end
-
-  def unauthorized(conn, %{reason: {:error, reason}}) do
-    conn
-    |> put_status(:forbidden)
-    |> json(%{error: translate_error(reason)})
-  end
-
-
-  def unauthorized(conn, _params) do
-    conn
-    |> put_status(:forbidden)
-    |> json(%{error: "forbidden"})
-  end
-
-  defp translate_error(reason) do 
+  def translate_error(reason) do 
     cond do
       is_tuple(reason) -> tuple_to_map(%{}, Tuple.to_list(reason))
       Exception.exception?(reason) -> translate_error(Exception.message(reason))

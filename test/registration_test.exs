@@ -33,7 +33,7 @@ defmodule Doorman.RegistrationTest do
     json_body = Poison.decode!(response.resp_body)
 
     response = send_json(:delete, "/doorman/account")
-    assert response.status == 401
+    assert response.status == 403
 
     device = %{"device"=> %{"token": "magic", "platform": "android"}}
     response = send_json(:post, "/doorman/registration/device", device)
@@ -49,7 +49,7 @@ defmodule Doorman.RegistrationTest do
 
   test 'validating user user' do
     response = send_json(:get, "/doorman/session")
-    assert response.status == 401
+    assert response.status == 403
 
     response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "august", "password": "not_very_secret", "password_confirmation": "not the same"}})
     assert response.status == 422

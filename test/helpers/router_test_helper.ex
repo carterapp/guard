@@ -5,7 +5,7 @@ defmodule Doorman.RouterTestHelper do
 
 
   def send_auth_json(method, url, token, body \\ nil, headers \\ []) do
-    send_json(method, url, body, [{"authorization", token} | headers])
+    send_json(method, url, body, [{"authorization", "Bearer " <> token} | headers])
   end
 
   def send_json(method, url, body \\ nil, headers \\ []) do

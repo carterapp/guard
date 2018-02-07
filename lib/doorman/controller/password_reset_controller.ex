@@ -3,7 +3,7 @@ defmodule Doorman.Controller.PasswordReset do
   alias Doorman.{Authenticator, User}
   import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
-  plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller
+  plug Guardian.Plug.EnsureAuthenticated
 
   def call(conn, opts) do
     try do

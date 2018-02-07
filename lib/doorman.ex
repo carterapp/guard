@@ -9,7 +9,7 @@ defmodule Doorman do
     children = [
       # Start the Ecto repository
       supervisor(Doorman.Repo, []),
-      supervisor(Doorman.Presence, []),
+      #supervisor(Doorman.Presence, []),
     ]
 
     pusher_conf = Application.get_env(:doorman, Doorman.Pusher)
@@ -38,7 +38,6 @@ defmodule Doorman do
       Ecto.Migrator.up(Doorman.Repo, 20171010000000, Doorman.Repo.Migrations.AddPin)
       Ecto.Migrator.up(Doorman.Repo, 20180131210142, Doorman.Repo.Migrations.AddMobile)
     end
-    
 
     {ok, sup_pid}
   end

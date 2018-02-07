@@ -66,7 +66,7 @@ defmodule Doorman.Authenticator do
 
     case Repo.insert(changeset) do
       {:ok, user} ->
-        {:ok, jwt, _full_claims} = Guardian.encode_and_sign(user, :access)
+        {:ok, jwt, _full_claims} = generate_access_claim(user)
         {:ok, user, jwt}
       {:error, changeset} ->
         {:error, Repo.changeset_errors(changeset), changeset}
@@ -136,10 +136,10 @@ defmodule Doorman.Authenticator do
   false
   """
   def has_perms?(user, %{}=required_perms) do
-    Enum.reduce_while(required_perms, true, fn {key, ps}, acc -> 
+    Enum.reduce_while(required_perms, true, fn {key, ps}, _acc -> 
       case Map.get(user.perms, key) do
         nil -> {:halt, false}
-        users_perms -> user_has_perm = Enum.reduce_while(ps, true, fn p, acc ->
+        users_perms -> user_has_perm = Enum.reduce_while(ps, true, fn p, _acc ->
           if Enum.any?(users_perms, fn up -> p == up end) do
             {:cont, true}
           else
@@ -156,7 +156,7 @@ defmodule Doorman.Authenticator do
   end
 
   def has_perms?(user, [_|_] = perm_names) do
-    Enum.reduce_while(perm_names, true, fn v, acc -> 
+    Enum.reduce_while(perm_names, true, fn v, _acc -> 
       if has_perms?(user, v) do
         {:cont, true}
       else
@@ -234,13 +234,27 @@ defmodule Doorman.Authenticator do
 
   end
 
-
-  def generate_login_claim(user = %User{}) do
-    Guardian.encode_and_sign(user, :login, ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
+  defp process_perms(perms) do
+    if perms do
+      Enum.to_list(perms)
+      |> Enum.map(fn({k,v}) -> {k, Enum.map(v, fn(v) -> String.to_atom(v) end)} end)
+      |> Enum.into(%{})
+    else
+      nil
+    end
   end
 
-  def generate_password_reset_claim(user = %User{}) do
-    Guardian.encode_and_sign(user, :password_reset, ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
+  def generate_access_claim(%User{} = user) do
+    perms = process_perms(user.perms)
+    Doorman.Guardian.encode_and_sign(user, %{}, token_type: "access", perms: perms || %{})
+  end
+
+  def generate_login_claim(%User{} = user) do
+    Doorman.Guardian.encode_and_sign(user, %{}, token_type: "login", token_ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
+  end
+
+  def generate_password_reset_claim(%User{} = user) do
+    Doorman.Guardian.encode_and_sign(user, %{}, token_type: "password_reset", token_ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
   end
 
   def get_user_devices(user) do
@@ -250,11 +264,11 @@ defmodule Doorman.Authenticator do
   def current_claims(conn)  do
     conn
     |> Guardian.Plug.current_token
-    |> Guardian.decode_and_verify
+    |> Doorman.Guardian.decode_and_verify
   end
 
   def current_claim_type(conn) do
-    case conn |> Guardian.Plug.current_token |> Guardian.decode_and_verify do
+    case conn |> current_claims do
       {:ok, claims} ->
         Map.get(claims, "typ")
       {:error, _} -> 

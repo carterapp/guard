@@ -1,11 +1,10 @@
 use Mix.Config
 
-config :guardian, Guardian,
+config :doorman, Doorman.Guardian,
 issuer: "Codenaut",
 ttl: { 180, :days },
 verify_issuer: true,
 secret_key: "changethistosomeothersecret",
-serializer: Doorman.GuardianSerializer,
 permissions: %{
   user: [:read, :write],
   bundles: [:read, :write],
@@ -34,7 +33,11 @@ templates: %{
 }
 
 config :doorman, Doorman.Pusher,
-token: "bad_token",
+key: "bad_key",
 dry_run: true
 
 config :plug, :validate_header_keys_during_test, true
+
+config :logger,
+  backends: [:console],
+  compile_time_purge_level: :debug

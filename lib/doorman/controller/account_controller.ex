@@ -3,7 +3,7 @@ defmodule Doorman.Controller.Account do
   alias Doorman.{Authenticator, User}
   import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
-  plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller, typ: "access"
+  plug Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"}
 
   def call(conn, opts) do
     try do

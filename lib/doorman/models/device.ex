@@ -11,7 +11,7 @@ defmodule Doorman.Device do
     field :token, :string
     field :platform, :string
     field :user_id, :binary_id
-    field :last_sent, Ecto.DateTime
+    field :last_sent, :utc_datetime
 
     timestamps()
   end

@@ -10,19 +10,9 @@ defmodule Doorman.Controller.Session do
     end
   end
 
-  defp process_perms(perms) do
-    if perms do
-      Enum.to_list(perms)
-      |> Enum.map(fn({k,v}) -> {k, Enum.map(v, fn(v) -> String.to_atom(v) end)} end)
-      |> Enum.into(%{})
-    else
-      nil
-    end
-  end
 
   defp process_session(conn, {:ok, user}) do
-    perms = process_perms(user.perms)
-    case Guardian.encode_and_sign(user, :access, perms: perms || %{}) do
+    case Doorman.Authenticator.generate_access_claim(user) do
       {:ok, jwt, _full_claims} ->
         conn
         |> put_status(:created)
@@ -48,10 +38,10 @@ defmodule Doorman.Controller.Session do
   end
 
   def delete(conn, _) do
-    case Guardian.Plug.claims(conn) do
+    case Doorman.Authenticator.current_claims(conn) do
       {:ok, claims} -> conn
       |> Guardian.Plug.current_token
-      |> Guardian.revoke!(claims)
+      |> Doorman.Guardian.revoke(claims)
       _ -> nil
     end
     conn

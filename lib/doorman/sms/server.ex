@@ -21,7 +21,7 @@ defmodule Doorman.Sms.Server do
   def init(config) do
     client = Tesla.build_client [
       {Tesla.Middleware.BaseUrl, "https://gatewayapi.com/rest"},
-      {Tesla.Middleware.BasicAuth, %{username: config[:token]}},
+      {Tesla.Middleware.BasicAuth, %{username: (config[:token] || "")}},
       Tesla.Middleware.JSON
     ]
     {:ok, %{options: config[:options], client: client}}

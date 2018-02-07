@@ -21,7 +21,7 @@ defmodule Doorman.Mixfile do
   def application do
     [mod: {Doorman, []},
      applications: [:logger,
-      :ecto, :guardian, :bamboo, :comeonin, :inets,
+      :ecto, :guardian, :bamboo, :comeonin, :inets, :gettext,
       :postgrex, :hackney, :tesla, :poison, :bcrypt_elixir]]
   end
 
@@ -35,15 +35,15 @@ defmodule Doorman.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:guardian, "~> 0.14.5"},
+    [{:guardian, "~> 1.0.1"},
      {:phoenix, "~>1.3.0"},
-     {:gettext, "~> 0.13.1"},
-     {:ecto, "~> 2.1.6"},
+     {:gettext, "~> 0.14.0"},
+     {:ecto, "~> 2.2.8"},
      {:bamboo, "~> 0.8"},
-     {:comeonin, "~> 4.0.0"},
-     {:bcrypt_elixir, "~> 0.12"},
-     {:tesla, "~> 0.7.1"},
+     {:comeonin, "~> 4.1.0"},
+     {:bcrypt_elixir, "~> 1.0.6"},
+     {:tesla, "~> 0.10.0"},
      {:poison, ">= 3.1.0"},
-     {:postgrex, ">= 0.13.3", only: :test}]
+     {:postgrex, ">= 0.13.4", only: :test}]
   end
 end

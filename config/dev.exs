@@ -1,11 +1,10 @@
 use Mix.Config
 
-config :guardian, Guardian,
+config :doorman, Doorman.Guardian,
 issuer: "Codenaut",
 ttl: { 180, :days },
 verify_issuer: true,
 secret_key: "changethistosomeothersecret",
-serializer: Doorman.GuardianSerializer,
 permissions: %{
   user: [:read, :write],
   bundles: [:read, :write],

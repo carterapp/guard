@@ -4,8 +4,7 @@ defmodule Doorman.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug Guardian.Plug.VerifyHeader
-    plug Guardian.Plug.LoadResource
+    plug Doorman.ApiPipeline
     plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], pass: ["*/*"], json_decoder: Poison
 
     plug Plug.RequestId
@@ -15,11 +14,11 @@ defmodule Doorman.Router do
   end
 
   pipeline :authenticated do
-    plug Guardian.Plug.EnsureAuthenticated, handler: Doorman.Controller, typ: "access"
+    plug Doorman.AuthApiPipeline
   end
 
   pipeline :admin do
-    plug Guardian.Plug.EnsurePermissions, handler: Doorman.Controller, admin: [:read, :write]
+    plug Guardian.Permissions.Bitwise, ensure: %{admin: [:read, :write]}
   end
 
   scope "/doorman" do
