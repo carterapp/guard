@@ -37,14 +37,14 @@ defmodule Doorman.Controller do
   end
 
   def send_error(conn, %{message: message, plug_status: status_code}=error) do
-    Logger.error("#{inspect error}")
+    Logger.error("#{conn.request_path} #{inspect error}")
     conn 
     |> put_status(status_code)
     |> json(%{error: translate_error(message)})
   end
 
     def send_error(conn, error, status_code \\ :unprocessable_entity) do
-    Logger.error("#{inspect error}")
+    Logger.error("#{conn.request_path} #{inspect error}")
     conn 
     |> put_status(status_code)
     |> json(%{error: translate_error(error)})
@@ -59,7 +59,7 @@ defmodule Doorman.Controller do
   end
 
   defp tuple_to_map(acc, list) do
-    if length list > 2 do
+    if length(list) > 2 do
       [k, v | tail] = list
       tuple_to_map(Map.put(acc, k, v), tail)
     else 

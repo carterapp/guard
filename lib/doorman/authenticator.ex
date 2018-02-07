@@ -5,32 +5,13 @@ defmodule Doorman.Authenticator do
     (:crypto.hash :sha512, (:crypto.strong_rand_bytes 512)) |> Base.encode64
   end
 
-  def create_user(username, password) do
-    map = %{"username" => username, "password" => password}
-    create_user(map)
+  def create_user_by_email(email, extra \\ nil) do
+    create_user%{"email" => email, "username" => email}, extra
   end
 
-  def create_user_by_email(email) do
-    create_user%{"email" => email, "username" => email}
+  def create_user_by_mobile(mobile, extra \\ nil) do
+    create_user%{"mobile" => mobile, "username" => mobile}, extra
   end
-
-  def create_user_by_mobile(mobile) do
-    create_user%{"mobile" => mobile, "username" => mobile}
-  end
-
-
-  def create_user(user_map) do
-    email = Map.get(user_map, "email")
-    username = Map.get(user_map, "username")
-    
-    user_map = if username == nil do
-       Map.put(user_map, "username", email)
-    else
-      user_map
-    end
-    do_create_user(user_map, email)
-  end
-
 
   def send_welcome_email(user) do
     {:ok, token, _} = generate_login_claim(user)
@@ -44,12 +25,37 @@ defmodule Doorman.Authenticator do
     Mailer.send_confirm_email(user, token)
   end
 
-  defp do_create_user(user_map, email) do
+  def create_user_by_username(username, password, extra \\ nil) do
+    map = %{"username" => username, "password" => password}
+    create_user(map, extra)
+  end
+
+
+  defp insert_user(changeset) do
+    case Repo.insert(changeset) do
+      {:ok, user} ->
+        {:ok, jwt, _full_claims} = generate_access_claim(user)
+        {:ok, user, jwt}
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  def create_user(user_map, extra \\ nil) when is_map(user_map) do
     #Only accept very few keys when creating user
     user = Map.take(user_map, ["username", "password", "password_confirmation", "fullname", "locale"])
+    email = Map.get(user_map, "email")
     user = Map.put(user, "requested_email", email)
     mobile = Map.get(user_map, "mobile")
     user = Map.put(user, "requested_mobile", mobile)
+    username = Map.get(user, "username")
+    username = if is_nil(username) do
+      email || mobile
+    else 
+      username
+    end
+    user = Map.put(user, "username", username)
+
     user = Map.put(user, "confirmation_token", random_bytes())
     #Make sure user does not try to set permissions
     user = Map.delete(user, "perms")
@@ -63,13 +69,31 @@ defmodule Doorman.Authenticator do
 
     changeset = User.changeset(%User{}, user)
 
-
-    case Repo.insert(changeset) do
-      {:ok, user} ->
-        {:ok, jwt, _full_claims} = generate_access_claim(user)
-        {:ok, user, jwt}
-      {:error, changeset} ->
-        {:error, Repo.changeset_errors(changeset), changeset}
+    if is_nil(extra) do
+      with {:ok, user, jwt} <- insert_user(changeset) do
+        {:ok, user, jwt, nil}
+      else
+        {:error, changeset} -> {:error, Repo.changeset_errors(changeset), changeset}
+      end
+    else
+      Repo.transaction(fn ->
+        with {:ok, user, jwt} <- insert_user(changeset),
+             {:ok, response} <- (try do 
+               extra.(user) 
+             rescue 
+               error -> {:error, error}
+             end) do
+               {:ok, user, jwt, response}
+        else
+          error ->
+            Repo.rollback(error) 
+        end
+      end)
+      |> case do
+        {:ok, response} -> response
+        {:error, %Ecto.Changeset{} = changeset} -> {:error, Repo.changeset_errors(changeset), changeset}
+        {:error, error} -> {:error, Doorman.Controller.translate_error(error), error}
+      end
     end
   end
 

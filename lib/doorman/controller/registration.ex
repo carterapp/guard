@@ -36,10 +36,10 @@ defmodule Doorman.Controller.Registration do
 
   def create(conn, %{"user" => user}) do
     case Authenticator.create_user(user) do
-      {:ok, user, jwt} -> 
+      {:ok, user, jwt, extra} -> 
       conn 
       |> put_status(:created)
-      |> json(%{user: user, jwt: jwt})
+      |> json(%{user: user, jwt: jwt, extra: extra})
       {:error, error, _} -> 
         send_error(conn, error)
     end
