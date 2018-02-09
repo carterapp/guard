@@ -34,6 +34,12 @@ defmodule Doorman.Controller.Registration do
   end
 
 
+  def list_all_users(conn, _params) do
+    users = Doorman.Repo.all(Doorman.User)
+    conn
+    |> json(%{data: users})
+  end
+
   def create(conn, %{"user" => user}) do
     case Authenticator.create_user(user) do
       {:ok, user, jwt, extra} -> 

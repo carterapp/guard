@@ -10,6 +10,26 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 201
   end
 
+  test 'registering admin user' do
+    response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "testuser", "password" => "testuser"}})
+    assert response.status == 201
+
+    jwt = Poison.decode!(response.resp_body)["jwt"]
+    response = send_auth_json(:get, "/jeeves/users", jwt)
+    assert response.status == 401
+
+    user = Authenticator.get_by_username!("testuser")
+    Authenticator.add_perms(user, %{"system" => ["read", "write"]})
+
+    response = send_json(:post, "/doorman/session", %{"session" => %{"username" => "testuser", "password": "testuser"}})
+    assert response.status == 201
+    jwt = Poison.decode!(response.resp_body)["jwt"]
+ 
+    response = send_auth_json(:get, "/jeeves/users", jwt)
+    assert response.status == 200
+  end
+
+
   test 'registering same user twice' do
     response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "testuser"}})
     assert response.status == 201

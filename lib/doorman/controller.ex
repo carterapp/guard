@@ -29,10 +29,10 @@ defmodule Doorman.Controller do
 
   defmacro admin_resources do
     quote do
-      put "/users/:userid", Doorman.Controller.Registration, :update #Update given user
-      delete "/users/:userid", Doorman.Controller.Registration, :delete #Delete given user
-      get "/users", Doorman.Controller.Registration, :index #Show all registered uses
-      get "/audit/:user_id", Doorman.Controller.Audit, :audit_trail #Show audit trail for user
+      put "/users/:userid", Doorman.Controller.Registration, :update_user #Update given user
+      delete "/users/:userid", Doorman.Controller.Registration, :delete_user #Delete given user
+      get "/users", Doorman.Controller.Registration, :list_all_users #Show all registered uses
+      get "/audit/:user_id", Doorman.Controller.Audit, :list_audit_trail #Show audit trail for user
     end
   end
 

@@ -18,7 +18,7 @@ defmodule Doorman.Router do
   end
 
   pipeline :admin do
-    plug Guardian.Permissions.Bitwise, ensure: %{admin: [:read, :write]}
+    plug Guardian.Permissions.Bitwise, ensure: %{system: [:read, :write]}
   end
 
   scope "/doorman" do
@@ -28,6 +28,7 @@ defmodule Doorman.Router do
   
   scope "/jeeves" do
     pipe_through :api
+    pipe_through :admin
     Doorman.Controller.admin_resources
   end
 
