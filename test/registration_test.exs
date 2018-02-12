@@ -19,8 +19,16 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 401
 
     user = Authenticator.get_by_username!("testuser")
+    assert !Authenticator.has_perms?(user, "system")
+    assert !Authenticator.has_perms?(user, %{"system" => ["read", "write"]})
     Authenticator.add_perms(user, %{"system" => ["read", "write"]})
-
+    user = Authenticator.get_by_username!("testuser")
+    assert Authenticator.has_perms?(user, "system")
+    assert !Authenticator.has_perms?(user, "something")
+    assert Authenticator.has_perms?(user, %{"system" => ["read", "write"]})
+    assert !Authenticator.has_perms?(user, %{"something" => ["read", "write"]})
+    assert !Authenticator.has_perms?(user, %{"system" => ["read", "write", "control"]})
+ 
     response = send_json(:post, "/doorman/session", %{"session" => %{"username" => "testuser", "password": "testuser"}})
     assert response.status == 201
     jwt = Poison.decode!(response.resp_body)["jwt"]

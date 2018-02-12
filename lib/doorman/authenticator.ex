@@ -160,7 +160,7 @@ defmodule Doorman.Authenticator do
   false
   """
   def has_perms?(user, %{}=required_perms) do
-    Enum.reduce_while(required_perms, true, fn {key, ps}, _acc -> 
+    !is_nil(user.perms) && Enum.reduce_while(required_perms, true, fn {key, ps}, _acc -> 
       case Map.get(user.perms, key) do
         nil -> {:halt, false}
         users_perms -> user_has_perm = Enum.reduce_while(ps, true, fn p, _acc ->
@@ -190,7 +190,7 @@ defmodule Doorman.Authenticator do
   end
 
   def has_perms?(user, perm_name) do
-    Map.has_key?(user.perms, perm_name)
+    !is_nil(user.perms) && Map.has_key?(user.perms, perm_name)
   end
 
 
