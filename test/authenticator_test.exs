@@ -8,7 +8,7 @@ defmodule Doorman.AuthenticatorTest do
 
   test "Create user" do
     {:ok, _, _, _} = Authenticator.create_user(%{"username"=>"August"})
-    {:error, _, _} = Authenticator.create_user(%{"username"=>"August"})
+    {:error, %{username: ["username_taken"]}, %Ecto.Changeset{}} = Authenticator.create_user(%{"username"=>"August"})
   end
 
   test "Test transactional creation" do
@@ -24,12 +24,21 @@ defmodule Doorman.AuthenticatorTest do
 
     extra_fn2 = fn(user) -> 
       {:ok, user, _jwt, _resp} = Authenticator.create_user_by_mobile("555-121")
-      assert !is_nil(Authenticator.get_by_username("555-512"))
+      assert !is_nil(Authenticator.get_by_username("555-121"))
       {:error, :im_a_teapot}
     end
-    {:error, _, _} = Authenticator.create_user_by_username("Emilia", "badpassword", extra_fn2)
+    {:error, _, :im_a_teapot} = Authenticator.create_user_by_username("Emilia", "badpassword", extra_fn2)
     assert is_nil(Authenticator.get_by_username("Emilia"))
     assert is_nil(Authenticator.get_by_username("555-512"))
+
+    extra_fn3 = fn(user) -> 
+      {:error, _, changeset} = Authenticator.create_user_by_mobile("Emilia")
+      {:error, changeset}
+    end
+    {:error, %{username: ["username_taken"]}, %Ecto.Changeset{}} = Authenticator.create_user_by_username("Emilia", "badpassword", extra_fn3)
+    assert is_nil(Authenticator.get_by_username("Emilia"))
+    assert is_nil(Authenticator.get_by_username("555-512"))
+ 
   end
 
   test "Create mobile user" do

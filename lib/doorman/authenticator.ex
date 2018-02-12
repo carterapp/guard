@@ -91,7 +91,8 @@ defmodule Doorman.Authenticator do
       end)
       |> case do
         {:ok, response} -> response
-        {:error, %Ecto.Changeset{} = changeset} -> {:error, Repo.changeset_errors(changeset), changeset}
+        {:error, {:error, %Ecto.Changeset{} = changeset}} -> {:error, Repo.changeset_errors(changeset), changeset}
+        {:error, {:error, error}} -> {:error, Doorman.Controller.translate_error(error), error}
         {:error, error} -> {:error, Doorman.Controller.translate_error(error), error}
       end
     end
