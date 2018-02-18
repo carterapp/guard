@@ -1,6 +1,6 @@
 # Doorman
 
-**TODO: Add description**
+Collection of common functionality for user handling.
 
 ## Installation
 
@@ -18,3 +18,8 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
           [applications: [:doorman]]
         end
 
+
+## Notes
+
+If you're having trouble having Guardian.Permission.Bitwise picking up your
+newly defined permissions - try doing a `mix dep.clean guardian`.
