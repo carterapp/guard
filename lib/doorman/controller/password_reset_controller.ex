@@ -15,7 +15,12 @@ defmodule Doorman.Controller.PasswordReset do
 
 
   defp do_update_password(conn, user, new_password, new_password_confirmation) do
-    case Authenticator.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) do
+    update = if new_password_confirmation do
+      Authenticator.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) 
+    else 
+      Authenticator.update_user(user, %{"password" => new_password}) 
+    end
+    case update do
           {:ok, _user} -> 
             json(conn, %{ok: true})
           {:error, error, _changeset} ->
@@ -36,7 +41,11 @@ defmodule Doorman.Controller.PasswordReset do
 
     end
   end
-  
+  def update_password(conn, %{"password" => _password, "new_password" => _new_password} = params) do
+    update_password(conn, Map.put(params, "new_password_confirmation", nil))
+  end
+
+
 
   def update_password(conn, %{"new_password" => new_password, "new_password_confirmation" => new_password_confirmation}) do
     case Authenticator.current_claim_type(conn) do
@@ -50,7 +59,11 @@ defmodule Doorman.Controller.PasswordReset do
 
     end
   end
-  
+  def update_password(conn, %{"new_password" => _new_password} = params) do
+    update_password(conn, Map.put(params, "new_password_confirmation", nil))
+  end
+
+
   def update_password(conn, _) do
     conn
         |> put_status(:precondition_failed)
