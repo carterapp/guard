@@ -41,7 +41,7 @@ defmodule Doorman.Controller.Registration do
   end
 
   def create(conn, %{"user" => user}) do
-    case Authenticator.create_user(user) do
+    case Authenticator.create_and_confirm_user(user) do
       {:ok, user, jwt, extra} -> 
       conn 
       |> put_status(:created)

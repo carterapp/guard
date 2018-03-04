@@ -41,6 +41,16 @@ defmodule Doorman.Authenticator do
     end
   end
 
+  def create_and_confirm_user(user_map) do
+    case create_user(user_map) do
+      {:ok, user, jwt, extra} -> 
+        send_welcome_email(user)
+        {:ok, user, jwt, extra}
+      other ->
+        other
+    end
+  end
+
   def create_user(user_map, extra \\ nil) when is_map(user_map) do
     #Only accept very few keys when creating user
     user = Map.take(user_map, ["username", "password", "password_confirmation", "fullname", "locale"])
