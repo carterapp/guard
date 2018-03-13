@@ -146,44 +146,30 @@ defmodule Doorman.Controller.Registration do
     user = Authenticator.current_user conn
     Logger.debug "Registering '#{token}'"
     existing = find_device(token, platform)
-    if (existing == nil || existing.user_id == nil) do
-      model = if existing == nil do
-        %Device{}
-      else
-        existing
-      end
-      device = if user != nil do
-        Map.put(device, "user_id", user.id)
-      else 
-        device
-      end
-      changeset = Device.changeset(model, device)
-      res = if existing == nil do
-        Repo.insert(changeset)
-      else 
-        Repo.update(changeset)
-      end
+    model = if existing == nil do
+      %Device{}
+    else
+      existing
+    end
+    device = if user != nil do
+      Map.put(device, "user_id", user.id)
+    else 
+      device
+    end
+    changeset = Device.changeset(model, device)
+    res = if existing == nil do
+      Repo.insert(changeset)
+    else 
+      Repo.update(changeset)
+    end
 
-      case res do
-        {:ok, updated_device} -> 
+    case res do
+      {:ok, updated_device} -> 
         conn 
         |> put_status(:created)
         |> json(%{device: updated_device})
-        {:error, changeset} -> 
+      {:error, changeset} -> 
         send_error(conn, Repo.changeset_errors(changeset))
-      end
-    else
-      if user != nil && existing.user_id != user.id do
-        conn 
-        |> put_status(:forbidden)
-        |> json(%{device: nil})
-
-      else
-        conn 
-        |> put_status(:found)
-        |> json(%{device: existing})
-
-      end
     end
   end
 

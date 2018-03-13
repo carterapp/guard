@@ -25,6 +25,13 @@ defmodule Doorman.Authenticator do
     Mailer.send_confirm_email(user, token)
   end
 
+  def send_login_email(user) do
+    {:ok, token, _} = generate_login_claim(user)
+    {:ok, user} = generate_pin(user)
+    Mailer.send_login_link(user, token)
+  end
+
+
   def create_user_by_username(username, password, extra \\ nil) do
     map = %{"username" => username, "password" => password}
     create_user(map, extra)
@@ -293,7 +300,7 @@ defmodule Doorman.Authenticator do
   end
 
   def get_user_devices(user) do
-    Repo.get(Device, user_id: user.id)
+    Repo.all(from d in Device, where: d.user_id == ^user.id)
   end
 
   def current_claims(conn)  do
