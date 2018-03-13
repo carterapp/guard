@@ -1,5 +1,6 @@
 defmodule Doorman.Authenticator do
   alias Doorman.{Repo, User, Mailer, Device}
+  import Ecto.Query
 
   defp random_bytes() do
     (:crypto.hash :sha512, (:crypto.strong_rand_bytes 512)) |> Base.encode64
