@@ -10,7 +10,6 @@ defmodule Doorman.Controller.Session do
     end
   end
 
-
   defp process_session(conn, {:ok, user}) do
     case Doorman.Authenticator.generate_access_claim(user) do
       {:ok, jwt, _full_claims} ->
