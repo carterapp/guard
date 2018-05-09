@@ -36,7 +36,7 @@ defmodule Doorman.Pusher.Server do
   end
 
   def handle_cast({:user, user, message, callback}, state) do
-    devices = Doorman.Repo.all(from d in Doorman.Device, where: d.user_id==^user.id)
+    devices = Doorman.Users.list_devices(user)
     if length(devices) > 0 do
       Enum.each(devices, fn(d) -> 
         resp = try do
