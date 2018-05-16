@@ -21,14 +21,15 @@ defmodule Doorman.User do
     field :provider, :map
     field :confirmation_token, :string
     field :attrs, :map
-    field :pin, :string
-    field :pin_timestamp, :utc_datetime
+    field :pin, :string, virtual: true
+    field :enc_pin, :string
+    field :pin_expiration, :utc_datetime
 
     timestamps()
   end
 
   @required_fields ~w(username)a
-  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin pin_timestamp mobile requested_mobile)a
+  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin enc_pin pin_expiration mobile requested_mobile)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -49,7 +50,9 @@ defmodule Doorman.User do
     |> update_change(:requested_email, &String.downcase/1) #Lowercase email, so we can check for duplicates
     |> update_change(:username, &String.downcase/1) #Lowercase username, so we can check for duplicates
     |> unique_constraint(:email, message: "email_taken")
+    |> unique_constraint(:mobile, message: "mobile_taken")
     |> unique_constraint(:requested_email, message: "email_requested")
+    |> unique_constraint(:requested_mobile, message: "mobile_requested")
     |> unique_constraint(:username, message: "username_taken")
     |> encrypt_changeset()
   end
@@ -63,18 +66,19 @@ defmodule Doorman.User do
   end
   
   def check_pin(user, pin) do
-    pin_valid_time = 60 * 60 #Pin valid for one hour
-    user.pin != nil 
-      && user.pin_timestamp != nil 
-      && DateTime.diff(DateTime.utc_now(), user.pin_timestamp) < pin_valid_time 
-      && pin == user.pin
+    user.enc_pin != nil 
+      && user.pin_expiration != nil
+      && DateTime.diff(DateTime.utc_now(), user.pin_expiration) < 0
+      && Comeonin.Bcrypt.checkpw(pin, user.enc_pin)
   end
 
 
   defp encrypt_changeset(current_changeset) do
-     case current_changeset do
+    case current_changeset do
       %Ecto.Changeset{valid?: true, changes: %{password: password}} ->
         put_change(current_changeset, :enc_password, encrypt_password(password))
+      %Ecto.Changeset{valid?: true, changes: %{pin: pin}} ->
+        put_change(current_changeset, :enc_pin, encrypt_password(pin))
       _ ->
         current_changeset
     end

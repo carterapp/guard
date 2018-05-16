@@ -17,6 +17,22 @@ defmodule Doorman.Session do
     end
   end
 
+  defp check_pin_with_message(user, pin, params) do
+    case check_pin(user, pin) do
+      true -> 
+        {:ok, user} = Authenticator.clear_pin(user)
+        case params do
+        %{"perm" => perm} ->
+          if Map.has_key?(user.perms || %{}, perm) do
+            {:ok, user}
+          else 
+            {:error, :forbidden}
+          end
+         _ -> {:ok, user}
+        end
+      _ -> {:error, "wrong_pin"}
+    end
+  end
 
   def authenticate(params = %{"email" => email, "password" => password}) do
     user = Repo.get_by(User, email: String.downcase(email))
@@ -32,6 +48,13 @@ defmodule Doorman.Session do
 
     check_password_with_message(user, password, params)
   end
+
+  def authenticate(params = %{"username" => username, "pin" => pin}) do
+    user = Authenticator.get_by_username(username)
+
+    check_pin_with_message(user, pin, params)
+  end
+
 
   def authenticate(%{"token" => token}) do
     case Doorman.Guardian.decode_and_verify(token) do
@@ -69,6 +92,14 @@ defmodule Doorman.Session do
       _ -> User.check_password(user, password)
     end
   end
+
+  defp check_pin(user, pin) do
+    case user do
+      nil -> false
+      _ -> User.check_pin(user, pin)
+    end
+  end
+
 
 
 end

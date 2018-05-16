@@ -167,26 +167,27 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 201
 
     user = Authenticator.get_by_username("new_user")
-    {:ok, user} = Authenticator.generate_pin(user)
+    {:ok, pin, user} = Authenticator.generate_pin(user)
 
-    assert user.pin != nil
+    assert user.enc_pin != nil
+    assert pin != nil
 
-    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": user.pin, "new_password": "testing", "new_password_confirmation": "testing"})
+    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": pin, "new_password": "testing", "new_password_confirmation": "testing"})
     assert response.status == 200
 
-    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": user.pin, "new_password": "testing", "new_password_confirmation": "testing"})
+    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": pin, "new_password": "testing", "new_password_confirmation": "testing"})
     assert response.status == 412
 
 
-    {:ok, user} = Authenticator.generate_pin(user)
-    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": user.pin, "new_password": "testing", "new_password_confirmation": "testing_blah"})
+    {:ok, pin, user} = Authenticator.generate_pin(user)
+    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": pin, "new_password": "testing", "new_password_confirmation": "testing_blah"})
     assert response.status == 422
 
     response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": "bad_pin", "new_password": "testing", "new_password_confirmation": "testing"})
     assert response.status == 412
 
 
-    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": user.pin, "new_password": "testing", "new_password_confirmation": "testing"})
+    response = send_json(:put, "/doorman/account/setpassword", %{"username": "new_user", "pin": pin, "new_password": "testing", "new_password_confirmation": "testing"})
     assert response.status == 200
 
 

@@ -41,10 +41,10 @@ defmodule Doorman.Controller.PasswordReset do
 
     end
   end
+
   def update_password(conn, %{"password" => _password, "new_password" => _new_password} = params) do
     update_password(conn, Map.put(params, "new_password_confirmation", nil))
   end
-
 
 
   def update_password(conn, %{"new_password" => new_password, "new_password_confirmation" => new_password_confirmation}) do

@@ -2,6 +2,15 @@ defmodule Doorman.Authenticator do
   alias Doorman.{Repo, User, Mailer, Device}
   import Ecto.Query
 
+  defp pin_range() do
+    Application.get_env(:doorman, :pin_range, 100000..999999)
+  end
+
+  defp pin_lifespan_mins() do
+    Application.get_env(:doorman, :pin_lifespan_mins, 60)
+  end
+
+
   defp random_bytes() do
     (:crypto.hash :sha512, (:crypto.strong_rand_bytes 512)) |> Base.encode64
   end
@@ -16,20 +25,19 @@ defmodule Doorman.Authenticator do
 
   def send_welcome_email(user) do
     {:ok, token, _} = generate_login_claim(user)
-    {:ok, user} = generate_pin(user)
-    Mailer.send_welcome_email(user, token)
+    {:ok, pin, user} = generate_pin(user)
+    Mailer.send_welcome_email(user, token, pin)
   end
 
   def send_confirm_email(user) do
     {:ok, token, _} = generate_login_claim(user)
-    {:ok, user} = generate_pin(user)
     Mailer.send_confirm_email(user, token)
   end
 
   def send_login_email(user) do
     {:ok, token, _} = generate_login_claim(user)
-    {:ok, user} = generate_pin(user)
-    Mailer.send_login_link(user, token)
+    {:ok, pin, user} = generate_pin(user)
+    Mailer.send_login_link(user, token, pin)
   end
 
 
@@ -134,34 +142,16 @@ defmodule Doorman.Authenticator do
     Guardian.Plug.current_resource(conn)
   end
 
-  def confirm_mobile_pin(user, pin) do
-    if !is_nil(pin) && pin == user.pin do
-      update_user(user, %{"mobile" => user.requested_mobile, "pin" => nil, "pin_timestamp" => nil})
-    else
-      {:error, "wrong_pin"}
-    end
-  end
-
-  def confirm_email_pin(user, pin) do
-    if !is_nil(pin) && pin == user.pin do
-      update_user(user, %{"email" => user.requested_email, "pin" => nil, "pin_timestamp" => nil})
-    else
-      {:error, "wrong_pin"}
-    end
-
-  end
   def confirm_email(user, confirmation_token) do 
     if confirmation_token == user.confirmation_token do
-      update_user(user, %{"email" => user.requested_email})
+      update_user(user, %{"email" => user.requested_email, "confirmation_token": nil})
     else 
       {:error, "wrong_confirmation_token"}
     end
   end
 
   def change_email(user, email) do
-    pin = to_string(Enum.random(100000..999999))
     update_user(user, %{"confirmation_token" => random_bytes(), 
-    "pin" => pin, "pin_timestamp" => DateTime.utc_now(),
     "requested_email" => email})
   end
 
@@ -320,13 +310,23 @@ defmodule Doorman.Authenticator do
 
   end
 
+  def use_pin(user, pin) do
+    if User.check_pin(user, pin) do
+      clear_pin(user)
+    else
+      {:error, :wrong_pin}
+    end
+  end
+
   def generate_pin(user) do
-    pin = to_string(Enum.random(100000..999999))
-    update_user(user, %{"pin" => pin, "pin_timestamp" => DateTime.utc_now()})
+    pin = to_string(Enum.random(pin_range()))
+    {:ok, exp_time} = (DateTime.utc_now() |> DateTime.to_unix()) + 60*pin_lifespan_mins() |> DateTime.from_unix
+    {:ok, user} = update_user(user, %{"pin" => pin, "pin_expiration" => exp_time})
+    {:ok, pin, user}
   end
 
   def clear_pin(user) do
-    update_user(user, %{"pin" => nil, "pin_timestamp" => nil})
+    update_user(user, %{"enc_pin" => nil, "pin_expiration" => nil})
   end
 
 end
