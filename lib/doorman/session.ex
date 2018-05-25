@@ -1,5 +1,5 @@
 defmodule Doorman.Session do
-  alias Doorman.{Repo, User, Authenticator}
+  alias Doorman.{Repo, User, Authenticator, Users}
 
   defp check_password_with_message(user, password, params) do
     case check_password(user, password) do
@@ -18,9 +18,8 @@ defmodule Doorman.Session do
   end
 
   defp check_pin_with_message(user, pin, params) do
-    case check_pin(user, pin) do
-      true -> 
-        {:ok, user} = Authenticator.clear_pin(user)
+    case Authenticator.use_pin(user, pin) do
+      {:ok, user} -> 
         case params do
         %{"perm" => perm} ->
           if Map.has_key?(user.perms || %{}, perm) do
@@ -30,30 +29,36 @@ defmodule Doorman.Session do
           end
          _ -> {:ok, user}
         end
-      _ -> {:error, "wrong_pin"}
+      error -> error
     end
   end
 
   def authenticate(params = %{"email" => email, "password" => password}) do
-    user = Repo.get_by(User, email: String.downcase(email))
+    user = Users.get_by(email: String.downcase(email))
     if user == nil do
-      check_password_with_message(Repo.get_by(User, requested_email: String.downcase(email)), password, params)
+      check_password_with_message(Users.get_by!(requested_email: String.downcase(email)), password, params)
     else
       check_password_with_message(user, password, params)
     end
   end
 
   def authenticate(params = %{"username" => username, "password" => password}) do
-    user = Authenticator.get_by_username(username)
+    user = Users.get_by!(username: username)
 
     check_password_with_message(user, password, params)
   end
 
   def authenticate(params = %{"username" => username, "pin" => pin}) do
-    user = Authenticator.get_by_username(username)
+    user = Users.get_by!(username: username)
 
     check_pin_with_message(user, pin, params)
   end
+
+  def authenticate(params = %{"mobile" => mobile, "pin" => pin}) do
+    user = Users.get_by(mobile: mobile) || Users.get_by!(requested_mobile: mobile)
+    check_pin_with_message(user, pin, params)
+  end
+
 
 
   def authenticate(%{"token" => token}) do
@@ -92,14 +97,6 @@ defmodule Doorman.Session do
       _ -> User.check_password(user, password)
     end
   end
-
-  defp check_pin(user, pin) do
-    case user do
-      nil -> false
-      _ -> User.check_pin(user, pin)
-    end
-  end
-
 
 
 end
