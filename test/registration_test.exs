@@ -97,6 +97,26 @@ defmodule Doorman.RegistrationTest do
 
     assert Map.get(claims, "typ") == "access"
  
+    {:ok, user} = Authenticator.change_email(user, "another@example.com")
+    {:ok, jwt, claims} = Authenticator.generate_login_claim(user, new_email)
+    response = send_json(:get, "/doorman/session/" <> jwt)
+    assert response.status == 201
+
+
+    user1 = Doorman.Users.get(user.id)
+    assert user.requested_email == user1.requested_email
+    assert user.email == user1.email
+
+    {:ok, jwt, claims} = Authenticator.generate_login_claim(user)
+    response = send_json(:get, "/doorman/session/" <> jwt)
+    assert response.status == 201
+
+
+    user1 = Doorman.Users.get(user.id)
+    assert user.requested_email == user1.requested_email
+    assert user.email == user1.email
+
+
 
  
   end
