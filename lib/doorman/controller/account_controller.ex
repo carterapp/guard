@@ -1,6 +1,6 @@
 defmodule Doorman.Controller.Account do
   use Phoenix.Controller
-  alias Doorman.{Authenticator, User}
+  alias Doorman.{Authenticator, User, Users}
   import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
   plug Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"}
@@ -25,7 +25,7 @@ defmodule Doorman.Controller.Account do
           sum
         end
       end)
-    case Authenticator.update_user(user, changes) do
+    case Users.update_user(user, changes) do
       {:ok, user} -> 
         json conn, %{user: user}
       {:error, error, _} -> 
@@ -35,7 +35,7 @@ defmodule Doorman.Controller.Account do
 
   def delete(conn, _) do
     user = Authenticator.current_user(conn)
-    case Authenticator.delete_user(user) do
+    case Users.delete_user(user) do
       {:ok, user} -> 
       json conn, %{user: user}
       {:error, error, _} -> 

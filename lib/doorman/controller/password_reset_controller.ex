@@ -1,6 +1,6 @@
 defmodule Doorman.Controller.PasswordReset do
   use Phoenix.Controller
-  alias Doorman.{Authenticator, User}
+  alias Doorman.{Authenticator, User, Users}
   import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
   plug Guardian.Plug.EnsureAuthenticated
@@ -16,9 +16,9 @@ defmodule Doorman.Controller.PasswordReset do
 
   defp do_update_password(conn, user, new_password, new_password_confirmation) do
     update = if new_password_confirmation do
-      Authenticator.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) 
+      Users.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) 
     else 
-      Authenticator.update_user(user, %{"password" => new_password}) 
+      Users.update_user(user, %{"password" => new_password}) 
     end
     case update do
           {:ok, _user} -> 

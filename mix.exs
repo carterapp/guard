@@ -3,7 +3,7 @@ defmodule Doorman.Mixfile do
 
   def project do
     [app: :doorman,
-     version: "0.0.1",
+     version: "0.1.0",
      elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
@@ -36,14 +36,14 @@ defmodule Doorman.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:guardian, "~> 1.0.1"},
-     {:phoenix, "~>1.3.0"},
-     {:gettext, "~> 0.14.0"},
-     {:ecto, "~> 2.2.8"},
+     {:phoenix, "~>1.3.2"},
+     {:gettext, "~> 0.15.0"},
+     {:ecto, "~> 2.2.10"},
      {:bamboo, "~> 0.8"},
-     {:comeonin, "~> 4.1.0"},
-     {:bcrypt_elixir, "~> 1.0.6"},
+     {:comeonin, "~> 4.1.1"},
+     {:bcrypt_elixir, "~> 1.0.7"},
      {:tesla, "~> 0.10.0"},
      {:poison, ">= 3.1.0"},
-     {:postgrex, ">= 0.13.4", only: :test}]
+     {:postgrex, ">= 0.13.5", only: :test}]
   end
 end

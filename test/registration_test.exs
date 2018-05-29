@@ -2,7 +2,7 @@ defmodule Doorman.RegistrationTest do
   use Doorman.ModelCase
   use Plug.Test
   import  Doorman.RouterTestHelper
-  alias Doorman.{Router, Authenticator}
+  alias Doorman.{Router, Authenticator, Users}
 
 
   test 'registering user' do
@@ -18,11 +18,11 @@ defmodule Doorman.RegistrationTest do
     response = send_auth_json(:get, "/jeeves/users", jwt)
     assert response.status == 401
 
-    user = Authenticator.get_by_username!("testuser")
+    user = Users.get_by_username!("testuser")
     assert !Authenticator.has_perms?(user, "system")
     assert !Authenticator.has_perms?(user, %{"system" => ["read", "write"]})
     Authenticator.add_perms(user, %{"system" => ["read", "write"]})
-    user = Authenticator.get_by_username!("testuser")
+    user = Users.get_by_username!("testuser")
     assert Authenticator.has_perms?(user, "system")
     assert !Authenticator.has_perms?(user, "something")
     assert Authenticator.has_perms?(user, %{"system" => ["read", "write"]})
@@ -71,6 +71,45 @@ defmodule Doorman.RegistrationTest do
     response = send_auth_json(:delete, "/doorman/account", Map.get(json_body, "jwt"))
     assert response.status == 200
 
+
+  end
+
+  test 'confirm email and mobile' do
+
+    new_email = "metoo@nowhere.com"
+    {:ok, user, _jwt, _resp} = Authenticator.create_user_by_email("me@nowhere.com")
+    {:ok, user} = Authenticator.change_email(user, new_email)
+    assert user.requested_email == new_email
+    assert user.email != new_email
+  
+    {:ok, jwt, claims} = Authenticator.generate_login_claim(user, new_email)
+
+    response = send_json(:get, "/doorman/session/" <> jwt)
+    assert response.status == 201
+
+
+    user = Doorman.Users.get(user.id)
+    assert user.requested_email == nil
+    assert user.email == new_email
+
+    jwt = Poison.decode!(response.resp_body) |> Map.get("jwt")
+    {:ok, claims} = Doorman.Guardian.decode_and_verify(jwt)
+
+    assert Map.get(claims, "typ") == "access"
+ 
+
+ 
+  end
+
+  test 'hash_values' do
+    
+    {:ok, user, _jwt, _resp} = Authenticator.create_user_by_email("me@nowhere.com")
+
+    {:ok, user} = Users.update_user(user, %{pin: "1234", password: "test12"})
+
+    assert user.enc_pin != nil
+
+    assert user.enc_password != nil
 
   end
 
@@ -150,7 +189,7 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 201
     
     #password_reset token
-    user =  Authenticator.get_by_username("new_user")
+    user =  Users.get_by_username("new_user")
     {:ok, resetToken, _claims} = Authenticator.generate_password_reset_claim(user)
 
     response = send_auth_json(:put, "/doorman/account/password", resetToken, %{"new_password": "testing", "new_password_confirmation": "testing"})
@@ -166,7 +205,7 @@ defmodule Doorman.RegistrationTest do
     response = send_json(:post, "/doorman/registration", %{"user"=> %{"username" => "new_user", "password": "not_very_secret"}})
     assert response.status == 201
 
-    user = Authenticator.get_by_username("new_user")
+    user = Users.get_by_username("new_user")
     {:ok, pin, user} = Authenticator.generate_pin(user)
 
     assert user.enc_pin != nil

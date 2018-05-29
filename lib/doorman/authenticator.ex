@@ -1,5 +1,5 @@
 defmodule Doorman.Authenticator do
-  alias Doorman.{Repo, User, Mailer, Device}
+  alias Doorman.{Repo, User, Mailer, Device, Users}
   import Ecto.Query
 
   defp pin_range() do
@@ -30,7 +30,7 @@ defmodule Doorman.Authenticator do
   end
 
   def send_confirm_email(user) do
-    {:ok, token, _} = generate_login_claim(user)
+    {:ok, token, _} = generate_login_claim(user, user.requested_email)
     Mailer.send_confirm_email(user, token)
   end
 
@@ -124,39 +124,25 @@ defmodule Doorman.Authenticator do
     end
   end
 
-  def delete_user(user) do
-    Repo.delete(user)
-  end
-
-  def update_user(user, changes) do
-    changeset = User.changeset(user, changes)
-    case Repo.update(changeset) do
-      {:ok, user} -> 
-        {:ok, user}
-      {:error, changeset} -> 
-        {:error, Repo.changeset_errors(changeset), changeset}
-    end
-  end
-
   def current_user(conn) do 
     Guardian.Plug.current_resource(conn)
   end
 
   def confirm_email(user, confirmation_token) do 
     if confirmation_token == user.confirmation_token do
-      update_user(user, %{"email" => user.requested_email, "confirmation_token": nil})
+      Users.update_user(user, %{email: user.requested_email, requested_email: nil, confirmation_token: nil})
     else 
       {:error, "wrong_confirmation_token"}
     end
   end
 
   def change_email(user, email) do
-    update_user(user, %{"confirmation_token" => random_bytes(), 
+    Users.update_user(user, %{"confirmation_token" => random_bytes(), 
     "requested_email" => email})
   end
 
   def change_password(user, new_password) do
-    update_user(user, %{password: new_password})
+    Users.update_user(user, %{password: new_password})
   end
 
   @doc """
@@ -222,50 +208,19 @@ defmodule Doorman.Authenticator do
   end
 
   def bump_to_admin(username) do
-    case get_by_username(username) do
+    case Users.get_by_username(username) do
       nil -> {:error}
       user -> Repo.update(User.changeset(user, %{"perms" => %{"admin" => ["read", "write"]}}))
     end
   end
 
   def drop_admin(username) do
-    case get_by_username(username) do
+    case Users.get_by_username(username) do
       nil -> {:error}
       user -> Repo.update(User.changeset(user, %{"perms" => %{}}))
     end
   end
 
-
-  def get_by_email(email) do
-    case Repo.get_by(User, email: String.downcase(email)) do
-      nil -> Repo.get_by(User, requested_email: String.downcase(email))
-      confirmed -> confirmed
-    end
-  end
-
-  def get_by_username(username) do
-    Repo.get_by(User, username: String.downcase(username))
-  end
-
-  def get_by_id(id) do
-    Repo.get(User, id)
-
-  end
-  def get_by_email!(email) do
-    case Repo.get_by(User, email: String.downcase(email)) do
-      nil -> Repo.get_by!(User, requested_email: String.downcase(email))
-      confirmed -> confirmed
-    end
-  end
-
-  def get_by_username!(username) do
-    Repo.get_by!(User, username: String.downcase(username))
-  end
-
-  def get_by_id!(id) do
-    Repo.get!(User, id)
-
-  end
 
   defp process_perms(perms) do
     if perms do
@@ -282,8 +237,8 @@ defmodule Doorman.Authenticator do
     Doorman.Guardian.encode_and_sign(user, %{}, token_type: "access", perms: perms || %{})
   end
 
-  def generate_login_claim(%User{} = user) do
-    Doorman.Guardian.encode_and_sign(user, %{}, token_type: "login", token_ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
+  def generate_login_claim(%User{} = user, email \\ nil) do
+    Doorman.Guardian.encode_and_sign(user, %{requested_email: email}, token_type: "login", token_ttl: Application.get_env(:doorman, :login_ttl, {12, :hours}))
   end
 
   def generate_password_reset_claim(%User{} = user) do
@@ -321,12 +276,12 @@ defmodule Doorman.Authenticator do
   def generate_pin(user) do
     pin = to_string(Enum.random(pin_range()))
     {:ok, exp_time} = (DateTime.utc_now() |> DateTime.to_unix()) + 60*pin_lifespan_mins() |> DateTime.from_unix
-    {:ok, user} = update_user(user, %{"pin" => pin, "pin_expiration" => exp_time})
+    {:ok, user} = Users.update_user(user, %{"pin" => pin, "pin_expiration" => exp_time})
     {:ok, pin, user}
   end
 
   def clear_pin(user) do
-    update_user(user, %{"enc_pin" => nil, "pin_expiration" => nil})
+    Users.update_user(user, %{"enc_pin" => nil, "pin_expiration" => nil})
   end
 
 end

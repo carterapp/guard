@@ -1,7 +1,7 @@
 defmodule Doorman.Controller.Registration do
   require Logger
   use Phoenix.Controller
-  alias Doorman.{Repo, User, Authenticator, Device, Mailer}
+  alias Doorman.{Repo, User, Authenticator, Device, Mailer, Users}
   import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
   def call(conn, opts) do
@@ -26,13 +26,16 @@ defmodule Doorman.Controller.Registration do
   end
 
   def check_account(conn, %{"username" => username}) do
-    check_user(conn, Authenticator.get_by_username(username))
+    check_user(conn, Users.get_by(username: String.downcase(username)))
   end
 
   def check_account(conn, %{"email" => email}) do
-    check_user(conn, Authenticator.get_by_email(email))
+    check_user(conn, Users.get_by(email: String.downcase(email)))
   end
 
+  def check_account(conn, %{"mobile" => mobile}) do
+    check_user(conn, Users.get_by(mobile: mobile))
+  end
 
   def list_all_users(conn, _params) do
     users = Doorman.Repo.all(Doorman.User)
@@ -63,10 +66,10 @@ defmodule Doorman.Controller.Registration do
   end
 
   def send_password_reset(conn, %{"username" => username}) do
-      send_password_reset(conn, Authenticator.get_by_username(username), username)
+      send_password_reset(conn, Users.get_by(username: username), username)
   end
   def send_password_reset(conn, %{"email" => email}) do
-    send_password_reset(conn, Authenticator.get_by_email(email), email)
+    send_password_reset(conn, Users.get_by(email: email), email)
   end
 
   def send_password_reset(conn, user, name) do
@@ -88,11 +91,11 @@ defmodule Doorman.Controller.Registration do
   end
 
   def send_login_link(conn,  %{"username" => username}) do
-    send_login_link(conn, Authenticator.get_by_username(username), username)
+    send_login_link(conn, Users.get_by(username: username), username)
   end
 
   def send_login_link(conn, user=%{"email" => email}) do
-    existing_user = Authenticator.get_by_email(email)
+    existing_user = Users.get_by(email: email)
     if existing_user do
       send_login_link(conn, existing_user, email)
     else
@@ -120,10 +123,10 @@ defmodule Doorman.Controller.Registration do
   end
 
   def update_password(conn, %{"username" => username, "pin" => pin, "new_password" => new_password, "new_password_confirmation" => new_password_confirmation}) do
-    user = Authenticator.get_by_username(username)
+    user = Users.get_by_username(username)
     case User.check_pin(user, pin) do
       true ->
-        case Authenticator.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) do
+        case Users.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) do
           {:ok, _user} -> 
             Authenticator.clear_pin(user)
             json(conn, %{ok: true})

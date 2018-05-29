@@ -5,7 +5,6 @@ defmodule Doorman.Controller do
   defmacro resources do
     quote do
       post "/registration", Doorman.Controller.Registration, :create #Create new account
-      post "/registration/confirm/:user_id/:confirmation_token", Doorman.Controller.Registration, :confirm #Confirm email
 
       post "/registration/reset", Doorman.Controller.Registration, :send_password_reset #Request a password reset
       post "/registration/link", Doorman.Controller.Registration, :send_login_link #Send magic link
