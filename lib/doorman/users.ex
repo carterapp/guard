@@ -18,26 +18,43 @@ defmodule Doorman.Users do
   end
 
   def get_by_email(email) do
-    case Repo.get_by(User, email: String.downcase(email)) do
-      nil -> Repo.get_by(User, requested_email: String.downcase(email))
+    case get_by(email: String.downcase(email)) do
+      nil -> get_by(requested_email: String.downcase(email))
       confirmed -> confirmed
     end
-  end
-
-  def get_by_username(username) do
-    Repo.get_by(User, username: String.downcase(username))
   end
 
   def get_by_email!(email) do
-    case Repo.get_by(User, email: String.downcase(email)) do
-      nil -> Repo.get_by!(User, requested_email: String.downcase(email))
+    case get_by(email: String.downcase(email)) do
+      nil ->get_by!(requested_email: String.downcase(email))
       confirmed -> confirmed
     end
   end
 
-  def get_by_username!(username) do
-    Repo.get_by!(User, username: String.downcase(username))
+  def get_by_mobile(mobile) do
+    case get_by(mobile: mobile) do
+      nil -> get_by(requested_mobile: mobile)
+      confirmed -> confirmed
+    end
   end
+
+  def get_by_mobile!(mobile) do
+    case get_by(mobile: mobile) do
+      nil -> get_by!(requested_mobile: mobile)
+      confirmed -> confirmed
+    end
+  end
+
+
+
+  def get_by_username(username) do
+    get_by(username: String.downcase(username))
+  end
+
+  def get_by_username!(username) do
+    get_by!(username: String.downcase(username))
+  end
+
 
 
 
