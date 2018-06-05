@@ -24,7 +24,7 @@ defmodule Doorman.Authenticator do
   end
 
   def send_welcome_email(user) do
-    {:ok, token, _} = generate_login_claim(user)
+    {:ok, token, _} = generate_login_claim(user, user.requested_email)
     {:ok, pin, user} = generate_pin(user)
     Mailer.send_welcome_email(user, token, pin)
   end
@@ -35,7 +35,7 @@ defmodule Doorman.Authenticator do
   end
 
   def send_login_email(user) do
-    {:ok, token, _} = generate_login_claim(user)
+    {:ok, token, _} = generate_login_claim(user, user.requested_email)
     {:ok, pin, user} = generate_pin(user)
     Mailer.send_login_link(user, token, pin)
   end

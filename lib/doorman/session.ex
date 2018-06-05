@@ -89,7 +89,7 @@ defmodule Doorman.Session do
   defp user_from_claim(claims) do
     case claims do 
       %{"sub" => "User:" <> user_id} -> 
-        case Repo.get(User, user_id) do
+        case Users.get(user_id) do
           nil -> {:error, "bad_claims"}
           user -> confirm_user_email(claims, user)
         end

@@ -56,7 +56,7 @@ defmodule Doorman.Controller.Registration do
   end
 
   def confirm(conn, %{"confirmation_token" => token, "user_id" => user_id}) do
-    user = Repo.get(User, user_id)
+    user = Users.get!(user_id)
     case Authenticator.confirm_email(user, token) do
       {:ok, user} -> 
         json conn, %{user: user}
