@@ -26,7 +26,7 @@ defmodule Doorman.Controller.Registration do
   end
 
   def check_account(conn, %{"username" => username}) do
-    check_user(conn, Users.get_by(username: String.downcase(username)))
+    check_user(conn, Users.get_by_username(username))
   end
 
   def check_account(conn, %{"email" => email}) do
@@ -66,10 +66,10 @@ defmodule Doorman.Controller.Registration do
   end
 
   def send_password_reset(conn, %{"username" => username}) do
-      send_password_reset(conn, Users.get_by(username: username), username)
+      send_password_reset(conn, Users.get_by_username(username), username)
   end
   def send_password_reset(conn, %{"email" => email}) do
-    send_password_reset(conn, Users.get_by(email: email), email)
+    send_password_reset(conn, Users.get_by_email(email), email)
   end
 
   def send_password_reset(conn, user, name) do
@@ -91,11 +91,11 @@ defmodule Doorman.Controller.Registration do
   end
 
   def send_login_link(conn,  %{"username" => username}) do
-    send_login_link(conn, Users.get_by(username: username), username)
+    send_login_link(conn, Users.get_by_username(username), username)
   end
 
   def send_login_link(conn, user=%{"email" => email}) do
-    existing_user = Users.get_by(email: email)
+    existing_user = Users.get_by_email(email)
     if existing_user do
       send_login_link(conn, existing_user, email)
     else
