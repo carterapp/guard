@@ -23,3 +23,5 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
 If you're having trouble having Guardian.Permission.Bitwise picking up your
 newly defined permissions - try doing a `mix dep.clean guardian`.
+
+Sometimes a `rm -rf _build is needed`
