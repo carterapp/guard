@@ -16,6 +16,7 @@ defmodule Doorman.Repo.Migrations.CreateUser do
       add :enc_password, :string, null: false
       add :perms, :map
       add :provider, :map
+      add :confirmation_token, :string
       add :attrs, :map
 
       timestamps()
