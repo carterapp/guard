@@ -25,7 +25,7 @@ defmodule Doorman.Pusher.Server do
   def init(config) do
     client = Tesla.build_client [
       {Tesla.Middleware.BaseUrl, "https://fcm.googleapis.com/fcm"},
-      {Tesla.Middleware.Headers, %{"Authorization" => "key=" <> (config[:key] || "") }},
+      {Tesla.Middleware.Headers, [{"Authorization", "key=" <> (config[:key] || "") }]},
       Tesla.Middleware.JSON
     ]
     {:ok, %{options: config[:options], client: client}}
@@ -73,7 +73,7 @@ defmodule Doorman.Pusher.Server do
 
   defp do_post(client, options, message) do
     msg = Map.merge(options, message)
-    post(client, "/send", msg)
+    post!(client, "/send", msg)
   end
 
 end

@@ -36,6 +36,10 @@ defmodule Doorman.Controller.Session do
     process_session conn, Doorman.Session.authenticate(session_params) 
   end
 
+  def create(conn, params) do
+    process_session conn, Doorman.Session.authenticate(params) 
+  end
+
   def delete(conn, _) do
     case Doorman.Authenticator.current_claims(conn) do
       {:ok, claims} -> conn
