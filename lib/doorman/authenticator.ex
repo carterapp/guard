@@ -2,6 +2,8 @@ defmodule Doorman.Authenticator do
   alias Doorman.{Repo, User, Mailer, Device, Users}
   import Ecto.Query
 
+  defexception message: "not_authenticated"
+
   defp pin_range() do
     Application.get_env(:doorman, :pin_range, 100000..999999)
   end
@@ -59,7 +61,7 @@ defmodule Doorman.Authenticator do
 
   def create_and_confirm_user(user_map) do
     case create_user(user_map) do
-      {:ok, user, jwt, extra} -> 
+      {:ok, user, jwt, extra} ->
         send_welcome_email(user)
         {:ok, user, jwt, extra}
       other ->
@@ -77,7 +79,7 @@ defmodule Doorman.Authenticator do
     username = Map.get(user, "username")
     username = if is_nil(username) do
       email || mobile
-    else 
+    else
       username
     end
     user = Map.put(user, "username", username)
@@ -89,7 +91,7 @@ defmodule Doorman.Authenticator do
     user = unless (Map.get user, "password") do
       password = random_bytes()
       Map.put(user, "password", password)
-    else 
+    else
       user
     end
 
@@ -104,15 +106,15 @@ defmodule Doorman.Authenticator do
     else
       Repo.transaction(fn ->
         with {:ok, user, jwt} <- insert_user(changeset),
-             {:ok, response} <- (try do 
-               extra.(user) 
-             rescue 
+             {:ok, response} <- (try do
+               extra.(user)
+             rescue
                error -> {:error, error}
              end) do
                {:ok, user, jwt, response}
         else
           error ->
-            Repo.rollback(error) 
+            Repo.rollback(error)
         end
       end)
       |> case do
@@ -124,20 +126,30 @@ defmodule Doorman.Authenticator do
     end
   end
 
-  def current_user(conn) do 
+  def current_user(conn) do
     Guardian.Plug.current_resource(conn)
   end
 
-  def confirm_email(user, confirmation_token) do 
+  def authenticated_user!(conn) do
+    user = Guardian.Plug.current_resource(conn)
+    if user do
+      user
+    else
+      raise Doorman.Authenticator, message: "not_authenticated"
+    end
+  end
+
+
+  def confirm_email(user, confirmation_token) do
     if confirmation_token == user.confirmation_token do
       Users.update_user(user, %{email: user.requested_email, requested_email: nil, confirmation_token: nil})
-    else 
+    else
       {:error, "wrong_confirmation_token"}
     end
   end
 
   def change_email(user, email) do
-    Users.update_user(user, %{"confirmation_token" => random_bytes(), 
+    Users.update_user(user, %{"confirmation_token" => random_bytes(),
     "requested_email" => email})
   end
 
@@ -150,12 +162,12 @@ defmodule Doorman.Authenticator do
 
 
   ## Examples
-  
+
   iex> Doorman.Authenticator.has_perms?(user, %{"admin" => ["read", "write"]})
   false
   """
   def has_perms?(user, %{}=required_perms) do
-    !is_nil(user.perms) && Enum.reduce_while(required_perms, true, fn {key, ps}, _acc -> 
+    !is_nil(user.perms) && Enum.reduce_while(required_perms, true, fn {key, ps}, _acc ->
       case Map.get(user.perms, key) do
         nil -> {:halt, false}
         users_perms -> user_has_perm = Enum.reduce_while(ps, true, fn p, _acc ->
@@ -167,7 +179,7 @@ defmodule Doorman.Authenticator do
         end)
         if user_has_perm do
           {:cont, true}
-        else 
+        else
           {:halt, false}
         end
       end
@@ -175,13 +187,13 @@ defmodule Doorman.Authenticator do
   end
 
   def has_perms?(user, [_|_] = perm_names) do
-    Enum.reduce_while(perm_names, true, fn v, _acc -> 
+    Enum.reduce_while(perm_names, true, fn v, _acc ->
       if has_perms?(user, v) do
         {:cont, true}
       else
         {:cont, false}
       end
-    end) 
+    end)
   end
 
   def has_perms?(user, perm_name) do
@@ -192,16 +204,16 @@ defmodule Doorman.Authenticator do
   def add_perms(user, perms) do
     case user do
       nil -> {:error}
-      user -> 
+      user ->
         old_perms = user.perms || %{}
-        Repo.update(User.changeset(user, %{"perms" => Map.merge(old_perms, perms)})) 
+        Repo.update(User.changeset(user, %{"perms" => Map.merge(old_perms, perms)}))
     end
   end
 
   def drop_perm(user, name) do
     case user do
       nil -> {:error}
-      user -> 
+      user ->
         perms = user.perms || %{}
         Repo.update(User.changeset(user, %{"perms" => Map.delete(perms, name)}))
     end
@@ -259,7 +271,7 @@ defmodule Doorman.Authenticator do
     case conn |> current_claims do
       {:ok, claims} ->
         Map.get(claims, "typ")
-      {:error, _} -> 
+      {:error, _} ->
         nil
     end
 
