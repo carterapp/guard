@@ -36,7 +36,7 @@ defmodule Doorman do
     {ok, sup_pid} = Supervisor.start_link(children, opts)
     
     if ok && doorman_started do 
-      Doorman.Migrations.run()
+      Doorman.Migrations.run(Doorman.Repo)
     end
 
     {ok, sup_pid}
