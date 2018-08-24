@@ -1,5 +1,9 @@
 defmodule Doorman.Repo do
-  use Ecto.Repo, otp_app: :doorman
+  if Application.get_env(:doorman,  Doorman.Repo) do
+    use Ecto.Repo, otp_app: :doorman
+  else
+    use Doorman.ExternalRepo
+  end
 
 
   def changeset_errors(changeset) do
