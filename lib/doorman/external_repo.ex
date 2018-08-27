@@ -4,6 +4,8 @@ defmodule Doorman.ExternalRepo do
     repo = Application.get_env(:doorman, Doorman.ExternalRepo)[:repo]
     if repo do
       quote do
+        :ets.new(Doorman.Repo, [:set, :public, read_concurrency: true])
+
         defdelegate __adapter__, to: unquote(repo)
         defdelegate aggregate(a,b,c), to: unquote(repo)
         defdelegate aggregate(a,b,c,d), to: unquote(repo)
