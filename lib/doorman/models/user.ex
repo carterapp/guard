@@ -58,7 +58,7 @@ defmodule Doorman.User do
 
   defp downcase(v) do
     if v != nil do
-      String.downcase(v)
+      v |> String.trim() |> String.downcase()
     else
       v
     end
@@ -71,9 +71,9 @@ defmodule Doorman.User do
   def check_password(user, password) do
     Comeonin.Bcrypt.checkpw(password, user.enc_password)
   end
-  
+
   def check_pin(user, pin) do
-    user.enc_pin != nil 
+    user.enc_pin != nil
       && user.pin_expiration != nil
       && DateTime.diff(DateTime.utc_now(), user.pin_expiration) < 0
       && Comeonin.Bcrypt.checkpw(pin, user.enc_pin)

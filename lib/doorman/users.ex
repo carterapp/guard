@@ -31,15 +31,17 @@ defmodule Doorman.Users do
   end
 
   def get_by_email(email) do
-    case get_by(email: String.downcase(email)) do
-      nil -> get_by(requested_email: String.downcase(email))
+    trimmed = trimmer(email)
+    case get_by(email: trimmed) do
+      nil -> get_by(requested_email: trimmed)
       confirmed -> confirmed
     end
   end
 
   def get_by_email!(email) do
-    case get_by(email: String.downcase(email)) do
-      nil -> get_by!(requested_email: String.downcase(email))
+    trimmed = trimmer(email)
+    case get_by(email: trimmed) do
+      nil -> get_by!(requested_email: trimmed)
       confirmed -> confirmed
     end
   end
@@ -59,11 +61,15 @@ defmodule Doorman.Users do
   end
 
   def get_by_username(username) do
-    get_by(username: String.downcase(username))
+    get_by(username: trimmer(username))
   end
 
   def get_by_username!(username) do
-    get_by!(username: String.downcase(username))
+    get_by!(username: trimmer(username))
+  end
+
+  defp trimmer(str) do
+    str |> String.trim() |> String.downcase()
   end
 
   def get(id) do
