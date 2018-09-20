@@ -19,6 +19,7 @@ defmodule Doorman.Controller do
       delete "/session", Doorman.Controller.Session, :delete #Logout
 
       put "/account", Doorman.Controller.Account, :update #Update current account
+      post "/account/attributes", Doorman.Controller.Account, :update_attributes #Update attributes for current account
       delete "/account", Doorman.Controller.Account, :delete #Delete account
       put "/account/password", Doorman.Controller.PasswordReset, :update_password #Update password for current account
       put "/account/setpassword", Doorman.Controller.Registration, :update_password #Update password for account by one-time-pin

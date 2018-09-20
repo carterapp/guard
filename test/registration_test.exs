@@ -117,6 +117,22 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 200
   end
 
+  test 'account attributes' do
+    {:ok, user, jwt, _} = Doorman.Authenticator.create_user_by_username("admin", "admin1")
+
+    response = send_auth_json(:post, "/doorman/account/attributes", jwt, %{someAttribute: "tester"})
+    assert response.status == 200
+
+    u1 = Doorman.Users.get_by_username!("admin")
+    assert %{"someAttribute" => "tester"} == u1.attrs
+
+    response = send_auth_json(:post, "/doorman/account/attributes", jwt, %{anotherAttribute: "test"})
+
+    u2 = Doorman.Users.get_by_username!("admin")
+    assert %{"someAttribute" => "tester", "anotherAttribute" => "test"} == u2.attrs
+ 
+  end
+
   test 'confirm email and mobile' do
     new_email = "metoo@nowhere.com"
     {:ok, user, _jwt, _resp} = Authenticator.create_user_by_email("me@nowhere.com")

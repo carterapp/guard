@@ -14,9 +14,20 @@ defmodule Doorman.Controller.Account do
   end
 
 
+  def update_attributes(conn, params) do
+    user = Authenticator.authenticated_user!(conn)
+    attrs = if user.attrs == nil, do: params, else: Map.merge(user.attrs, params)
+    case Users.update_user(user, %{attrs: attrs}) do
+      {:ok, user} -> 
+        json conn, %{user: user}
+      {:error, error, _} -> 
+        send_error(conn, error)
+    end
+  end
+
   def update(conn, params) do
     updatable_fields = MapSet.new(["attrs", "requested_email", "username"])
-    user = Authenticator.current_user(conn)
+    user = Authenticator.authenticated_user!(conn)
     changes = Enum.reduce(params, %{},
       fn ({k,v}, sum)->
         if MapSet.member?(updatable_fields, k) do 
@@ -25,6 +36,7 @@ defmodule Doorman.Controller.Account do
           sum
         end
       end)
+
     case Users.update_user(user, changes) do
       {:ok, user} -> 
         json conn, %{user: user}
@@ -34,7 +46,7 @@ defmodule Doorman.Controller.Account do
   end
 
   def delete(conn, _) do
-    user = Authenticator.current_user(conn)
+    user = Authenticator.authenticated_user!(conn)
     case Users.delete_user(user) do
       {:ok, user} -> 
       json conn, %{user: user}
