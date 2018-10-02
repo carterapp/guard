@@ -20,6 +20,15 @@ defmodule Doorman.Mailer do
     end
   end
 
+  def send_plain_mail(from, to, subject, body) do
+    new_email(
+      to: to,
+      from: from,
+      subject: subject,
+      text_body: body
+    ) |> deliver_now()
+  end
+
 
   def send_unverified_user_mail(user, type, meta \\ %{}) do
     Logger.debug "Sending #{type} mail to #{user.requested_email}"
