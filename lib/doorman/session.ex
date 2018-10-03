@@ -1,5 +1,5 @@
 defmodule Doorman.Session do
-  alias Doorman.{Repo, User, Authenticator, Users}
+  alias Doorman.{User, Authenticator, Users}
 
   defp check_password_with_message(user, password, params) do
     case check_password(user, password) do

@@ -1,6 +1,6 @@
 defmodule Doorman.ExternalRepo do
 
-  defmacro __using__(opts) do
+  defmacro __using__(_opts) do
     repo = Application.get_env(:doorman, Doorman.ExternalRepo)[:repo]
     if repo do
       quote do

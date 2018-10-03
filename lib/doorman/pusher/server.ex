@@ -1,7 +1,6 @@
 defmodule Doorman.Pusher.Server do
   use GenServer
   use Tesla
-  import Ecto.Query
   adapter Tesla.Adapter.Hackney
 
   def start_link(name, config) do

@@ -1,6 +1,6 @@
 defmodule Doorman.Controller.Account do
   use Phoenix.Controller
-  alias Doorman.{Authenticator, User, Users}
+  alias Doorman.{Authenticator, Users}
   import Doorman.Controller, only: [send_error: 2, send_error: 3]
 
   plug Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"}

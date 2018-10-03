@@ -12,7 +12,6 @@ defmodule Doorman.Plug.FilteringLogger do
   """
 
   require Logger
-  alias Plug.Conn
   @behaviour Plug
 
   def init(opts) do

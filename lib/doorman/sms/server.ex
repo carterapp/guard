@@ -1,7 +1,6 @@
 defmodule Doorman.Sms.Server do
   use GenServer
   use Tesla
-  import Ecto.Query
   adapter Tesla.Adapter.Httpc #Hackney does not play well with gatewayapi.com
 
   def start_link(name, config) do

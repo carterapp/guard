@@ -7,9 +7,6 @@ defmodule Doorman.Guardian do
   alias Doorman.{Repo, User}
 
 
-  defp permissions() do
-  end
-
   def subject_for_token(%User{} = user, _claims) do
     {:ok, "User:#{user.id}"}
   end
