@@ -6,6 +6,7 @@ ttl: { 180, :days },
 verify_issuer: true,
 secret_key: "changethistosomeothersecret",
 permissions: %{
+  admin: [:read, :write],
   user: [:read, :write],
   bundles: [:read, :write],
   system: [:read, :write]

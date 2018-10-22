@@ -1,18 +1,52 @@
 defmodule Doorman.Session do
   alias Doorman.{User, Authenticator, Users}
 
+
+  defp has_perm?(user, perm) do
+    Map.has_key?(user.perms || %{}, perm) 
+  end
+
+  defp verify_params(user, params) do
+    case params do
+      %{"perm" => perm} ->
+        if has_perm?(user, perm) do
+          {:ok, user}
+        else 
+          {:error, :forbidden}
+        end
+      %{"all_perms" => all_perms} ->
+        if Enum.reduce_while(all_perms, true, fn (perm, acc) -> 
+          if has_perm?(user, perm) do
+            {:cont, true}
+          else
+            {:halt, false}
+          end
+        end) do
+          {:ok, user}
+        else
+          {:error, :forbidden}
+        end
+ 
+      %{"any_perms" => any_perms} ->
+        if Enum.reduce_while(any_perms, true, fn (perm, acc) -> 
+          if has_perm?(user, perm) do
+            {:halt, true}
+          else
+            {:cont, false} 
+          end
+        end) do
+          {:ok, user}
+        else 
+          {:error, :forbidden}
+        end
+      _ -> {:ok, user}
+    end
+  end
+
   defp check_password_with_message(user, password, params) do
     case check_password(user, password) do
       true -> 
-        case params do
-        %{"perm" => perm} ->
-          if Map.has_key?(user.perms || %{}, perm) do
-            {:ok, user}
-          else 
-            {:error, :forbidden}
-          end
-         _ -> {:ok, user}
-        end
+        verify_params(user, params)    
       _ -> {:error, "wrong_password"}
     end
   end
@@ -20,15 +54,7 @@ defmodule Doorman.Session do
   defp check_pin_with_message(user, pin, params) do
     case Authenticator.use_pin(user, pin) do
       {:ok, user} -> 
-        case params do
-        %{"perm" => perm} ->
-          if Map.has_key?(user.perms || %{}, perm) do
-            {:ok, user}
-          else 
-            {:error, :forbidden}
-          end
-         _ -> {:ok, user}
-        end
+        verify_params(user, params)
       error -> error
     end
   end

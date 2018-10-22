@@ -350,7 +350,7 @@ defmodule Doorman.RegistrationTest do
 
     assert response.status == 200
 
-    response =
+    response2 =
       send_json(:put, "/doorman/account/setpassword", %{
         username: "new_user",
         pin: pin,
@@ -358,11 +358,11 @@ defmodule Doorman.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response.status == 412
+    assert response2.status == 412
 
     {:ok, pin, user} = Authenticator.generate_pin(user)
 
-    response =
+    response3 =
       send_json(:put, "/doorman/account/setpassword", %{
         username: "new_user",
         pin: pin,
@@ -370,9 +370,9 @@ defmodule Doorman.RegistrationTest do
         new_password_confirmation: "testing_blah"
       })
 
-    assert response.status == 422
+    assert (response3.status == 422 || response3.status == 412)
 
-    response =
+    response4 =
       send_json(:put, "/doorman/account/setpassword", %{
         username: "new_user",
         pin: "bad_pin",
@@ -380,9 +380,9 @@ defmodule Doorman.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response.status == 412
+    assert response4.status == 412
 
-    response =
+    response5 =
       send_json(:put, "/doorman/account/setpassword", %{
         username: "new_user",
         pin: pin,
@@ -390,6 +390,6 @@ defmodule Doorman.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response.status == 200
+    assert response5.status == 200
   end
 end
