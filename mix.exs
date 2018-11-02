@@ -59,6 +59,7 @@ defmodule Doorman.Mixfile do
   
   defp package() do
     [
+      name: "guard",
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/codenaut/doorman"}
     ]
