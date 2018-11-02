@@ -25,7 +25,7 @@ pool: Ecto.Adapters.SQL.Sandbox
 config :doorman, Doorman.Mailer,
 adapter: Bamboo.TestAdapter,
 
-default_sender: "biowatch@codenaut.com",
+default_sender: "noone@codenaut.com",
 templates: %{
   welcome: Doorman.MailTestContent,
   login: Doorman.MailTestContent,

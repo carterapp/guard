@@ -8,6 +8,8 @@ defmodule Doorman.Mixfile do
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     package: package(),
+     description: description(),
      deps: deps()]
   end
 
@@ -44,7 +46,21 @@ defmodule Doorman.Mixfile do
      {:bcrypt_elixir, "~> 1.1.1"},
      {:tesla, "~> 1.2.0"},
      {:jason, "~> 1.0"},
+     {:plug_cowboy, "~> 1.0"},
      {:poison, ">= 3.1.0"},
-     {:postgrex, ">= 0.13.5", only: :test}]
+     {:postgrex, ">= 0.13.5", only: :test},
+     {:ex_doc, ">= 0.0.0", only: :dev}
+    ]
+  end
+
+  defp description() do
+    "Useful package for dealing with user authentication and signup"
+  end
+  
+  defp package() do
+    [
+      licenses: ["Apache 2.0"],
+      links: %{"GitHub" => "https://github.com/codenaut/doorman"}
+    ]
   end
 end
