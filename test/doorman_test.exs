@@ -1,5 +1,5 @@
-defmodule Doorman.DoormanTest do
+defmodule Guard.GuardTest do
   use ExUnit.Case
-  doctest Doorman
+  doctest Guard
 
 end

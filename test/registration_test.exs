@@ -1,17 +1,17 @@
-defmodule Doorman.RegistrationTest do
-  use Doorman.ModelCase
+defmodule Guard.RegistrationTest do
+  use Guard.ModelCase
   use Plug.Test
-  import Doorman.RouterTestHelper
-  alias Doorman.{Router, Authenticator, Users}
+  import Guard.RouterTestHelper
+  alias Guard.{Router, Authenticator, Users}
 
   test 'registering user' do
-    response = send_json(:post, "/doorman/registration", %{"user" => %{"username" => "testuser"}})
+    response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
     assert response.status == 201
   end
 
   test 'registering admin user' do
     response =
-      send_json(:post, "/doorman/registration", %{
+      send_json(:post, "/guard/registration", %{
         "user" => %{"username" => "testuser", "password" => "testuser"}
       })
 
@@ -33,7 +33,7 @@ defmodule Doorman.RegistrationTest do
     assert !Authenticator.has_perms?(user, %{"system" => ["read", "write", "control"]})
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "testuser", password: "testuser"}
       })
 
@@ -45,33 +45,33 @@ defmodule Doorman.RegistrationTest do
   end
 
   test 'registering same user twice' do
-    response = send_json(:post, "/doorman/registration", %{"user" => %{"username" => "testuser"}})
+    response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
     assert response.status == 201
 
-    response = send_json(:post, "/doorman/registration", %{"user" => %{"username" => "testuser"}})
+    response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
     assert response.status == 422
   end
 
   test 'registering untrimmed user' do
     response =
-      send_json(:post, "/doorman/registration", %{
+      send_json(:post, "/guard/registration", %{
         "user" => %{"username" => " tesTuser ", password: "secret"}
       })
 
     assert response.status == 201
 
-    response = send_json(:post, "/doorman/registration", %{"user" => %{"username" => "testuser"}})
+    response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
     assert response.status == 422
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "testuser", password: "secret"}
       })
 
     assert response.status == 201
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => " testuser  ", password: "secret"}
       })
 
@@ -80,21 +80,21 @@ defmodule Doorman.RegistrationTest do
 
   test 'registering user and dropping account' do
     response =
-      send_json(:post, "/doorman/registration", %{
+      send_json(:post, "/guard/registration", %{
         "user" => %{"username" => "testuser", password: "secret"}
       })
 
     assert response.status == 201
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "testuser", password: "secret"}
       })
 
     assert response.status == 201
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "TESTuser", password: "secret"}
       })
 
@@ -102,33 +102,33 @@ defmodule Doorman.RegistrationTest do
 
     json_body = Poison.decode!(response.resp_body)
 
-    response = send_json(:delete, "/doorman/account")
+    response = send_json(:delete, "/guard/account")
     assert response.status == 403
 
     device = %{"device" => %{token: "magic", platform: "android"}}
-    response = send_json(:post, "/doorman/registration/device", device)
+    response = send_json(:post, "/guard/registration/device", device)
 
     response =
-      send_auth_json(:post, "/doorman/registration/device", Map.get(json_body, "jwt"), device)
+      send_auth_json(:post, "/guard/registration/device", Map.get(json_body, "jwt"), device)
 
     assert response.status == 201
 
-    response = send_auth_json(:delete, "/doorman/account", Map.get(json_body, "jwt"))
+    response = send_auth_json(:delete, "/guard/account", Map.get(json_body, "jwt"))
     assert response.status == 200
   end
 
   test 'account attributes' do
-    {:ok, user, jwt, _} = Doorman.Authenticator.create_user_by_username("admin", "admin1")
+    {:ok, user, jwt, _} = Guard.Authenticator.create_user_by_username("admin", "admin1")
 
-    response = send_auth_json(:post, "/doorman/account/attributes", jwt, %{someAttribute: "tester"})
+    response = send_auth_json(:post, "/guard/account/attributes", jwt, %{someAttribute: "tester"})
     assert response.status == 200
 
-    u1 = Doorman.Users.get_by_username!("admin")
+    u1 = Guard.Users.get_by_username!("admin")
     assert %{"someAttribute" => "tester"} == u1.attrs
 
-    response = send_auth_json(:post, "/doorman/account/attributes", jwt, %{anotherAttribute: "test"})
+    response = send_auth_json(:post, "/guard/account/attributes", jwt, %{anotherAttribute: "test"})
 
-    u2 = Doorman.Users.get_by_username!("admin")
+    u2 = Guard.Users.get_by_username!("admin")
     assert %{"someAttribute" => "tester", "anotherAttribute" => "test"} == u2.attrs
  
   end
@@ -142,32 +142,32 @@ defmodule Doorman.RegistrationTest do
 
     {:ok, jwt, claims} = Authenticator.generate_login_claim(user, new_email)
 
-    response = send_json(:get, "/doorman/session/" <> jwt)
+    response = send_json(:get, "/guard/session/" <> jwt)
     assert response.status == 201
 
-    user = Doorman.Users.get(user.id)
+    user = Guard.Users.get(user.id)
     assert user.requested_email == nil
     assert user.email == new_email
 
     jwt = Poison.decode!(response.resp_body) |> Map.get("jwt")
-    {:ok, claims} = Doorman.Guardian.decode_and_verify(jwt)
+    {:ok, claims} = Guard.Guardian.decode_and_verify(jwt)
 
     assert Map.get(claims, "typ") == "access"
 
     {:ok, user} = Authenticator.change_email(user, "another@example.com")
     {:ok, jwt, claims} = Authenticator.generate_login_claim(user, new_email)
-    response = send_json(:get, "/doorman/session/" <> jwt)
+    response = send_json(:get, "/guard/session/" <> jwt)
     assert response.status == 201
 
-    user1 = Doorman.Users.get(user.id)
+    user1 = Guard.Users.get(user.id)
     assert user.requested_email == user1.requested_email
     assert user.email == user1.email
 
     {:ok, jwt, claims} = Authenticator.generate_login_claim(user)
-    response = send_json(:get, "/doorman/session/" <> jwt)
+    response = send_json(:get, "/guard/session/" <> jwt)
     assert response.status == 201
 
-    user1 = Doorman.Users.get(user.id)
+    user1 = Guard.Users.get(user.id)
     assert user.requested_email == user1.requested_email
     assert user.email == user1.email
   end
@@ -183,11 +183,11 @@ defmodule Doorman.RegistrationTest do
   end
 
   test 'validating user user' do
-    response = send_json(:get, "/doorman/session")
+    response = send_json(:get, "/guard/session")
     assert response.status == 403
 
     response =
-      send_json(:post, "/doorman/registration", %{
+      send_json(:post, "/guard/registration", %{
         "user" => %{
           "username" => "august",
           password: "not_very_secret",
@@ -198,7 +198,7 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 422
 
     response =
-      send_json(:post, "/doorman/registration", %{
+      send_json(:post, "/guard/registration", %{
         "user" => %{
           "username" => "august",
           email: "jalp@codenaut.com",
@@ -208,24 +208,24 @@ defmodule Doorman.RegistrationTest do
 
     assert response.status == 201
 
-    response = send_json(:post, "/doorman/registration/link?username=august")
+    response = send_json(:post, "/guard/registration/link?username=august")
     assert response.status == 200
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "august", password: "not_very_secret"}
       })
 
     assert response.status == 201
     json_body = Poison.decode!(response.resp_body)
-    response = send_auth_json(:get, "/doorman/session", Map.get(json_body, "jwt"))
+    response = send_auth_json(:get, "/guard/session", Map.get(json_body, "jwt"))
     assert response.status == 200
 
-    response = send_auth_json(:get, "/doorman/session", Map.get(json_body, "jwt") <> "bad")
+    response = send_auth_json(:get, "/guard/session", Map.get(json_body, "jwt") <> "bad")
     assert response.status == 401
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "august", password: "not_very_secret_and_bad"}
       })
 
@@ -233,29 +233,29 @@ defmodule Doorman.RegistrationTest do
   end
 
   test 'registering empty' do
-    response = send_json(:post, "/doorman/registration", %{"user" => %{}})
+    response = send_json(:post, "/guard/registration", %{"user" => %{}})
     assert response.status == 422
   end
 
   test 'registering bad username' do
-    response = send_json(:post, "/doorman/registration", %{"user" => %{"username" => ""}})
+    response = send_json(:post, "/guard/registration", %{"user" => %{"username" => ""}})
     assert response.status == 422
   end
 
   test 'password and other things' do
-    response = send_json(:post, "/doorman/registration/reset?username=a_user")
+    response = send_json(:post, "/guard/registration/reset?username=a_user")
     assert response.status == 200
 
-    response = send_json(:post, "/doorman/registration/link?username=a_user")
+    response = send_json(:post, "/guard/registration/link?username=a_user")
     assert response.status == 200
 
-    response = send_json(:post, "/doorman/registration/link?email=createondemand@codenaut.com")
+    response = send_json(:post, "/guard/registration/link?email=createondemand@codenaut.com")
     assert response.status == 201
   end
 
   test 'update password normal' do
     response =
-      send_json(:post, "/doorman/registration", %{
+      send_json(:post, "/guard/registration", %{
         "user" => %{"username" => "new_user", password: "not_very_secret"}
       })
 
@@ -265,7 +265,7 @@ defmodule Doorman.RegistrationTest do
     jwt = Map.get(json_body, "jwt")
 
     response =
-      send_auth_json(:put, "/doorman/account/password", jwt, %{
+      send_auth_json(:put, "/guard/account/password", jwt, %{
         password: "not_very_secret",
         new_password: "testing",
         new_password_confirmation: "testing"
@@ -275,7 +275,7 @@ defmodule Doorman.RegistrationTest do
 
     # Unless we have a password_reset typed token, require the old password
     response =
-      send_auth_json(:put, "/doorman/account/password", jwt, %{
+      send_auth_json(:put, "/guard/account/password", jwt, %{
         new_password: "testing",
         new_password_confirmation: "testing"
       })
@@ -283,7 +283,7 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 412
 
     response =
-      send_auth_json(:put, "/doorman/account/password", jwt, %{
+      send_auth_json(:put, "/guard/account/password", jwt, %{
         password: "not_very_secret",
         new_password: "testing",
         new_password_confirmation: "not_testing"
@@ -292,14 +292,14 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 412
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "new_user", password: "not_the_right_one"}
       })
 
     assert response.status == 401
 
     response =
-      send_json(:post, "/doorman/session", %{
+      send_json(:post, "/guard/session", %{
         "session" => %{"username" => "new_user", password: "testing"}
       })
 
@@ -310,7 +310,7 @@ defmodule Doorman.RegistrationTest do
     {:ok, resetToken, _claims} = Authenticator.generate_password_reset_claim(user)
 
     response =
-      send_auth_json(:put, "/doorman/account/password", resetToken, %{
+      send_auth_json(:put, "/guard/account/password", resetToken, %{
         new_password: "testing",
         new_password_confirmation: "testing"
       })
@@ -318,7 +318,7 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 200
 
     response =
-      send_auth_json(:put, "/doorman/account/password", resetToken, %{
+      send_auth_json(:put, "/guard/account/password", resetToken, %{
         new_password: "testing",
         new_password_confirmation: "testing_blah"
       })
@@ -328,7 +328,7 @@ defmodule Doorman.RegistrationTest do
 
   test 'pin support' do
     response =
-      send_json(:post, "/doorman/registration", %{
+      send_json(:post, "/guard/registration", %{
         "user" => %{"username" => "new_user", password: "not_very_secret"}
       })
 
@@ -341,7 +341,7 @@ defmodule Doorman.RegistrationTest do
     assert pin != nil
 
     response =
-      send_json(:put, "/doorman/account/setpassword", %{
+      send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
         new_password: "testing",
@@ -351,7 +351,7 @@ defmodule Doorman.RegistrationTest do
     assert response.status == 200
 
     response2 =
-      send_json(:put, "/doorman/account/setpassword", %{
+      send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
         new_password: "testing",
@@ -363,7 +363,7 @@ defmodule Doorman.RegistrationTest do
     {:ok, pin, user} = Authenticator.generate_pin(user)
 
     response3 =
-      send_json(:put, "/doorman/account/setpassword", %{
+      send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
         new_password: "testing",
@@ -373,7 +373,7 @@ defmodule Doorman.RegistrationTest do
     assert (response3.status == 422 || response3.status == 412)
 
     response4 =
-      send_json(:put, "/doorman/account/setpassword", %{
+      send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: "bad_pin",
         new_password: "testing",
@@ -383,7 +383,7 @@ defmodule Doorman.RegistrationTest do
     assert response4.status == 412
 
     response5 =
-      send_json(:put, "/doorman/account/setpassword", %{
+      send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
         new_password: "testing",

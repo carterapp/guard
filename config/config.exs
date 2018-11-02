@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure for your application as:
 #
-#     config :doorman, key: :value
+#     config :guard, key: :value
 #
 # And access this configuration in your application as:
 #
-#     Application.get_env(:doorman, :key)
+#     Application.get_env(:guard, :key)
 #
 # Or configure a 3rd-party app:
 #
@@ -35,6 +35,6 @@ config :phoenix, :format_encoders,
 config :phoenix, 
   filter_parameters:  []
 
-config :doorman, ecto_repos: [Doorman.Repo]
+config :guard, ecto_repos: [Guard.Repo]
 
 import_config "#{Mix.env}.exs"

@@ -1,9 +1,9 @@
-defmodule Doorman.Mixfile do
+defmodule Guard.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :doorman,
-     version: "0.1.0",
+    [app: :guard,
+     version: "0.2.0",
      elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
@@ -21,7 +21,7 @@ defmodule Doorman.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [mod: {Doorman, []},
+    [mod: {Guard, []},
      applications: [:logger,
       :ecto, :guardian, :bamboo, :comeonin, :inets, :gettext,
       :postgrex, :hackney, :tesla, :poison, :bcrypt_elixir, :jason]]
@@ -59,7 +59,6 @@ defmodule Doorman.Mixfile do
   
   defp package() do
     [
-      name: "guard",
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => "https://github.com/codenaut/doorman"}
     ]

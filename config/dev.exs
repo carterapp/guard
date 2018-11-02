@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :doorman, Doorman.Guardian,
+config :guard, Guard.Guardian,
 issuer: "Codenaut",
 ttl: { 180, :days },
 verify_issuer: true,
@@ -11,7 +11,7 @@ permissions: %{
   system: [:read, :write]
 }
 
-config :doorman, Doorman.Repo,
+config :guard, Guard.Repo,
 adapter: Ecto.Adapters.Postgres,
 username: "doorman_test",
 password: "doorman",

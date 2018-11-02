@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :doorman, Doorman.Guardian,
+config :guard, Guard.Guardian,
 issuer: "Codenaut",
 ttl: { 180, :days },
 verify_issuer: true,
@@ -12,7 +12,7 @@ permissions: %{
   system: [:read, :write]
 }
 
-config :doorman, Doorman.Repo,
+config :guard, Guard.Repo,
 adapter: Ecto.Adapters.Postgres,
 username: "doorman_test",
 password: "doorman",
@@ -22,18 +22,18 @@ port: 5433,
 pool_size: 10,
 pool: Ecto.Adapters.SQL.Sandbox
 
-config :doorman, Doorman.Mailer,
+config :guard, Guard.Mailer,
 adapter: Bamboo.TestAdapter,
 
 default_sender: "noone@codenaut.com",
 templates: %{
-  welcome: Doorman.MailTestContent,
-  login: Doorman.MailTestContent,
-  reset: Doorman.MailTestContent,
-  confirm: Doorman.MailTestContent
+  welcome: Guard.MailTestContent,
+  login: Guard.MailTestContent,
+  reset: Guard.MailTestContent,
+  confirm: Guard.MailTestContent
 }
 
-config :doorman, Doorman.Pusher,
+config :guard, Guard.Pusher,
 key: "bad_key",
 dry_run: true
 

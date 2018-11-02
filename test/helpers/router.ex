@@ -1,10 +1,10 @@
-defmodule Doorman.Router do
+defmodule Guard.Router do
   use Phoenix.Router
-  require Doorman.Controller
+  require Guard.Controller
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug Doorman.ApiPipeline
+    plug Guard.ApiPipeline
     plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], pass: ["*/*"], json_decoder: Poison
 
     plug Plug.RequestId
@@ -14,22 +14,22 @@ defmodule Doorman.Router do
   end
 
   pipeline :authenticated do
-    plug Doorman.AuthApiPipeline
+    plug Guard.AuthApiPipeline
   end
 
   pipeline :admin do
     plug Guardian.Permissions.Bitwise, ensure: %{system: [:read, :write]}
   end
 
-  scope "/doorman" do
+  scope "/guard" do
     pipe_through :api
-    Doorman.Controller.resources
+    Guard.Controller.resources
   end
   
   scope "/jeeves" do
     pipe_through :api
     pipe_through :admin
-    Doorman.Controller.admin_resources
+    Guard.Controller.admin_resources
   end
 
 end

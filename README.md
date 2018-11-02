@@ -1,4 +1,4 @@
-# Doorman
+# Guard
 
 Collection of common functionality for user handling.
 
@@ -6,16 +6,16 @@ Collection of common functionality for user handling.
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
 
-  1. Add doorman to your list of dependencies in `mix.exs`:
+  1. Add guard to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:doorman, "~> 0.0.1"}]
+          [{:guard, "~> 0.2.0"}]
         end
 
-  2. Ensure doorman is started before your application:
+  2. Ensure guard is started before your application:
 
         def application do
-          [applications: [:doorman]]
+          [applications: [:guard]]
         end
 
 

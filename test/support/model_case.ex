@@ -1,4 +1,4 @@
-defmodule Doorman.ModelCase do
+defmodule Guard.ModelCase do
   @moduledoc """
   This module defines the test case to be used by
   model tests.
@@ -16,20 +16,20 @@ defmodule Doorman.ModelCase do
 
   using do
     quote do
-      alias Doorman.Repo
+      alias Guard.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Doorman.ModelCase
+      import Guard.ModelCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Doorman.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Guard.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Doorman.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Guard.Repo, {:shared, self()})
     end
 
     :ok
@@ -59,7 +59,7 @@ defmodule Doorman.ModelCase do
   """
   def errors_on(struct, data) do
     struct.__struct__.changeset(struct, data)
-    |> Ecto.Changeset.traverse_errors(&Doorman.Repo.translate_error/1)
+    |> Ecto.Changeset.traverse_errors(&Guard.Repo.translate_error/1)
     |> Enum.flat_map(fn {key, errors} -> for msg <- errors, do: {key, msg} end)
   end
 end

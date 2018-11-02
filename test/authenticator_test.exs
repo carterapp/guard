@@ -1,6 +1,6 @@
-defmodule Doorman.AuthenticatorTest do
-  use Doorman.ModelCase
-  alias Doorman.{Authenticator, User, Users, Session}
+defmodule Guard.AuthenticatorTest do
+  use Guard.ModelCase
+  alias Guard.{Authenticator, User, Users, Session}
 
   test "Create missing user" do
     {:error, _, _} = Authenticator.create_user(%{})
@@ -58,22 +58,22 @@ defmodule Doorman.AuthenticatorTest do
   test "Conditional authentication" do
     {:ok, user, _, _} = Authenticator.create_user_by_username("August", "somepassword")
     {:ok, user} = Authenticator.add_perms(user, %{"admin" => [:read, :write], "special" => [:read, :write]})
-    {:ok, %Doorman.User{username: "august"}} = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "perm" => "admin"})
-    {:ok, %Doorman.User{username: "august"}} = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "perm" => "special"})
+    {:ok, %Guard.User{username: "august"}} = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "perm" => "admin"})
+    {:ok, %Guard.User{username: "august"}} = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "perm" => "special"})
     {:error, :forbidden} = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "perm" => "notspecial"})
 
-    {:ok, %Doorman.User{username: "august"}} 
+    {:ok, %Guard.User{username: "august"}} 
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "all_perms" => ["admin"]})
 
-    {:ok, %Doorman.User{username: "august"}}
+    {:ok, %Guard.User{username: "august"}}
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "all_perms" => ["special", "admin"]})
     {:error, :forbidden}
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "all_perms" => ["admin", "notspecial", "special"]})
 
-    {:ok, %Doorman.User{username: "august"}} 
+    {:ok, %Guard.User{username: "august"}} 
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "any_perms" => ["admin"]})
 
-    {:ok, %Doorman.User{username: "august"}}
+    {:ok, %Guard.User{username: "august"}}
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "any_perms" => ["testing", "special", "admin", "bonkers"]})
     {:error, :forbidden}
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "any_perms" => ["notspecial", "another"]})

@@ -1,6 +1,6 @@
-defmodule Doorman.RouterTestHelper do
+defmodule Guard.RouterTestHelper do
   use Plug.Test
-  alias Doorman.Router
+  alias Guard.Router
   @opts Router.init([])
 
 
