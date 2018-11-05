@@ -60,7 +60,7 @@ defmodule Guard.Mixfile do
   defp package() do
     [
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/codenaut/doorman"}
+      links: %{"GitHub" => "https://github.com/codenaut/guard"}
     ]
   end
 end
