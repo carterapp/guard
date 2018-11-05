@@ -3,7 +3,7 @@ defmodule Guard.Mixfile do
 
   def project do
     [app: :guard,
-     version: "0.2.0",
+     version: "0.3.0",
      elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
@@ -23,7 +23,7 @@ defmodule Guard.Mixfile do
   def application do
     [mod: {Guard, []},
      applications: [:logger,
-      :ecto, :guardian, :bamboo, :comeonin, :inets, :gettext,
+      :ecto, :guardian, :bamboo, :comeonin, :inets, :gettext, :plug_cowboy,
       :postgrex, :hackney, :tesla, :poison, :bcrypt_elixir, :jason]]
   end
 
