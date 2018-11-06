@@ -3,7 +3,7 @@ defmodule Guard.Session do
 
 
   defp has_perm?(user, perm) do
-    Map.has_key?(user.perms || %{}, perm) 
+    Map.has_key?(user.perms || %{}, perm)
   end
 
   defp verify_params(user, params) do
@@ -11,11 +11,11 @@ defmodule Guard.Session do
       %{"perm" => perm} ->
         if has_perm?(user, perm) do
           {:ok, user}
-        else 
+        else
           {:error, :forbidden}
         end
       %{"all_perms" => all_perms} ->
-        if Enum.reduce_while(all_perms, true, fn (perm, acc) -> 
+        if Enum.reduce_while(all_perms, true, fn (perm, _acc) ->
           if has_perm?(user, perm) do
             {:cont, true}
           else
@@ -26,17 +26,17 @@ defmodule Guard.Session do
         else
           {:error, :forbidden}
         end
- 
+
       %{"any_perms" => any_perms} ->
-        if Enum.reduce_while(any_perms, true, fn (perm, acc) -> 
+        if Enum.reduce_while(any_perms, true, fn (perm, _acc) ->
           if has_perm?(user, perm) do
             {:halt, true}
           else
-            {:cont, false} 
+            {:cont, false}
           end
         end) do
           {:ok, user}
-        else 
+        else
           {:error, :forbidden}
         end
       _ -> {:ok, user}
@@ -45,15 +45,15 @@ defmodule Guard.Session do
 
   defp check_password_with_message(user, password, params) do
     case check_password(user, password) do
-      true -> 
-        verify_params(user, params)    
+      true ->
+        verify_params(user, params)
       _ -> {:error, "wrong_password"}
     end
   end
 
   defp check_pin_with_message(user, pin, params) do
     case Authenticator.use_pin(user, pin) do
-      {:ok, user} -> 
+      {:ok, user} ->
         verify_params(user, params)
       error -> error
     end
@@ -99,7 +99,7 @@ defmodule Guard.Session do
       _ -> {:error, "bad_token"}
     end
   end
-  
+
   def authenticate(_) do
     {:error, "missing_credentials"}
   end
@@ -113,8 +113,8 @@ defmodule Guard.Session do
   end
 
   defp user_from_claim(claims) do
-    case claims do 
-      %{"sub" => "User:" <> user_id} -> 
+    case claims do
+      %{"sub" => "User:" <> user_id} ->
         case Users.get(user_id) do
           nil -> {:error, "bad_claims"}
           user -> confirm_user_email(claims, user)

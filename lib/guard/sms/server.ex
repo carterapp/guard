@@ -18,11 +18,11 @@ defmodule Guard.Sms.Server do
   ## GenServer Callbacks
 
   def init(config) do
-    client = Tesla.build_client [
+    client = Tesla.client([
       {Tesla.Middleware.BaseUrl, "https://gatewayapi.com/rest"},
       {Tesla.Middleware.BasicAuth, [{:username, (config[:token] || "")}]},
       Tesla.Middleware.JSON
-    ]
+    ])
     {:ok, %{options: config[:options], client: client}}
   end
 
@@ -34,7 +34,7 @@ defmodule Guard.Sms.Server do
     resp = try do
       recip = if is_list(recipients) do
         recipients
-      else 
+      else
         [recipients]
       end
       recip = Enum.map(recip, fn(r) -> %{msisdn: r} end)
@@ -45,9 +45,9 @@ defmodule Guard.Sms.Server do
         %{recipients: recip, message: message}
       end
       do_post(state.client, state.options, payload)
-    rescue 
+    rescue
       error -> {:error, error}
-    end 
+    end
 
     if !is_nil(callback) do
       callback.(resp)

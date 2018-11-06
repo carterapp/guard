@@ -22,11 +22,11 @@ defmodule Guard.Pusher.Server do
   ## GenServer Callbacks
 
   def init(config) do
-    client = Tesla.build_client [
+    client = Tesla.client([
       {Tesla.Middleware.BaseUrl, "https://fcm.googleapis.com/fcm"},
       {Tesla.Middleware.Headers, [{"Authorization", "key=" <> (config[:key] || "") }]},
       Tesla.Middleware.JSON
-    ]
+    ])
     {:ok, %{options: config[:options], client: client}}
   end
 
@@ -37,7 +37,7 @@ defmodule Guard.Pusher.Server do
   def handle_cast({:user, user, message, callback}, state) do
     devices = Guard.Users.list_devices(user)
     if length(devices) > 0 do
-      Enum.each(devices, fn(d) -> 
+      Enum.each(devices, fn(d) ->
         resp = try do
           resp = do_post(state.client, state.options, Map.merge(message, %{to: d.token}))
           if resp.body != nil do
@@ -46,7 +46,7 @@ defmodule Guard.Pusher.Server do
             end
           end
           resp
-        rescue 
+        rescue
           error -> {:error, error}
         end
         if !is_nil(callback) do
@@ -60,9 +60,9 @@ defmodule Guard.Pusher.Server do
   def handle_cast({:message, message, callback}, state) do
     resp = try do
        do_post(state.client, state.options, message)
-    rescue 
+    rescue
       error -> {:error, error}
-    end 
+    end
 
     if !is_nil(callback) do
       callback.(resp)
