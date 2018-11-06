@@ -19,7 +19,7 @@ defmodule Guard.Controller.ActiveSession do
     case Authenticator.current_claims(conn) do
       { :ok, _claims } ->
         user = Guardian.Plug.current_resource(conn)
-        
+
         conn
         |> put_status(:ok)
         |> json(%{jwt: Guardian.Plug.current_token(conn), user: user})
@@ -27,7 +27,7 @@ defmodule Guard.Controller.ActiveSession do
       { :error, _reason } ->
         conn
         |> put_status(:not_found)
-        |> Controller.send_error("not found")
+        |> Controller.send_error(:not_found)
     end
   end
 

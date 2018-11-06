@@ -9,7 +9,7 @@ defmodule Guard.Controller do
       post "/registration/reset", Guard.Controller.Registration, :send_password_reset #Request a password reset
       post "/registration/link", Guard.Controller.Registration, :send_login_link #Send magic link
       post "/registration/check", Guard.Controller.Registration, :check_account #Send magic link
-      
+
       post "/registration/device", Guard.Controller.Registration, :register_device #Register for push
       delete "/registration/device/:platform/:token", Guard.Controller.Registration, :unregister_device #Unregister for push
 
@@ -38,19 +38,19 @@ defmodule Guard.Controller do
 
   def send_error(conn, %{message: message, plug_status: status_code}=error) do
     Logger.error("#{conn.request_path} #{inspect error}")
-    conn 
+    conn
     |> put_status(status_code)
     |> json(%{error: translate_error(message)})
   end
 
     def send_error(conn, error, status_code \\ :unprocessable_entity) do
     Logger.error("#{conn.request_path} #{inspect error}")
-    conn 
+    conn
     |> put_status(status_code)
     |> json(%{error: translate_error(error)})
   end
 
-  def translate_error(reason) do 
+  def translate_error(reason) do
     cond do
       is_tuple(reason) -> tuple_to_map(%{}, Tuple.to_list(reason))
       Exception.exception?(reason) -> translate_error(Exception.message(reason))
@@ -62,7 +62,7 @@ defmodule Guard.Controller do
     if length(list) > 2 do
       [k, v | tail] = list
       tuple_to_map(Map.put(acc, k, v), tail)
-    else 
+    else
       acc
     end
 

@@ -16,12 +16,12 @@ defmodule Guard.Controller.PasswordReset do
 
   defp do_update_password(conn, user, new_password, new_password_confirmation) do
     update = if new_password_confirmation do
-      Users.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) 
-    else 
-      Users.update_user(user, %{"password" => new_password}) 
+      Users.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation})
+    else
+      Users.update_user(user, %{"password" => new_password})
     end
     case update do
-          {:ok, _user} -> 
+          {:ok, _user} ->
             json(conn, %{ok: true})
           {:error, error, _changeset} ->
             send_error(conn, error)
@@ -36,8 +36,8 @@ defmodule Guard.Controller.PasswordReset do
         do_update_password(conn, user, new_password, new_password_confirmation)
       false ->
         conn
-        |> put_status(:precondition_failed)
-        |> json(%{ok: false})
+        |> put_status(:unprocessable_entity)
+        |> send_error(:wrong_password)
 
     end
   end
@@ -52,10 +52,10 @@ defmodule Guard.Controller.PasswordReset do
       "password_reset" ->
         user = Authenticator.current_user(conn)
         do_update_password(conn, user, new_password, new_password_confirmation)
-      _ -> 
+      _ ->
         conn
-        |> put_status(:precondition_failed)
-        |> json(%{ok: false})
+        |> put_status(:unprocessable_entity)
+        |> send_error(:bad_claim)
 
     end
   end
@@ -66,7 +66,7 @@ defmodule Guard.Controller.PasswordReset do
 
   def update_password(conn, _) do
     conn
-        |> put_status(:precondition_failed)
+        |> put_status(:unprocessable_entity)
         |> json(%{ok: false})
   end
 

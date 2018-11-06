@@ -4,6 +4,11 @@ defmodule Guard.RegistrationTest do
   import Guard.RouterTestHelper
   alias Guard.{Router, Authenticator, Users}
 
+  defp get_body(response) do
+    Poison.decode!(response.resp_body)
+  end
+
+
   test 'registering user' do
     response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
     assert response.status == 201
@@ -52,6 +57,12 @@ defmodule Guard.RegistrationTest do
     assert response.status == 422
   end
 
+  test 'short password' do
+    response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser", "password" => "1"}})
+    assert response.status == 422
+    assert %{"error" => %{"password" => ["should be at least 6 character(s)"]}} == get_body(response)
+  end
+
   test 'registering untrimmed user' do
     response =
       send_json(:post, "/guard/registration", %{
@@ -62,6 +73,7 @@ defmodule Guard.RegistrationTest do
 
     response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
     assert response.status == 422
+    assert %{"error" => %{"username" => ["username_taken"]}} == get_body(response)
 
     response =
       send_json(:post, "/guard/session", %{
@@ -130,7 +142,7 @@ defmodule Guard.RegistrationTest do
 
     u2 = Guard.Users.get_by_username!("admin")
     assert %{"someAttribute" => "tester", "anotherAttribute" => "test"} == u2.attrs
- 
+
   end
 
   test 'confirm email and mobile' do
@@ -196,6 +208,7 @@ defmodule Guard.RegistrationTest do
       })
 
     assert response.status == 422
+    assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} == get_body(response)
 
     response =
       send_json(:post, "/guard/registration", %{
@@ -235,11 +248,13 @@ defmodule Guard.RegistrationTest do
   test 'registering empty' do
     response = send_json(:post, "/guard/registration", %{"user" => %{}})
     assert response.status == 422
+    assert %{"error" => %{"username" => ["can't be blank"]}} == get_body(response)
   end
 
   test 'registering bad username' do
     response = send_json(:post, "/guard/registration", %{"user" => %{"username" => ""}})
     assert response.status == 422
+    assert %{"error" => %{"username" => ["can't be blank"]}} == get_body(response)
   end
 
   test 'password and other things' do
@@ -261,7 +276,7 @@ defmodule Guard.RegistrationTest do
 
     assert response.status == 201
 
-    json_body = Poison.decode!(response.resp_body)
+    json_body = get_body(response)
     jwt = Map.get(json_body, "jwt")
 
     response =
@@ -280,7 +295,8 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response.status == 412
+    assert response.status == 422
+    assert %{"error" => "bad_claim"} == get_body(response)
 
     response =
       send_auth_json(:put, "/guard/account/password", jwt, %{
@@ -289,7 +305,8 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "not_testing"
       })
 
-    assert response.status == 412
+    assert response.status == 422
+    assert %{"error" => "wrong_password"} == get_body(response)
 
     response =
       send_json(:post, "/guard/session", %{
@@ -350,7 +367,7 @@ defmodule Guard.RegistrationTest do
 
     assert response.status == 200
 
-    response2 =
+    response =
       send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
@@ -358,11 +375,12 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response2.status == 412
+    assert response.status == 422
+    assert %{"error" => "wrong_pin"} = get_body(response)
 
     {:ok, pin, user} = Authenticator.generate_pin(user)
 
-    response3 =
+    response =
       send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
@@ -370,9 +388,10 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing_blah"
       })
 
-    assert (response3.status == 422 || response3.status == 412)
+    assert response.status == 422
+    assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} = get_body(response)
 
-    response4 =
+    response =
       send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: "bad_pin",
@@ -380,9 +399,10 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response4.status == 412
+    assert response.status == 422
+    assert %{"error" => "wrong_pin"} = get_body(response)
 
-    response5 =
+    response =
       send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
@@ -390,6 +410,6 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response5.status == 200
+    assert response.status == 200
   end
 end

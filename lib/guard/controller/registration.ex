@@ -45,11 +45,11 @@ defmodule Guard.Controller.Registration do
 
   def create(conn, %{"user" => user}) do
     case Authenticator.create_and_confirm_user(user) do
-      {:ok, user, jwt, extra} -> 
-      conn 
+      {:ok, user, jwt, extra} ->
+      conn
       |> put_status(:created)
       |> json(%{user: user, jwt: jwt, extra: extra})
-      {:error, error, _} -> 
+      {:error, error, _} ->
         send_error(conn, error)
     end
 
@@ -58,11 +58,11 @@ defmodule Guard.Controller.Registration do
   def confirm(conn, %{"confirmation_token" => token, "user_id" => user_id}) do
     user = Users.get!(user_id)
     case Authenticator.confirm_email(user, token) do
-      {:ok, user} -> 
+      {:ok, user} ->
         json conn, %{user: user}
-      {:error, error, _} -> 
+      {:error, error, _} ->
         send_error(conn, error)
-    end 
+    end
   end
 
   def send_password_reset(conn, %{"username" => username}) do
@@ -74,18 +74,18 @@ defmodule Guard.Controller.Registration do
 
   def send_password_reset(conn, user, name) do
     case user do
-      nil -> 
+      nil ->
         Logger.debug "Failed to send link to unknown user #{name}"
-        json conn, %{ok: true} #Do not allow people to probe which users are on the system 
-      user ->  
+        json conn, %{ok: true} #Do not allow people to probe which users are on the system
+      user ->
         case Authenticator.generate_password_reset_claim(user) do
-          {:ok, token, _} -> 
+          {:ok, token, _} ->
             {:ok, pin, user} = Authenticator.generate_pin(user)
             Mailer.send_reset_password_link(user, token, pin)
             json conn, %{ok: true}
-          _ -> 
+          _ ->
             Logger.debug "Failed to generate claim for #{name}"
-            json conn, %{ok: true} #Do not allow people to probe which users are on the system 
+            json conn, %{ok: true} #Do not allow people to probe which users are on the system
         end
     end
   end
@@ -108,16 +108,16 @@ defmodule Guard.Controller.Registration do
     case user do
       nil ->
         Logger.debug "Failed to send link to unknown user #{name}"
-        json conn, %{ok: true} #Do not allow people to probe which users are on the system 
-      user -> 
+        json conn, %{ok: true} #Do not allow people to probe which users are on the system
+      user ->
         case Authenticator.generate_login_claim(user) do
-          {:ok, token, _} -> 
+          {:ok, token, _} ->
             {:ok, pin, user} = Authenticator.generate_pin(user)
             Mailer.send_login_link(user, token, pin)
             json conn, %{ok: true, user: user}
-          _ -> 
+          _ ->
             Logger.debug "Failed to generate claim for #{name}"
-            json conn, %{ok: true} #Do not allow people to probe which users are on the system 
+            json conn, %{ok: true} #Do not allow people to probe which users are on the system
         end
     end
   end
@@ -127,7 +127,7 @@ defmodule Guard.Controller.Registration do
     case User.check_pin(user, pin) do
       true ->
         case Users.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) do
-          {:ok, _user} -> 
+          {:ok, _user} ->
             Authenticator.clear_pin(user)
             json(conn, %{ok: true})
           {:error, error, _changeset} ->
@@ -135,9 +135,8 @@ defmodule Guard.Controller.Registration do
         end
       false ->
         conn
-        |> put_status(:precondition_failed)
-        |> json(%{ok: false})
-
+        |> put_status(:unprocessable_entity)
+        |> send_error(:wrong_pin)
     end
   end
 
@@ -157,22 +156,22 @@ defmodule Guard.Controller.Registration do
     end
     device = if user != nil do
       Map.put(device, "user_id", user.id)
-    else 
+    else
       device
     end
     changeset = Device.changeset(model, device)
     res = if existing == nil do
       Repo.insert(changeset)
-    else 
+    else
       Repo.update(changeset)
     end
 
     case res do
-      {:ok, updated_device} -> 
-        conn 
+      {:ok, updated_device} ->
+        conn
         |> put_status(:created)
         |> json(%{device: updated_device})
-      {:error, changeset} -> 
+      {:error, changeset} ->
         send_error(conn, Repo.changeset_errors(changeset))
     end
   end
@@ -184,7 +183,7 @@ defmodule Guard.Controller.Registration do
       conn
       |> put_status(:not_found)
       |> json(%{device: nil})
-    else 
+    else
       if existing.user_id == nil || existing.user_id == user.id do
         case Repo.delete(existing) do
           {:ok, model} ->
@@ -192,7 +191,7 @@ defmodule Guard.Controller.Registration do
           {:error, changeset} ->
             send_error(conn, Repo.changeset_errors(changeset))
         end
-      else 
+      else
         conn
         |> put_status(:not_found)
         |> json(%{device: nil})
@@ -201,5 +200,5 @@ defmodule Guard.Controller.Registration do
 
 
   end
-  
+
 end
