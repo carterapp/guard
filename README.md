@@ -1,5 +1,7 @@
 # Guard
 
+[![Build Status](https://travis-ci.com/Codenaut/guard.svg?branch=master)](https://travis-ci.com/Codenaut/guard)
+
 Collection of common functionality for user handling.
 
 ## Installation
