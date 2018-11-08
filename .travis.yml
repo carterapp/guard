@@ -1,3 +1,12 @@
 language: elixir
 elixir: '1.7.4'
 otp_release: '21.1'
+
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker pull carlad/sinatra
+  - docker run --name guard-test-postgres -e POSTGRES_PASSWORD=doorman -e POSTGRES_USER=doorman_test -p 5433:5432 -d postgres
