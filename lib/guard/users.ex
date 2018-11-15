@@ -47,6 +47,7 @@ defmodule Guard.Users do
   end
 
   def get_by_mobile(mobile) do
+    mobile = User.clean_mobile_number(mobile)
     case get_by(mobile: mobile) do
       nil -> get_by(requested_mobile: mobile)
       confirmed -> confirmed

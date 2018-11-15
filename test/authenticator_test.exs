@@ -51,6 +51,15 @@ defmodule Guard.AuthenticatorTest do
     {:error, _} = Authenticator.use_pin(user, user_pin)
   end
 
+  test "Create mobile user with dirty mobile number" do
+    {:ok, user, _, _} = Authenticator.create_user_by_mobile("+45 30 12 34 56")
+    u = Users.get_by_mobile("4530123456")
+    u1 = Users.get_by_mobile("+45  30 12 34 56")
+    assert user.id == u.id
+    assert user.id == u1.id
+  end
+
+
   test "Password mismatch" do
     {:error, _, _} = Authenticator.create_user(%{"username"=>"August", "password"=>"tester", "password_confirmation"=>"testerikke"})
   end

@@ -41,19 +41,34 @@ defmodule Guard.User do
     model
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
+
     |> validate_format(:email, ~r/@/)
     |> validate_format(:requested_email, ~r/@/)
     |> validate_length(:password, min: 6)
     |> validate_length(:username, min: 1)
+
     |> validate_confirmation(:password, message: "password_mismatch")
+
     |> update_change(:email, &downcase/1) #Lowercase email, so we can check for duplicates
     |> update_change(:requested_email, &downcase/1) #Lowercase email, so we can check for duplicates
     |> update_change(:username, &downcase/1) #Lowercase username, so we can check for duplicates
+    |> update_change(:mobile, &clean_mobile_number/1) #Remove all spaces and leading + from mobile phone
+    |> update_change(:requested_mobile, &clean_mobile_number/1) #Remove all spaces and leading + from mobile phone
+
     |> unique_constraint(:email, message: "email_taken")
     |> unique_constraint(:mobile, message: "mobile_taken")
     |> unique_constraint(:username, message: "username_taken")
+
     |> encrypt_password()
     |> encrypt_pin()
+  end
+
+  def clean_mobile_number(v) do
+    if v do
+      v |> String.replace("+", "") |> String.replace(" ", "")
+    else
+      v
+    end
   end
 
   defp downcase(v) do
