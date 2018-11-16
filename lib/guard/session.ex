@@ -1,5 +1,6 @@
 defmodule Guard.Session do
   alias Guard.{User, Authenticator, Users}
+  require Logger
 
 
   defp has_perm?(user, perm) do
@@ -47,7 +48,7 @@ defmodule Guard.Session do
     case check_password(user, password) do
       true ->
         verify_params(user, params)
-      _ -> {:error, "wrong_password"}
+      _ -> {:error, :wrong_password}
     end
   end
 
@@ -89,19 +90,35 @@ defmodule Guard.Session do
   def authenticate(%{"token" => token}) do
     case Guard.Guardian.decode_and_verify(token) do
       {:ok, claims} -> user_from_claim(claims)
-      _ -> {:error, "bad_token"}
+      _ -> {:error, :bad_token}
     end
   end
 
   def authenticate({:jwt, jwt}) do
     case Guard.Guardian.decode_and_verify(jwt) do
       {:ok, claims} -> user_from_claim(claims)
-      _ -> {:error, "bad_token"}
+      _ -> {:error, :bad_token}
     end
   end
 
   def authenticate(_) do
-    {:error, "missing_credentials"}
+    {:error, :missing_credentials}
+  end
+
+  def authenticate(conn, params) do
+    case authenticate(params) do
+      {:ok, user} -> {:ok, user}
+      {:error, :missing_credentials} ->
+        case Guardian.Plug.current_token(conn) do
+          nil -> {:error, :missing_token}
+          token ->
+            case Guard.Guardian.refresh(token) do
+              {:ok, _old, {new_token, new_claims}} -> {:ok, new_token, new_claims}
+              other -> other
+            end
+        end
+      other -> other
+    end
   end
 
   defp confirm_user_mobile(%User{} = user, mobile) do
@@ -116,10 +133,10 @@ defmodule Guard.Session do
     case claims do
       %{"sub" => "User:" <> user_id} ->
         case Users.get(user_id) do
-          nil -> {:error, "bad_claims"}
+          nil -> {:error, :bad_claims}
           user -> confirm_user_email(claims, user)
         end
-      _ -> {:error, "bad_claims"}
+      _ -> {:error, :bad_claims}
     end
   end
 

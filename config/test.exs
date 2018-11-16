@@ -5,11 +5,13 @@ issuer: "Codenaut",
 ttl: { 180, :days },
 verify_issuer: true,
 secret_key: "changethistosomeothersecret",
+switch_user_permission: %{system: [:switch_user]},
 permissions: %{
   admin: [:read, :write],
   user: [:read, :write],
   bundles: [:read, :write],
-  system: [:read, :write]
+  system: [:read, :write, :switch_user],
+
 }
 
 config :guard, Guard.Repo,

@@ -237,12 +237,60 @@ defmodule Guard.Authenticator do
   defp process_perms(perms) do
     if perms do
       Enum.to_list(perms)
-      |> Enum.map(fn({k,v}) -> {k, Enum.map(v, fn(v) -> String.to_atom(v) end)} end)
+      |> Enum.map(fn({k,v}) -> {k, Enum.map(v, fn(v) -> if is_atom(v), do: v, else: String.to_atom(v) end)} end)
       |> Enum.into(%{})
     else
       nil
     end
   end
+
+  defp can_switch_user?(claims) do
+    case Application.get_env(:guard, Guard.Guardian)[:switch_user_permission] do
+      nil -> false
+      true -> true
+      required_permission ->
+        perms = claims
+                |> Guard.Guardian.decode_permissions_from_claims()
+
+        claims
+        |> Guard.Guardian.decode_permissions_from_claims()
+        |> Guard.Guardian.all_permissions?(required_permission)
+    end
+  end
+
+  def switch_user(conn, %User{} = user) do
+    case current_claims(conn) do
+      {:ok, claims} -> current_claims(conn)
+        if can_switch_user?(claims) do
+          root_user = authenticated_user!(conn)
+          generate_switched_user_access_claim(user, root_user.id)
+        else
+          {:error, :forbidden}
+
+        end
+      other -> other
+    end
+  end
+
+  def reset_user(conn) do
+    case current_claims(conn) do
+      {:ok, claims} -> current_claims(conn)
+        case claims do
+          %{"usr" => user_id} ->
+            user = Users.get!(user_id)
+            generate_access_claim(user)
+          _ ->
+            {:error, :not_switched}
+        end
+      other -> other
+    end
+  end
+
+  defp generate_switched_user_access_claim(%User{} = user, root_user_id) do
+    perms = process_perms(user.perms)
+    Guard.Guardian.encode_and_sign(user, %{usr: root_user_id}, token_type: "access", perms: perms || %{})
+  end
+
 
   def generate_access_claim(%User{} = user) do
     perms = process_perms(user.perms)

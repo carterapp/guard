@@ -17,6 +17,11 @@ defmodule Guard.Controller do
       get "/session", Guard.Controller.ActiveSession, :show #Show current session
       get "/session/:token", Guard.Controller.Session, :restore #Restore session with given JWT
       delete "/session", Guard.Controller.Session, :delete #Logout
+      put "/session/switch/:username", Guard.Controller.Session, :switch_user
+      put "/session/switch/:email", Guard.Controller.Session, :switch_user
+      put "/session/switch/:mobile", Guard.Controller.Session, :switch_user
+
+      delete "/session/switch", Guard.Controller.Session, :reset_user
 
       put "/account", Guard.Controller.Account, :update #Update current account
       post "/account/attributes", Guard.Controller.Account, :update_attributes #Update attributes for current account

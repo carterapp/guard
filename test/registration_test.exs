@@ -8,6 +8,9 @@ defmodule Guard.RegistrationTest do
     Poison.decode!(response.resp_body)
   end
 
+  defp get_jwt(reponse) do
+    get_body(reponse)["jwt"]
+  end
 
   test 'registering user' do
     response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
@@ -144,6 +147,36 @@ defmodule Guard.RegistrationTest do
     assert %{"someAttribute" => "tester", "anotherAttribute" => "test"} == u2.attrs
 
   end
+
+  @tag switch_user: true
+  test 'switch user' do
+    {:ok, admin, _, _} = Guard.Authenticator.create_user_by_username("admin", "admin123") 
+    {:ok, admin} = admin |> Guard.Authenticator.add_perms(%{system: [:switch_user]})
+    {:ok, user, _, _} = Guard.Authenticator.create_user_by_username("user", "user12")
+    assert admin.username == "admin"
+    {:ok, admin_jwt, _} = Authenticator.generate_access_claim(admin)
+
+    response = send_auth_json(:put, "/guard/session/switch/user", admin_jwt)
+    assert response.status == 201
+    assert %{"user" => %{"username" => "user"}} = get_body(response)
+    user_jwt = get_jwt(response)
+
+    response1 = send_auth_json(:put, "/guard/session/switch/user", user_jwt)
+    assert response1.status == 401
+    #refresh token
+    response2 = send_auth_json(:post, "/guard/session/", user_jwt)
+    user_jwt2 = get_jwt(response2)
+    assert user_jwt != user_jwt2
+    assert %{"user" => %{"username" => "user"}} = get_body(response2)
+
+    response3 = send_auth_json(:delete, "/guard/session/switch", user_jwt2)
+    assert response3.status == 201
+    assert %{"user" => %{"username" => "admin"}} = get_body(response3)
+    
+
+
+  end
+
 
   test 'confirm email and mobile' do
     new_email = "metoo@nowhere.com"

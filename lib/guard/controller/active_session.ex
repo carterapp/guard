@@ -15,20 +15,32 @@ defmodule Guard.Controller.ActiveSession do
   end
 
 
-  def show(conn, _) do
-    case Authenticator.current_claims(conn) do
-      { :ok, _claims } ->
+  defp generate_response(resp, conn) do
+    case resp do
+      { :ok, claims } ->
+        perms = Guard.Guardian.decode_permissions_from_claims(claims)
         user = Guardian.Plug.current_resource(conn)
+        root_user = claims["usr"]
+        extra = if root_user do
+          %{root_user: root_user}
+        else
+          %{}
+        end
 
         conn
         |> put_status(:ok)
-        |> json(%{jwt: Guardian.Plug.current_token(conn), user: user})
+        |> json(Map.merge(%{jwt: Guardian.Plug.current_token(conn), perms: perms, user: user}, extra))
 
       { :error, _reason } ->
         conn
         |> put_status(:not_found)
         |> Controller.send_error(:not_found)
     end
+ 
+  end
+
+  def show(conn, _) do
+    Authenticator.current_claims(conn) |> generate_response(conn)
   end
 
 
