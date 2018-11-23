@@ -7,7 +7,7 @@ defmodule Guard.Repo.Migrations.CreateUser do
 
   def change do
     create table(users_table(), primary_key: false) do
-      add :id, :uuid, primary_key: true
+      add :id, :binary_id, primary_key: true
       add :username, :string, null: false
       add :fullname, :string
       add :locale, :string

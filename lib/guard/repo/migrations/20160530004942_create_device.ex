@@ -7,7 +7,7 @@ defmodule Guard.Repo.Migrations.CreateDevice do
 
   def change do
     create table(device_table(), primary_key: false) do
-      add :id, :uuid, primary_key: true
+      add :id, :binary_id, primary_key: true
       add :token, :string, null: false
       add :platform, :string, null: false
       add :user_id, :uuid
