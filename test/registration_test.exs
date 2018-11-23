@@ -420,7 +420,7 @@ defmodule Guard.RegistrationTest do
         new_password: "testing",
         new_password_confirmation: "testing_blah"
       })
-
+    assert Guard.User.check_pin(user, pin)
     assert response.status == 422
     assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} = get_body(response)
 

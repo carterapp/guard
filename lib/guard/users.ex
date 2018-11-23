@@ -31,10 +31,12 @@ defmodule Guard.Users do
   end
 
   def get_by_email(email) do
-    trimmed = trimmer(email)
-    case get_by(email: trimmed) do
-      nil -> get_by(requested_email: trimmed)
-      confirmed -> confirmed
+    if email do
+      trimmed = trimmer(email)
+      case get_by(email: trimmed) do
+        nil -> get_by(requested_email: trimmed)
+        confirmed -> confirmed
+      end
     end
   end
 
@@ -47,10 +49,12 @@ defmodule Guard.Users do
   end
 
   def get_by_mobile(mobile) do
-    mobile = User.clean_mobile_number(mobile)
-    case get_by(mobile: mobile) do
-      nil -> get_by(requested_mobile: mobile)
-      confirmed -> confirmed
+    if mobile do
+      mobile = User.clean_mobile_number(mobile)
+      case get_by(mobile: mobile) do
+        nil -> get_by(requested_mobile: mobile)
+        confirmed -> confirmed
+      end
     end
   end
 
@@ -62,7 +66,7 @@ defmodule Guard.Users do
   end
 
   def get_by_username(username) do
-    get_by(username: trimmer(username))
+    username && get_by(username: trimmer(username))
   end
 
   def get_by_username!(username) do
@@ -74,7 +78,7 @@ defmodule Guard.Users do
   end
 
   def get(id) do
-    Repo.get(User, id)
+    id && Repo.get(User, id)
   end
 
   def get!(id) do
