@@ -255,9 +255,6 @@ defmodule Guard.Authenticator do
       nil -> false
       true -> true
       required_permission ->
-        perms = claims
-                |> Guard.Guardian.decode_permissions_from_claims()
-
         claims
         |> Guard.Guardian.decode_permissions_from_claims()
         |> Guard.Guardian.all_permissions?(required_permission)
