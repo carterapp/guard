@@ -37,7 +37,7 @@ defmodule Guard.User do
   If no params are provided, an invalid changeset is returned
   with no validation performed.
   """
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params) do
     model
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
@@ -87,11 +87,20 @@ defmodule Guard.User do
     Comeonin.Bcrypt.checkpw(password, user.enc_password)
   end
 
+  def validate_pin(user, pin) do
+    cond do
+      !user.enc_pin -> {:error, :no_pin}
+      user.pin_expiration && DateTime.diff(DateTime.utc_now(), user.pin_expiration) > 0 -> {:error, :pin_expired}
+      Comeonin.Bcrypt.checkpw(pin, user.enc_pin) -> :ok
+      true -> {:error, :wrong_pin}
+    end
+  end
+
   def check_pin(user, pin) do
-    user.enc_pin != nil
-      && user.pin_expiration != nil
-      && DateTime.diff(DateTime.utc_now(), user.pin_expiration) < 0
-      && Comeonin.Bcrypt.checkpw(pin, user.enc_pin)
+    case validate_pin(user, pin) do
+      :ok -> true
+      _ -> false
+    end
   end
 
   defp encrypt_password(current_changeset) do

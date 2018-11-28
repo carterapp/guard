@@ -30,11 +30,11 @@ defmodule Guard.Controller.Registration do
   end
 
   def check_account(conn, %{"email" => email}) do
-    check_user(conn, Users.get_by(email: String.downcase(email)))
+    check_user(conn, Users.get_by_email(email))
   end
 
   def check_account(conn, %{"mobile" => mobile}) do
-    check_user(conn, Users.get_by(mobile: mobile))
+    check_user(conn, Users.get_by_mobile(mobile))
   end
 
   def list_all_users(conn, _params) do
@@ -123,20 +123,20 @@ defmodule Guard.Controller.Registration do
   end
 
   def update_password(conn, %{"username" => username, "pin" => pin, "new_password" => new_password, "new_password_confirmation" => new_password_confirmation}) do
-    user = Users.get_by_username(username)
-    case User.check_pin(user, pin) do
-      true ->
+    user = Users.get_by_username!(username)
+    case User.validate_pin(user, pin) do
+      :ok ->
         case Users.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) do
-          {:ok, _user} ->
+          {:ok, user} ->
             Authenticator.clear_pin(user)
             json(conn, %{ok: true})
           {:error, error, _changeset} ->
             send_error(conn, error)
         end
-      false ->
+      {:error, error} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> send_error(:wrong_pin)
+        |> send_error(error)
     end
   end
 

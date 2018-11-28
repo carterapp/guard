@@ -228,14 +228,14 @@ defmodule Guard.Authenticator do
   def bump_to_admin(username) do
     case Users.get_by_username(username) do
       nil -> {:error}
-      user -> Repo.update(User.changeset(user, %{"perms" => %{"admin" => ["read", "write"]}}))
+      user -> add_perms(user, %{admin: [:read, :write]})
     end
   end
 
   def drop_admin(username) do
     case Users.get_by_username(username) do
       nil -> {:error}
-      user -> Repo.update(User.changeset(user, %{"perms" => %{}}))
+      user -> drop_perm(user, "admin")
     end
   end
 
@@ -332,22 +332,24 @@ defmodule Guard.Authenticator do
   end
 
   def use_pin(user, pin) do
-    if User.check_pin(user, pin) do
-      clear_pin(user)
-    else
-      {:error, :wrong_pin}
+    case User.validate_pin(user, pin) do
+      :ok -> clear_pin(user)
+      other -> other
     end
   end
 
   def generate_pin(user) do
-    pin = to_string(Enum.random(pin_range()))
     {:ok, exp_time} = (DateTime.utc_now() |> DateTime.to_unix()) + 60*pin_lifespan_mins() |> DateTime.from_unix
-    {:ok, user} = Users.update_user(user, %{"pin" => pin, "pin_expiration" => exp_time})
+    generate_pin(user, exp_time)
+  end
+  def generate_pin(user, exp_time) do
+    pin = to_string(Enum.random(pin_range()))
+    {:ok, user} = Users.update_user(user, %{pin: pin, pin_expiration: exp_time})
     {:ok, pin, user}
   end
 
   def clear_pin(user) do
-    Users.update_user(user, %{"enc_pin" => nil, "pin_expiration" => nil})
+    Users.update_user(user, %{enc_pin: nil, pin_expiration: nil})
   end
 
 end

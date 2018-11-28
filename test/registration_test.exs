@@ -172,9 +172,6 @@ defmodule Guard.RegistrationTest do
     response3 = send_auth_json(:delete, "/guard/session/switch", user_jwt2)
     assert response3.status == 201
     assert %{"user" => %{"username" => "admin"}} = get_body(response3)
-
-
-
   end
 
 
@@ -247,6 +244,8 @@ defmodule Guard.RegistrationTest do
       send_json(:post, "/guard/registration", %{
         "user" => %{
           "username" => "august",
+          mobile: "+4512345678",
+          email: "test@test.dk",
           email: "jalp@codenaut.com",
           password: "not_very_secret"
         }
@@ -376,6 +375,49 @@ defmodule Guard.RegistrationTest do
     assert response.status == 422
   end
 
+
+  @tag pin_support: true
+  test 'pin login' do
+    response =
+      send_json(:post, "/guard/registration", %{
+        "user" => %{"username" => "new_user", "mobile" => "4512345678"}
+      })
+
+    user = Users.get_by_username!("new_user")
+    assert abs((DateTime.utc_now() |> DateTime.to_unix()) +( 60*60) - (user.pin_expiration |> DateTime.to_unix())) <= 1
+
+    response =
+      send_json(:post, "/guard/session",
+         %{"username" => "new_user", "pin" => "badone"})
+
+    assert response.status == 401
+    assert %{"error" => "wrong_pin"} = get_body(response)
+
+    user = Users.get_by_username!("new_user")
+    {:ok, pin, user} = Authenticator.generate_pin(user)
+    response =
+      send_json(:post, "/guard/session",
+         %{"mobile" => "4512345678", "pin" => pin})
+
+    assert response.status == 201
+
+    response =
+      send_json(:post, "/guard/session",
+         %{"mobile" => "4512345678", "pin" => pin})
+
+    assert response.status == 401
+    assert %{"error" => "no_pin"} = get_body(response)
+
+    {:ok, pin, user} = Authenticator.generate_pin(user, DateTime.from_unix!(0))
+    response =
+      send_json(:post, "/guard/session",
+         %{"mobile" => "4512345678", "pin" => pin})
+
+    assert response.status == 401
+    assert %{"error" => "pin_expired"} = get_body(response)
+
+  end
+
   test 'pin support' do
     response =
       send_json(:post, "/guard/registration", %{
@@ -409,20 +451,20 @@ defmodule Guard.RegistrationTest do
       })
 
     assert response.status == 422
-    assert %{"error" => "wrong_pin"} = get_body(response)
+    assert %{"error" => "no_pin"} = get_body(response)
 
     {:ok, pin, user} = Authenticator.generate_pin(user)
     assert Guard.User.check_pin(user, pin)
 
-    response =
+    mismatch_response =
       send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",
         pin: pin,
         new_password: "testing",
         new_password_confirmation: "testing_blah"
       })
-    assert response.status == 422
-    assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} = get_body(response)
+    assert mismatch_response.status == 422
+    assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} = get_body(mismatch_response)
 
     response =
       send_json(:put, "/guard/account/setpassword", %{
