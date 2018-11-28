@@ -12,7 +12,7 @@ defmodule Guard.AuthenticatorTest do
   end
 
   test "Test transactional creation" do
-    extra_fn = fn(user) -> 
+    extra_fn = fn(user) ->
       assert !is_nil(user.id)
       _ = Users.get!(user.id)
       {:ok, user, _jwt, _response} = Authenticator.create_user(%{"username"=>"AugustAndre"})
@@ -22,7 +22,7 @@ defmodule Guard.AuthenticatorTest do
     assert !is_nil(Users.get_by_username!("August"))
     assert !is_nil(Users.get_by_username!("AugustAndre"))
 
-    extra_fn2 = fn(user) -> 
+    extra_fn2 = fn(user) ->
       {:ok, user, _jwt, _resp} = Authenticator.create_user_by_mobile("555-121")
       assert !is_nil(Users.get_by_username("555-121"))
       {:error, :im_a_teapot}
@@ -31,14 +31,14 @@ defmodule Guard.AuthenticatorTest do
     assert is_nil(Users.get_by_username("Emilia"))
     assert is_nil(Users.get_by_username("555-512"))
 
-    extra_fn3 = fn(user) -> 
+    extra_fn3 = fn(user) ->
       {:error, _, changeset} = Authenticator.create_user_by_mobile("Emilia")
       {:error, changeset}
     end
     {:error, %{username: ["username_taken"]}, %Ecto.Changeset{}} = Authenticator.create_user_by_username("Emilia", "badpassword", extra_fn3)
     assert is_nil(Users.get_by_username("Emilia"))
     assert is_nil(Users.get_by_username("555-512"))
- 
+
   end
 
   test "Create mobile user" do
@@ -71,7 +71,7 @@ defmodule Guard.AuthenticatorTest do
     {:ok, %Guard.User{username: "august"}} = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "perm" => "special"})
     {:error, :forbidden} = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "perm" => "notspecial"})
 
-    {:ok, %Guard.User{username: "august"}} 
+    {:ok, %Guard.User{username: "august"}}
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "all_perms" => ["admin"]})
 
     {:ok, %Guard.User{username: "august"}}
@@ -79,7 +79,7 @@ defmodule Guard.AuthenticatorTest do
     {:error, :forbidden}
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "all_perms" => ["admin", "notspecial", "special"]})
 
-    {:ok, %Guard.User{username: "august"}} 
+    {:ok, %Guard.User{username: "august"}}
     = Session.authenticate(%{"username"=>"August", "password" => "somepassword", "any_perms" => ["admin"]})
 
     {:ok, %Guard.User{username: "august"}}

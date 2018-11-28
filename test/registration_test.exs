@@ -150,7 +150,7 @@ defmodule Guard.RegistrationTest do
 
   @tag switch_user: true
   test 'switch user' do
-    {:ok, admin, _, _} = Guard.Authenticator.create_user_by_username("admin", "admin123") 
+    {:ok, admin, _, _} = Guard.Authenticator.create_user_by_username("admin", "admin123")
     {:ok, admin} = admin |> Guard.Authenticator.add_perms(%{system: [:switch_user]})
     {:ok, user, _, _} = Guard.Authenticator.create_user_by_username("user", "user12")
     assert admin.username == "admin"
@@ -172,7 +172,7 @@ defmodule Guard.RegistrationTest do
     response3 = send_auth_json(:delete, "/guard/session/switch", user_jwt2)
     assert response3.status == 201
     assert %{"user" => %{"username" => "admin"}} = get_body(response3)
-    
+
 
 
   end
@@ -412,6 +412,7 @@ defmodule Guard.RegistrationTest do
     assert %{"error" => "wrong_pin"} = get_body(response)
 
     {:ok, pin, user} = Authenticator.generate_pin(user)
+    assert Guard.User.check_pin(user, pin)
 
     response =
       send_json(:put, "/guard/account/setpassword", %{
@@ -420,7 +421,6 @@ defmodule Guard.RegistrationTest do
         new_password: "testing",
         new_password_confirmation: "testing_blah"
       })
-    assert Guard.User.check_pin(user, pin)
     assert response.status == 422
     assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} = get_body(response)
 

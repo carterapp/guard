@@ -71,7 +71,7 @@ defmodule Guard.User do
     end
   end
 
-  defp downcase(v) do
+  def downcase(v) do
     if v != nil do
       v |> String.trim() |> String.downcase()
     else

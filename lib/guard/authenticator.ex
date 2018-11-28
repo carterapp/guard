@@ -18,11 +18,17 @@ defmodule Guard.Authenticator do
   end
 
   def create_user_by_email(email, extra \\ nil) do
-    create_user%{"email" => email, "username" => email}, extra
+    case Users.get_by_email(email) do
+      nil -> create_user%{"email" => email, "username" => User.downcase(email)}, extra
+      _user -> {:error, %{errors: %{email: ["email_taken"]}}, nil}
+    end
   end
 
   def create_user_by_mobile(mobile, extra \\ nil) do
-    create_user%{"mobile" => mobile, "username" => mobile}, extra
+    case Users.get_by_mobile(mobile) do
+      nil -> create_user%{"mobile" => mobile, "username" => User.clean_mobile_number(mobile)}, extra
+      _user -> {:error, %{errors: %{mobile: ["mobile_taken"]}}, nil}
+    end
   end
 
   def send_welcome_email(user) do
