@@ -52,8 +52,8 @@ defmodule Guard.Session do
     end
   end
 
-  defp check_pin_with_message(user, pin, params) do
-    case Authenticator.use_pin(user, pin) do
+  defp check_pin_with_message(pin_fn, user, pin, params) do
+    case pin_fn.(user, pin) do
       {:ok, user} ->
         verify_params(user, params)
       error -> error
@@ -61,30 +61,40 @@ defmodule Guard.Session do
   end
 
   def authenticate(params = %{"email" => email, "password" => password}) do
-    user = Users.get_by_email(email)
+    user = Users.get_by_email!(email)
     check_password_with_message(user, password, params)
   end
 
   def authenticate(params = %{"username" => username, "password" => password}) do
-    user = Users.get_by_username(username)
+    user = Users.get_by_username!(username)
 
     check_password_with_message(user, password, params)
   end
 
   def authenticate(params = %{"username" => username, "pin" => pin}) do
-    user = Users.get_by_username(username)
+    user = Users.get_by_username!(username)
 
-    check_pin_with_message(user, pin, params)
+    check_pin_with_message(&Authenticator.use_either_pin/2, user, pin, params)
   end
 
   def authenticate(params = %{"mobile" => mobile, "pin" => pin}) do
-    user = Users.get_by(mobile: mobile) || Users.get_by!(requested_mobile: mobile)
-    case check_pin_with_message(user, pin, params) do
+    user = Users.get_by_mobile!(mobile)
+    case check_pin_with_message(&Authenticator.use_pin/2, user, pin, params) do
       {:ok, user} ->
-        confirm_user_mobile(user, mobile)
+        Users.confirm_user_mobile(user, mobile)
       error -> error
     end
   end
+
+  def authenticate(params = %{"email" => email, "pin" => pin}) do
+    user = Users.get_by_email!(email)
+    case check_pin_with_message(&Authenticator.use_email_pin/2, user, pin, params) do
+      {:ok, user} ->
+        Users.confirm_user_email(user, email)
+      error -> error
+    end
+  end
+
 
 
   def authenticate(%{"token" => token}) do
@@ -121,26 +131,19 @@ defmodule Guard.Session do
     end
   end
 
-  defp confirm_user_mobile(%User{} = user, mobile) do
-    if user.requested_mobile == mobile do
-      Users.update_user(user, %{mobile: mobile, requested_mobile: nil})
-    else
-      {:ok, user}
-    end
-  end
 
   defp user_from_claim(claims) do
     case claims do
       %{"sub" => "User:" <> user_id} ->
         case Users.get(user_id) do
           nil -> {:error, :bad_claims}
-          user -> confirm_user_email(claims, user)
+          user -> confirm_user_email_from_claims(claims, user)
         end
       _ -> {:error, :bad_claims}
     end
   end
 
-  defp confirm_user_email(claims, user) do
+  defp confirm_user_email_from_claims(claims, user) do
     case Map.get(claims, "typ") do
       "login" ->
         if user.requested_email != nil && user.requested_email == Map.get(claims, "requested_email") do

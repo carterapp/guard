@@ -7,28 +7,32 @@ defmodule Guard.Users do
   end
 
   def update_user(user, changes) do
-    changeset = User.changeset(user, changes)
-
-    case Repo.update(changeset) do
-      {:ok, user} ->
-        {:ok, user}
-
-      {:error, changeset} ->
-        {:error, Repo.changeset_errors(changeset), changeset}
-    end
+    User.changeset(user, changes)
+    |> Repo.update()
   end
 
   def create_user(changes \\ %{}) do
-    case %User{}
-         |> User.changeset(changes)
-         |> Repo.insert() do
-      {:ok, user} ->
-        {:ok, user}
+    %User{}
+    |> User.changeset(changes)
+    |> Repo.insert()
+  end
 
-      {:error, changeset} ->
-        {:error, Repo.changeset_errors(changeset), changeset}
+  def confirm_user_mobile(%User{} = user, mobile) do
+    if mobile && user.requested_mobile == mobile do
+      update_user(user, %{mobile: mobile, requested_mobile: nil})
+    else
+      {:ok, user}
     end
   end
+
+  def confirm_user_email(%User{} = user, email) do
+    if email && user.requested_email == email do
+      update_user(user, %{email: email, requested_email: nil})
+    else
+      {:ok, user}
+    end
+  end
+
 
   def get_by_email(email) do
     if email do

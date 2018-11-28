@@ -2,7 +2,7 @@ defmodule Guard.RegistrationTest do
   use Guard.ModelCase
   use Plug.Test
   import Guard.RouterTestHelper
-  alias Guard.{Router, Authenticator, Users}
+  alias Guard.{Router, Authenticator, Users, Session}
 
   defp get_body(response) do
     Poison.decode!(response.resp_body)
@@ -178,7 +178,7 @@ defmodule Guard.RegistrationTest do
   test 'confirm email and mobile' do
     new_email = "metoo@nowhere.com"
     {:ok, user, _jwt, _resp} = Authenticator.create_user_by_email("me@nowhere.com")
-    {:ok, user} = Authenticator.change_email(user, new_email)
+    {:ok, user} = Authenticator.request_email_change(user, new_email)
     assert user.requested_email == new_email
     assert user.email != new_email
 
@@ -196,7 +196,7 @@ defmodule Guard.RegistrationTest do
 
     assert Map.get(claims, "typ") == "access"
 
-    {:ok, user} = Authenticator.change_email(user, "another@example.com")
+    {:ok, user} = Authenticator.request_email_change(user, "another@example.com")
     {:ok, jwt, claims} = Authenticator.generate_login_claim(user, new_email)
     response = send_json(:get, "/guard/session/" <> jwt)
     assert response.status == 201
@@ -212,6 +212,30 @@ defmodule Guard.RegistrationTest do
     user1 = Guard.Users.get(user.id)
     assert user.requested_email == user1.requested_email
     assert user.email == user1.email
+    
+
+    {:ok, user} = Authenticator.request_mobile_change(user, "5551234")
+    {:ok, pin, user} = Authenticator.generate_pin(user)
+    assert user.mobile == nil 
+    assert user.requested_mobile == "5551234"
+    {:error, _} = Session.authenticate(%{"mobile" => "5551234", "pin" => "bad"})
+    assert user.mobile == nil 
+    assert user.requested_mobile == "5551234"
+    {:ok, updated_user} = Session.authenticate(%{"mobile" => "5551234", "pin" => pin})
+    assert updated_user.mobile == "5551234"
+    assert updated_user.requested_mobile == nil
+
+    {:ok, user} = Authenticator.request_email_change(user, "newone@tester.dk")
+    {:ok, pin, user} = Authenticator.generate_email_pin(user)
+    assert user.email == new_email 
+    assert user.requested_email == "newone@tester.dk"
+    {:error, _} = Session.authenticate(%{"email" => "newone@tester.dk", "pin" => "badtoo"})
+    assert user.email == new_email 
+    assert user.requested_email == "newone@tester.dk"
+    {:ok, updated_user} = Session.authenticate(%{"email" => "newone@tester.dk", "pin" => pin})
+    assert updated_user.email == "newone@tester.dk"
+    assert updated_user.requested_email == nil
+
   end
 
   test 'hash_values' do
@@ -384,7 +408,9 @@ defmodule Guard.RegistrationTest do
       })
 
     user = Users.get_by_username!("new_user")
-    assert abs((DateTime.utc_now() |> DateTime.to_unix()) +( 60*60) - (user.pin_expiration |> DateTime.to_unix())) <= 1
+    assert abs((DateTime.utc_now() |> DateTime.to_unix()) +( 60*60) - (user.email_pin_expiration |> DateTime.to_unix())) <= 1
+    assert user.enc_email_pin
+    assert !user.enc_pin
 
     response =
       send_json(:post, "/guard/session",
@@ -397,7 +423,7 @@ defmodule Guard.RegistrationTest do
     {:ok, pin, user} = Authenticator.generate_pin(user)
     response =
       send_json(:post, "/guard/session",
-         %{"mobile" => "4512345678", "pin" => pin})
+         %{"username" => "new_user", "pin" => pin})
 
     assert response.status == 201
 
@@ -421,20 +447,22 @@ defmodule Guard.RegistrationTest do
   test 'pin support' do
     response =
       send_json(:post, "/guard/registration", %{
-        "user" => %{"username" => "new_user", password: "not_very_secret"}
+        "user" => %{"username" => "new_user", mobile: "5551234", password: "not_very_secret"}
       })
 
     assert response.status == 201
-
+    
     user = Users.get_by_username("new_user")
+    {:ok, user} = Authenticator.clear_email_pin(user)
     {:ok, pin, user} = Authenticator.generate_pin(user)
 
     assert user.enc_pin != nil
     assert pin != nil
-
+    assert user.mobile == nil
+    assert user.requested_mobile == "5551234"
     response =
       send_json(:put, "/guard/account/setpassword", %{
-        username: "new_user",
+        mobile: "5551234",
         pin: pin,
         new_password: "testing",
         new_password_confirmation: "testing"
@@ -442,6 +470,10 @@ defmodule Guard.RegistrationTest do
 
     assert response.status == 200
 
+    user = Users.get!(user.id)
+    assert user.mobile == "5551234"
+    assert user.requested_mobile == nil
+ 
     response =
       send_json(:put, "/guard/account/setpassword", %{
         username: "new_user",

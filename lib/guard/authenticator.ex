@@ -1,6 +1,5 @@
 defmodule Guard.Authenticator do
-  alias Guard.{Repo, User, Mailer, Device, Users}
-  import Ecto.Query
+  alias Guard.{Repo, User, Mailer, Users, Sms}
 
   defexception message: "not_authenticated"
 
@@ -27,7 +26,7 @@ defmodule Guard.Authenticator do
 
   def send_welcome_email(user) do
     {:ok, token, _} = generate_login_claim(user, user.requested_email)
-    {:ok, pin, user} = generate_pin(user)
+    {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_welcome_email(user, token, pin)
   end
 
@@ -42,22 +41,11 @@ defmodule Guard.Authenticator do
     Mailer.send_login_link(user, token, pin)
   end
 
-
   def create_user_by_username(username, password, extra \\ nil) do
     map = %{"username" => username, "password" => password}
     create_user(map, extra)
   end
 
-
-  defp insert_user(changeset) do
-    case Repo.insert(changeset) do
-      {:ok, user} ->
-        {:ok, jwt, _full_claims} = generate_access_claim(user)
-        {:ok, user, jwt}
-      {:error, changeset} ->
-        {:error, changeset}
-    end
-  end
 
   def create_and_confirm_user(user_map) do
     case create_user(user_map) do
@@ -84,7 +72,6 @@ defmodule Guard.Authenticator do
     end
     user = Map.put(user, "username", username)
 
-    user = Map.put(user, "confirmation_token", random_bytes())
     #Make sure user does not try to set permissions
     user = Map.delete(user, "perms")
     #Generate password if user has not provided one
@@ -95,34 +82,28 @@ defmodule Guard.Authenticator do
       user
     end
 
-    changeset = User.changeset(%User{}, user)
-
-    if is_nil(extra) do
-      with {:ok, user, jwt} <- insert_user(changeset) do
-        {:ok, user, jwt, nil}
-      else
-        {:error, changeset} -> {:error, Repo.changeset_errors(changeset), changeset}
-      end
-    else
-      Repo.transaction(fn ->
-        with {:ok, user, jwt} <- insert_user(changeset),
-             {:ok, response} <- (try do
+    Repo.transaction(fn ->
+      with {:ok, user} <- Users.create_user(user),
+           {:ok, jwt, _full_claims} <- generate_access_claim(user),
+           {:ok, response} <- (try do
+             if extra do
                extra.(user)
-             rescue
-               error -> {:error, error}
-             end) do
-               {:ok, user, jwt, response}
-        else
-          error ->
-            Repo.rollback(error)
-        end
-      end)
-      |> case do
-        {:ok, response} -> response
-        {:error, {:error, %Ecto.Changeset{} = changeset}} -> {:error, Repo.changeset_errors(changeset), changeset}
-        {:error, {:error, error}} -> {:error, Guard.Controller.translate_error(error), error}
-        {:error, error} -> {:error, Guard.Controller.translate_error(error), error}
+             else
+               {:ok, nil}
+             end
+           rescue
+             error -> {:error, error}
+           end) do
+             {:ok, user, jwt, response}
+      else
+        error -> Repo.rollback(error)
       end
+    end)
+    |> case do
+      {:ok, response} -> response
+      {:error, {:error, %Ecto.Changeset{} = changeset}} -> {:error, Repo.changeset_errors(changeset), changeset}
+      {:error, {:error, error}} -> {:error, Guard.Controller.translate_error(error), error}
+      {:error, error} -> {:error, Guard.Controller.translate_error(error), error}
     end
   end
 
@@ -139,18 +120,12 @@ defmodule Guard.Authenticator do
     end
   end
 
-
-  def confirm_email(user, confirmation_token) do
-    if confirmation_token == user.confirmation_token do
-      Users.update_user(user, %{email: user.requested_email, requested_email: nil, confirmation_token: nil})
-    else
-      {:error, "wrong_confirmation_token"}
-    end
+  def request_email_change(user, email) do
+    Users.update_user(user, %{"requested_email" => email})
   end
 
-  def change_email(user, email) do
-    Users.update_user(user, %{"confirmation_token" => random_bytes(),
-    "requested_email" => email})
+  def request_mobile_change(user, mobile) do
+    Users.update_user(user, %{"requested_mobile" => mobile})
   end
 
   def change_password(user, new_password) do
@@ -302,10 +277,6 @@ defmodule Guard.Authenticator do
     Guard.Guardian.encode_and_sign(user, %{}, token_type: "password_reset", token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours}))
   end
 
-  def get_user_devices(user) do
-    Repo.all(from d in Device, where: d.user_id == ^user.id)
-  end
-
   def current_claims(conn)  do
     conn
     |> Guardian.Plug.current_token
@@ -329,18 +300,54 @@ defmodule Guard.Authenticator do
     end
   end
 
+  def use_email_pin(user, pin) do
+    case User.validate_email_pin(user, pin) do
+      :ok -> clear_email_pin(user)
+      other -> other
+    end
+  end
+
+  def use_either_pin(user, pin) do
+    case User.validate_pin(user, pin) do
+      :ok -> clear_pin(user)
+      other -> 
+        if user.enc_email_pin, do: use_email_pin(user, pin), else: other
+    end
+  end
+
+
   def generate_pin(user) do
     {:ok, exp_time} = (DateTime.utc_now() |> DateTime.to_unix()) + 60*pin_lifespan_mins() |> DateTime.from_unix
     generate_pin(user, exp_time)
   end
+
   def generate_pin(user, exp_time) do
     pin = to_string(Enum.random(pin_range()))
-    {:ok, user} = Users.update_user(user, %{pin: pin, pin_expiration: exp_time})
-    {:ok, pin, user}
+    case Users.update_user(user, %{pin: pin, pin_expiration: exp_time}) do
+      {:ok, user} -> {:ok, pin, user}
+      other -> other
+    end
   end
 
   def clear_pin(user) do
     Users.update_user(user, %{enc_pin: nil, pin_expiration: nil})
+  end
+
+  def generate_email_pin(user) do
+    {:ok, exp_time} = (DateTime.utc_now() |> DateTime.to_unix()) + 60*pin_lifespan_mins() |> DateTime.from_unix
+    generate_email_pin(user, exp_time)
+  end
+
+  def generate_email_pin(user, exp_time) do
+    pin = to_string(Enum.random(pin_range()))
+    case Users.update_user(user, %{email_pin: pin, email_pin_expiration: exp_time}) do
+      {:ok, user} -> {:ok, pin, user}
+      other -> other
+    end
+  end
+
+  def clear_email_pin(user) do
+    Users.update_user(user, %{enc_email_pin: nil, email_pin_expiration: nil})
   end
 
 end

@@ -12,24 +12,28 @@ defmodule Guard.User do
     field :fullname, :string
     field :locale, :string
     field :email, :string
+    field :requested_email, :string
     field :mobile, :string
     field :requested_mobile, :string
     field :password, :string, virtual: true
     field :enc_password, :string
     field :perms, :map
-    field :requested_email, :string
     field :provider, :map
-    field :confirmation_token, :string
     field :attrs, :map
     field :pin, :string, virtual: true
     field :enc_pin, :string
     field :pin_expiration, :utc_datetime
+    field :email_pin, :string, virtual: true
+    field :enc_email_pin, :string
+    field :email_pin_expiration, :utc_datetime
+
 
     timestamps()
   end
 
   @required_fields ~w(username)a
-  @optional_fields ~w(password email enc_password perms requested_email provider confirmation_token fullname locale attrs pin enc_pin pin_expiration mobile requested_mobile)a
+  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin enc_pin pin_expiration 
+                      email_pin enc_email_pin email_pin_expiration mobile requested_mobile)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -61,6 +65,7 @@ defmodule Guard.User do
 
     |> encrypt_password()
     |> encrypt_pin()
+    |> encrypt_email_pin()
   end
 
   def clean_mobile_number(v) do
@@ -87,13 +92,22 @@ defmodule Guard.User do
     Comeonin.Bcrypt.checkpw(password, user.enc_password)
   end
 
-  def validate_pin(user, pin) do
+  defp validate_pin(user_pin, exp_time, check_pin) do
     cond do
-      !user.enc_pin -> {:error, :no_pin}
-      user.pin_expiration && DateTime.diff(DateTime.utc_now(), user.pin_expiration) > 0 -> {:error, :pin_expired}
-      Comeonin.Bcrypt.checkpw(pin, user.enc_pin) -> :ok
+      !user_pin -> {:error, :no_pin}
+      exp_time && DateTime.diff(DateTime.utc_now(), exp_time) > 0 -> {:error, :pin_expired}
+      Comeonin.Bcrypt.checkpw(check_pin, user_pin) -> :ok
       true -> {:error, :wrong_pin}
     end
+  end
+
+  def validate_email_pin(user, pin) do
+    validate_pin(user.enc_email_pin, user.email_pin_expiration, pin)
+  end
+
+
+  def validate_pin(user, pin) do
+    validate_pin(user.enc_pin, user.pin_expiration, pin)
   end
 
   def check_pin(user, pin) do
@@ -120,5 +134,15 @@ defmodule Guard.User do
         current_changeset
     end
   end
+
+  defp encrypt_email_pin(current_changeset) do
+    case current_changeset do
+      %Ecto.Changeset{valid?: true, changes: %{email_pin: pin}} ->
+        put_change(current_changeset, :enc_email_pin, hash_password(pin))
+      _ ->
+        current_changeset
+    end
+  end
+
 
 end

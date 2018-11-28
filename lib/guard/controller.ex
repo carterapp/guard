@@ -8,7 +8,7 @@ defmodule Guard.Controller do
 
       post "/registration/reset", Guard.Controller.Registration, :send_password_reset #Request a password reset
       post "/registration/link", Guard.Controller.Registration, :send_login_link #Send magic link
-      post "/registration/check", Guard.Controller.Registration, :check_account #Send magic link
+      post "/registration/check", Guard.Controller.Registration, :check_account #Check availability
 
       post "/registration/device", Guard.Controller.Registration, :register_device #Register for push
       delete "/registration/device/:platform/:token", Guard.Controller.Registration, :unregister_device #Unregister for push
@@ -41,7 +41,7 @@ defmodule Guard.Controller do
     end
   end
 
-  def send_error(conn, %{message: message, plug_status: status_code}=error) do
+  def send_error(conn, %{message: message, plug_status: status_code}=_error) do
     send_error(conn, message, status_code)
   end
 

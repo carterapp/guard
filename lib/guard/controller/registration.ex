@@ -55,16 +55,6 @@ defmodule Guard.Controller.Registration do
 
   end
 
-  def confirm(conn, %{"confirmation_token" => token, "user_id" => user_id}) do
-    user = Users.get!(user_id)
-    case Authenticator.confirm_email(user, token) do
-      {:ok, user} ->
-        json conn, %{user: user}
-      {:error, error, _} ->
-        send_error(conn, error)
-    end
-  end
-
   def send_password_reset(conn, %{"username" => username}) do
       send_password_reset(conn, Users.get_by_username(username), username)
   end
@@ -122,16 +112,46 @@ defmodule Guard.Controller.Registration do
     end
   end
 
-  def update_password(conn, %{"username" => username, "pin" => pin, "new_password" => new_password, "new_password_confirmation" => new_password_confirmation}) do
-    user = Users.get_by_username!(username)
+  defp validate_either_pin(user, pin) do
     case User.validate_pin(user, pin) do
-      :ok ->
+      :ok -> {:ok, :mobile}
+      other -> 
+        if user.enc_email_pin do
+          case User.validate_email_pin(user, pin) do
+            :ok -> {:ok, :email}
+            other -> other
+          end
+          else
+            other
+        end
+    end
+  end
+
+  defp get_user_from_param(params) do
+    cond do
+      username = Map.get(params, "username") -> Users.get_by_username!(username)
+      email = Map.get(params, "email") -> Users.get_by_email!(email)
+      mobile = Map.get(params, "mobile") -> Users.get_by_mobile!(mobile)
+      true -> {:error, :not_found}
+    end
+  end
+
+  def update_password(conn, %{"pin" => pin, "new_password" => new_password, "new_password_confirmation" => new_password_confirmation} = params) do
+    user = get_user_from_param(params)
+    case validate_either_pin(user, pin) do
+      {:ok, type} ->
         case Users.update_user(user, %{"password" => new_password, "password_confirmation" => new_password_confirmation}) do
           {:ok, user} ->
-            Authenticator.clear_pin(user)
+            if type == :mobile do
+              Users.confirm_user_mobile(user, Map.get(params, "mobile")) 
+              Authenticator.clear_pin(user)
+            else 
+              Users.confirm_user_email(user, Map.get(params, "email")) 
+              Authenticator.clear_email_pin(user)
+            end
             json(conn, %{ok: true})
-          {:error, error, _changeset} ->
-            send_error(conn, error)
+          {:error, changeset} ->
+            send_error(conn, changeset)
         end
       {:error, error} ->
         conn

@@ -23,8 +23,8 @@ defmodule Guard.Controller.PasswordReset do
     case update do
           {:ok, _user} ->
             json(conn, %{ok: true})
-          {:error, error, _changeset} ->
-            send_error(conn, error)
+          {:error, changeset} ->
+            send_error(conn, changeset)
         end
   end
 
