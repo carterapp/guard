@@ -42,14 +42,15 @@ defmodule Guard.Controller do
   end
 
   def send_error(conn, %{message: message, plug_status: status_code}=error) do
-    Logger.error("#{conn.request_path} #{inspect error}")
-    conn
-    |> put_status(status_code)
-    |> json(%{error: translate_error(message)})
+    send_error(conn, message, status_code)
   end
 
-    def send_error(conn, error, status_code \\ :unprocessable_entity) do
-    Logger.error("#{conn.request_path} #{inspect error}")
+  def send_error(conn, %Ecto.Changeset{} = cs) do
+    send_error(conn, Guard.Repo.changeset_errors(cs), :unprocessable_entity)
+  end
+
+  def send_error(conn, error, status_code \\ :unprocessable_entity) do
+    Logger.debug("#{conn.request_path} #{inspect error}")
     conn
     |> put_status(status_code)
     |> json(%{error: translate_error(error)})
