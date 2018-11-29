@@ -4,74 +4,25 @@ defmodule Guard.ExternalRepo do
     repo = Application.get_env(:guard, Guard.ExternalRepo)[:repo]
     if repo do
       quote do
-        :ets.new(Guard.Repo, [:set, :public, read_concurrency: true])
-
-        defdelegate __adapter__, to: unquote(repo)
-        defdelegate aggregate(a,b,c), to: unquote(repo)
-        defdelegate aggregate(a,b,c,d), to: unquote(repo)
-        defdelegate all(a), to: unquote(repo)
-        defdelegate all(a,b), to: unquote(repo)
-        defdelegate child_spec(a), to: unquote(repo)
-        defdelegate config, to: unquote(repo)
-        defdelegate delete!(a), to: unquote(repo)
-        defdelegate delete!(a,b), to: unquote(repo)
-        defdelegate delete(a), to: unquote(repo)
-        defdelegate delete(a,b), to: unquote(repo)
-        defdelegate delete_all(a), to: unquote(repo)
-        defdelegate delete_all(a,b), to: unquote(repo)
-        defdelegate get!(a,b), to: unquote(repo)
-        defdelegate get!(a,b,c), to: unquote(repo)
-        defdelegate get(a,b), to: unquote(repo)
-        defdelegate get(a,b,c), to: unquote(repo)
-        defdelegate get_by!(a,b), to: unquote(repo)
-        defdelegate get_by!(a,b,c), to: unquote(repo)
-        defdelegate get_by(a,b), to: unquote(repo)
-        defdelegate get_by(a,b,c), to: unquote(repo)
-        defdelegate in_transaction?, to: unquote(repo)
-        defdelegate init(a,b), to: unquote(repo)
-        defdelegate insert!(a), to: unquote(repo)
-        defdelegate insert!(a,b), to: unquote(repo)
-        defdelegate insert(a), to: unquote(repo)
-        defdelegate insert(a,b), to: unquote(repo)
-        defdelegate insert_all(a,b), to: unquote(repo)
-        defdelegate insert_all(a,b,c), to: unquote(repo)
-        defdelegate insert_or_update!(a), to: unquote(repo)
-        defdelegate insert_or_update!(a,b), to: unquote(repo)
-        defdelegate insert_or_update(a), to: unquote(repo)
-        defdelegate insert_or_update(a,b), to: unquote(repo)
-        defdelegate load(a,b), to: unquote(repo)
-        defdelegate one!(a), to: unquote(repo)
-        defdelegate one!(a,b), to: unquote(repo)
-        defdelegate one(a), to: unquote(repo)
-        defdelegate one(a,b), to: unquote(repo)
-        defdelegate paginate(a), to: unquote(repo)
-        defdelegate paginate(a,b), to: unquote(repo)
-        defdelegate paginate(a,b,c), to: unquote(repo)
-        defdelegate preload(a,b), to: unquote(repo)
-        defdelegate preload(a,b,c), to: unquote(repo)
-        defdelegate query!(a), to: unquote(repo)
-        defdelegate query!(a,b), to: unquote(repo)
-        defdelegate query!(a,b,c), to: unquote(repo)
-        defdelegate query(a), to: unquote(repo)
-        defdelegate query(a,b), to: unquote(repo)
-        defdelegate query(a,b,c), to: unquote(repo)
-        defdelegate rollback(a), to: unquote(repo)
-        defdelegate start_link, to: unquote(repo)
-        defdelegate start_link(a), to: unquote(repo)
-        defdelegate stop(a), to: unquote(repo)
-        defdelegate stop(a,b), to: unquote(repo)
-        defdelegate stream(a), to: unquote(repo)
-        defdelegate stream(a,b), to: unquote(repo)
-        defdelegate to_sql(a,b), to: unquote(repo)
-        defdelegate transaction(a), to: unquote(repo)
-        defdelegate transaction(a,b), to: unquote(repo)
-        defdelegate update!(a), to: unquote(repo)
-        defdelegate update!(a,b), to: unquote(repo)
-        defdelegate update(a), to: unquote(repo)
-        defdelegate update(a,b), to: unquote(repo)
-        defdelegate update_all(a,b), to: unquote(repo)
-        defdelegate update_all(a,b,c), to: unquote(repo)
+        Process.register(GenServer.whereis(repo), Guard.Repo)
       end
+
+      # automatically generate delegate for all functions in repo, which 
+      # look like something like this:
+      #     ...
+      #     defdelegate update_all(a,b,c), to: unquote(repo)
+      #     ...
+      repo.__info__(:functions)
+      |> Enum.map(fn({function, arity}) ->
+        case arity do
+          0 -> quote do defdelegate unquote(function)(), to: unquote(repo) end
+          1 -> quote do defdelegate unquote(function)(a), to: unquote(repo) end
+          2 -> quote do defdelegate unquote(function)(a,b), to: unquote(repo) end
+          3 -> quote do defdelegate unquote(function)(a,b,c), to: unquote(repo) end
+          4 -> quote do defdelegate unquote(function)(a,b,c,d), to: unquote(repo) end
+          _ -> raise "Unexpected arity for function in Repo"
+        end
+      end)
     end
   end
 end
