@@ -29,7 +29,7 @@ use Mix.Config
 #
 
 config :phoenix, :format_encoders,
-  "json-api": Poison,
+  "json-api": Jason,
   filter_parameters:  []
 
 config :phoenix, 

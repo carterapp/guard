@@ -5,7 +5,7 @@ defmodule Guard.Router do
   pipeline :api do
     plug :accepts, ["json"]
     plug Guard.ApiPipeline
-    plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], pass: ["*/*"], json_decoder: Poison
+    plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], pass: ["*/*"], json_decoder: Jason
 
     plug Plug.RequestId
     plug Plug.Logger

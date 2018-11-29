@@ -14,7 +14,7 @@ defmodule Guard.RouterTestHelper do
   end
 
   def send_request(method, url, body \\ nil, headers \\ []) do
-    conn = conn(method, url, Poison.encode!(body))
+    conn = conn(method, url, Jason.encode!(body))
     conn = Enum.reduce(headers, conn, fn ({name, value}, conn) ->
       put_req_header(conn, name, value)
     end)

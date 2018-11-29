@@ -3,7 +3,7 @@ defmodule Guard.Mixfile do
 
   def project do
     [app: :guard,
-     version: "0.9.0",
+     version: "0.10.0",
      elixir: "~> 1.4 or ~> 1.5 or ~> 1.6 or ~> 1.7",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
@@ -20,7 +20,7 @@ defmodule Guard.Mixfile do
   defp application_list() do
     apps = [:logger,
             :guardian, :bamboo, :comeonin, :inets, :gettext, :plug_cowboy,
-            :postgrex, :hackney, :tesla, :poison, :bcrypt_elixir, :jason]
+            :postgrex, :hackney, :tesla, :bcrypt_elixir, :jason]
     if Mix.env() == :test do
       [:ecto, :ecto_sql] ++ apps
     else
@@ -58,7 +58,6 @@ defmodule Guard.Mixfile do
      {:tesla, "~> 1.2.1"},
      {:jason, "~> 1.1.2"},
      {:plug_cowboy, "~> 1.0 or ~> 2.0"},
-     {:poison, "~> 3.0 or ~> 4.0"},
      {:postgrex, "~> 0.13.0 or ~> 0.14.0", only: :test},
      {:ex_doc, ">= 0.0.0", only: :dev}
     ]

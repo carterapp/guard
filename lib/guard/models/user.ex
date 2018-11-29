@@ -6,6 +6,7 @@ defmodule Guard.User do
   @primary_key {:id, :binary_id, autogenerate: true}
 
   @derive {Poison.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at, :mobile, :requested_mobile]}
+  @derive {Jason.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at, :mobile, :requested_mobile]}
 
   schema "users" do
     field :username, :string

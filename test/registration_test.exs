@@ -5,7 +5,7 @@ defmodule Guard.RegistrationTest do
   alias Guard.{Router, Authenticator, Users, Session}
 
   defp get_body(response) do
-    Poison.decode!(response.resp_body)
+    Jason.decode!(response.resp_body)
   end
 
   defp get_jwt(reponse) do
@@ -25,7 +25,7 @@ defmodule Guard.RegistrationTest do
 
     assert response.status == 201
 
-    jwt = Poison.decode!(response.resp_body)["jwt"]
+    jwt = Jason.decode!(response.resp_body)["jwt"]
     response = send_auth_json(:get, "/jeeves/users", jwt)
     assert response.status == 401
 
@@ -46,7 +46,7 @@ defmodule Guard.RegistrationTest do
       })
 
     assert response.status == 201
-    jwt = Poison.decode!(response.resp_body)["jwt"]
+    jwt = Jason.decode!(response.resp_body)["jwt"]
 
     response = send_auth_json(:get, "/jeeves/users", jwt)
     assert response.status == 200
@@ -115,7 +115,7 @@ defmodule Guard.RegistrationTest do
 
     assert response.status == 201
 
-    json_body = Poison.decode!(response.resp_body)
+    json_body = Jason.decode!(response.resp_body)
 
     response = send_json(:delete, "/guard/account")
     assert response.status == 403
@@ -191,7 +191,7 @@ defmodule Guard.RegistrationTest do
     assert user.requested_email == nil
     assert user.email == new_email
 
-    jwt = Poison.decode!(response.resp_body) |> Map.get("jwt")
+    jwt = Jason.decode!(response.resp_body) |> Map.get("jwt")
     {:ok, claims} = Guard.Guardian.decode_and_verify(jwt)
 
     assert Map.get(claims, "typ") == "access"
@@ -286,9 +286,13 @@ defmodule Guard.RegistrationTest do
       })
 
     assert response.status == 201
-    json_body = Poison.decode!(response.resp_body)
+    json_body = Jason.decode!(response.resp_body)
     response = send_auth_json(:get, "/guard/session", Map.get(json_body, "jwt"))
     assert response.status == 200
+    %{"user" => user_resp} = get_body(response)
+    assert user_resp["enc_password"] == nil
+    assert user_resp["password"] == nil
+    assert user_resp["pin"] == nil
 
     response = send_auth_json(:get, "/guard/session", Map.get(json_body, "jwt") <> "bad")
     assert response.status == 401

@@ -1,5 +1,5 @@
 defmodule Guard.Authenticator do
-  alias Guard.{Repo, User, Mailer, Users, Sms}
+  alias Guard.{Repo, User, Mailer, Users}
 
   defexception message: "not_authenticated"
 

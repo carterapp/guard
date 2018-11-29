@@ -5,6 +5,7 @@ defmodule Guard.Device do
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
+  @derive {Jason.Encoder, only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
   @derive {Poison.Encoder, only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
 
   schema "devices" do
