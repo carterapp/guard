@@ -3,7 +3,7 @@ defmodule Guard.Mixfile do
 
   def project do
     [app: :guard,
-     version: "0.10.0",
+     version: "0.10.1",
      elixir: "~> 1.4 or ~> 1.5 or ~> 1.6 or ~> 1.7",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
@@ -50,7 +50,7 @@ defmodule Guard.Mixfile do
     [{:guardian, "~> 1.1.1"},
      {:phoenix, "~> 1.3 or ~> 1.4"},
      {:gettext, "~> 0.15 or ~> 0.16"},
-     {:ecto, "~> 2.2 or ~> 3.0", optional: true},
+     {:ecto, "~> 2.2 or ~> 3.0", optional: false},
      {:ecto_sql, "~> 3.0", optional: true},
      {:bamboo, "~> 1.1.0"},
      {:comeonin, "~> 4.1.1"},
