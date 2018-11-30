@@ -20,9 +20,9 @@ defmodule Guard.Mixfile do
   defp application_list() do
     apps = [:logger,
             :guardian, :bamboo, :comeonin, :inets, :gettext, :plug_cowboy,
-            :postgrex, :hackney, :tesla, :bcrypt_elixir, :jason]
+            :hackney, :tesla, :bcrypt_elixir, :jason]
     if Mix.env() == :test do
-      [:ecto, :ecto_sql] ++ apps
+      [:ecto, :ecto_sql, :postgrex] ++ apps
     else
       apps
     end
