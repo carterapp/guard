@@ -1,6 +1,6 @@
 defmodule Guard.Repo do
   if Application.get_env(:guard,  Guard.Repo) do
-    use Ecto.Repo, otp_app: :guard, adapter: Ecto.Adapters.Postgres
+    use Ecto.Repo, otp_app: :guard, adapter: Application.get_env(:guard, Guard.Repo)[:adapter]
   else
     use Guard.ExternalRepo
   end
