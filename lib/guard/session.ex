@@ -61,24 +61,24 @@ defmodule Guard.Session do
   end
 
   def authenticate(params = %{"email" => email, "password" => password}) do
-    user = Users.get_by_email!(email)
+    user = Users.get_by_email(email)
     check_password_with_message(user, password, params)
   end
 
   def authenticate(params = %{"username" => username, "password" => password}) do
-    user = Users.get_by_username!(username)
+    user = Users.get_by_username(username)
 
     check_password_with_message(user, password, params)
   end
 
   def authenticate(params = %{"username" => username, "pin" => pin}) do
-    user = Users.get_by_username!(username)
+    user = Users.get_by_username(username)
 
     check_pin_with_message(&Authenticator.use_either_pin/2, user, pin, params)
   end
 
   def authenticate(params = %{"mobile" => mobile, "pin" => pin}) do
-    user = Users.get_by_mobile!(mobile)
+    user = Users.get_by_mobile(mobile)
     case check_pin_with_message(&Authenticator.use_pin/2, user, pin, params) do
       {:ok, user} ->
         Users.confirm_user_mobile(user, mobile)
@@ -87,7 +87,7 @@ defmodule Guard.Session do
   end
 
   def authenticate(params = %{"email" => email, "pin" => pin}) do
-    user = Users.get_by_email!(email)
+    user = Users.get_by_email(email)
     case check_pin_with_message(&Authenticator.use_email_pin/2, user, pin, params) do
       {:ok, user} ->
         Users.confirm_user_email(user, email)

@@ -3,7 +3,7 @@ defmodule Guard.Mixfile do
 
   def project do
     [app: :guard,
-     version: "0.10.3",
+     version: "0.10.4",
      elixir: "~> 1.4 or ~> 1.5 or ~> 1.6 or ~> 1.7",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
