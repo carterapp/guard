@@ -6,7 +6,6 @@ defmodule Guard.Jwt do
 
   alias Guard.{Repo, User}
 
-
   def subject_for_token(%User{} = user, _claims) do
     {:ok, "User:#{user.id}"}
   end
@@ -15,7 +14,7 @@ defmodule Guard.Jwt do
 
   def load_resource("User:" <> id), do: Repo.get!(User, id)
 
-  def load_resource(_), do: nil
+  def load_resource(resource), do: Guard.ApiKey.load_resource(resource)
 
   def resource_from_claims(%{"sub" => sub} = _claims) do
     {:ok, load_resource(sub)}

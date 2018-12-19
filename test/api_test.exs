@@ -21,6 +21,8 @@ defmodule Guard.APITest do
 
     #response = send_auth_json("get", "/guard/session", user_jwt)
     #assert response.status == 200
+    #jwt_body = response |> get_body
+    #%{"user" => %{"username" => "a_user"}} = jwt_body
 
     #response = send_auth_json("get", "/jeeves/users", user_jwt)
     #assert response.status == 401
@@ -30,12 +32,15 @@ defmodule Guard.APITest do
  
     response = send_app_json("get", "/guard/session", user_key.key)
     assert response.status == 200
+    app_body = response |> get_body
+    %{"user" => %{"username" => "a_user"}} = app_body
 
     response = send_app_json("get", "/jeeves/users", user_key.key)
     assert response.status == 401
 
     response = send_app_json("get", "/jeeves/users", key.key)
     assert response.status == 200
+
  
   end
 

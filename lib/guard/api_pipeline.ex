@@ -5,5 +5,4 @@ defmodule Guard.ApiPipeline do
 
   plug Guard.JwtPipeline
 
-
 end

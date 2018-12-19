@@ -1,5 +1,5 @@
 defmodule Guard.Authenticator do
-  alias Guard.{Repo, User, Mailer, Users}
+  alias Guard.{Repo, User, UserApiKey, Mailer, Users}
 
   defexception message: "not_authenticated"
 
@@ -108,7 +108,12 @@ defmodule Guard.Authenticator do
   end
 
   def current_user(conn) do
-    Guardian.Plug.current_resource(conn)
+    case Guardian.Plug.current_resource(conn) do
+      nil -> nil
+      user = %User{}  -> user
+      key = %UserApiKey{} -> Users.get!(key.user_id)
+      _ -> nil
+    end
   end
 
   def authenticated_user!(conn) do
