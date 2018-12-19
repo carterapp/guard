@@ -8,6 +8,10 @@ defmodule Guard.RouterTestHelper do
     send_json(method, url, body, [{"authorization", "Bearer " <> token} | headers])
   end
 
+  def send_app_json(method, url, app_key, body \\ nil, headers \\ []) do
+    send_json(method, url, body, [{"authorization", "Key "<> app_key} | headers])
+  end
+
   def send_json(method, url, body \\ nil, headers \\ []) do
     send_request(method, url, body, [{"content-type", "application/json"} | headers])
 

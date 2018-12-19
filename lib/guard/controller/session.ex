@@ -29,7 +29,7 @@ defmodule Guard.Controller.Session do
   end
 
   defp process_session(conn, {:ok, jwt, claims}) do
-    case Guard.Guardian.resource_from_claims(claims) do
+    case Guard.Jwt.resource_from_claims(claims) do
       {:ok, user} ->
         root_user = claims["usr"]
         extra = if root_user do
@@ -62,13 +62,17 @@ defmodule Guard.Controller.Session do
     case Authenticator.current_claims(conn) do
       {:ok, claims} -> conn
       |> Guardian.Plug.current_token
-      |> Guard.Guardian.revoke(claims)
+      |> Guard.Jwt.revoke(claims)
       _ -> nil
     end
     conn
     |> json(%{ok: true})
   end
 
+  def switch_user(conn, %{"id" => id}) do
+    user = Guard.Users.get!(id)
+    process_session(conn, Authenticator.switch_user(conn, user))
+  end
   def switch_user(conn, %{"username" => username}) do
     user = Guard.Users.get_by_username!(username)
     process_session(conn, Authenticator.switch_user(conn, user))

@@ -18,7 +18,7 @@ defmodule Guard.Controller.ActiveSession do
   defp generate_response(resp, conn) do
     case resp do
       { :ok, claims } ->
-        perms = Guard.Guardian.decode_permissions_from_claims(claims)
+        perms = Guard.Jwt.decode_permissions_from_claims(claims)
         user = Guardian.Plug.current_resource(conn)
         root_user = claims["usr"]
         extra = if root_user do
@@ -31,10 +31,10 @@ defmodule Guard.Controller.ActiveSession do
         |> put_status(:ok)
         |> json(Map.merge(%{jwt: Guardian.Plug.current_token(conn), perms: perms, user: user}, extra))
 
-      { :error, _reason } ->
+      { :error, reason } ->
         conn
         |> put_status(:not_found)
-        |> Controller.send_error(:not_found)
+        |> Controller.send_error(reason)
     end
  
   end

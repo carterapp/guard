@@ -17,9 +17,10 @@ defmodule Guard.Controller do
       get "/session", Guard.Controller.ActiveSession, :show #Show current session
       get "/session/:token", Guard.Controller.Session, :restore #Restore session with given JWT
       delete "/session", Guard.Controller.Session, :delete #Logout
-      put "/session/switch/:username", Guard.Controller.Session, :switch_user
-      put "/session/switch/:email", Guard.Controller.Session, :switch_user
-      put "/session/switch/:mobile", Guard.Controller.Session, :switch_user
+      put "/session/switch/:id", Guard.Controller.Session, :switch_user
+      put "/session/switch/username/:username", Guard.Controller.Session, :switch_user
+      put "/session/switch/email/:email", Guard.Controller.Session, :switch_user
+      put "/session/switch/mobile/:mobile", Guard.Controller.Session, :switch_user
 
       delete "/session/switch", Guard.Controller.Session, :reset_user
 
@@ -37,7 +38,6 @@ defmodule Guard.Controller do
       put "/users/:userid", Guard.Controller.Registration, :update_user #Update given user
       delete "/users/:userid", Guard.Controller.Registration, :delete_user #Delete given user
       get "/users", Guard.Controller.Registration, :list_all_users #Show all registered uses
-      get "/audit/:user_id", Guard.Controller.Audit, :list_audit_trail #Show audit trail for user
     end
   end
 

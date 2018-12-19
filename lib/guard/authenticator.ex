@@ -225,8 +225,8 @@ defmodule Guard.Authenticator do
       true -> true
       required_permission ->
         claims
-        |> Guard.Guardian.decode_permissions_from_claims()
-        |> Guard.Guardian.all_permissions?(required_permission)
+        |> Guard.Jwt.decode_permissions_from_claims()
+        |> Guard.Jwt.all_permissions?(required_permission)
     end
   end
 
@@ -260,27 +260,25 @@ defmodule Guard.Authenticator do
 
   defp generate_switched_user_access_claim(%User{} = user, root_user_id) do
     perms = process_perms(user.perms)
-    Guard.Guardian.encode_and_sign(user, %{usr: root_user_id}, token_type: "access", perms: perms || %{})
+    Guard.Jwt.encode_and_sign(user, %{usr: root_user_id}, token_type: "access", perms: perms || %{})
   end
 
 
   def generate_access_claim(%User{} = user) do
     perms = process_perms(user.perms)
-    Guard.Guardian.encode_and_sign(user, %{}, token_type: "access", perms: perms || %{})
+    Guard.Jwt.encode_and_sign(user, %{}, token_type: "access", perms: perms || %{})
   end
 
   def generate_login_claim(%User{} = user, email \\ nil) do
-    Guard.Guardian.encode_and_sign(user, %{requested_email: email}, token_type: "login", token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours}))
+    Guard.Jwt.encode_and_sign(user, %{requested_email: email}, token_type: "login", token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours}))
   end
 
   def generate_password_reset_claim(%User{} = user) do
-    Guard.Guardian.encode_and_sign(user, %{}, token_type: "password_reset", token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours}))
+    Guard.Jwt.encode_and_sign(user, %{}, token_type: "password_reset", token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours}))
   end
 
   def current_claims(conn)  do
-    conn
-    |> Guardian.Plug.current_token
-    |> Guard.Guardian.decode_and_verify
+    {:ok, Guardian.Plug.current_claims(conn)}
   end
 
   def current_claim_type(conn) do
@@ -348,6 +346,19 @@ defmodule Guard.Authenticator do
 
   def clear_email_pin(user) do
     Users.update_user(user, %{enc_email_pin: nil, email_pin_expiration: nil})
+  end
+
+
+  def create_api_key(%User{} = user, permissions \\ %{}) do
+    Users.create_api_key(user, permissions)
+  end
+
+  def delete_api_key(key) do
+    Users.delete_api_key(key)
+  end
+
+  def list_api_keys(%User{} = user) do
+    Users.list_api_keys(user)
   end
 
 end

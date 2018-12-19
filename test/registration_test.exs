@@ -156,12 +156,12 @@ defmodule Guard.RegistrationTest do
     assert admin.username == "admin"
     {:ok, admin_jwt, _} = Authenticator.generate_access_claim(admin)
 
-    response = send_auth_json(:put, "/guard/session/switch/user", admin_jwt)
+    response = send_auth_json(:put, "/guard/session/switch/username/user", admin_jwt)
     assert response.status == 201
     assert %{"user" => %{"username" => "user"}} = get_body(response)
     user_jwt = get_jwt(response)
 
-    response1 = send_auth_json(:put, "/guard/session/switch/user", user_jwt)
+    response1 = send_auth_json(:put, "/guard/session/switch/username/user", user_jwt)
     assert response1.status == 401
     #refresh token
     response2 = send_auth_json(:post, "/guard/session/", user_jwt)
@@ -192,7 +192,7 @@ defmodule Guard.RegistrationTest do
     assert user.email == new_email
 
     jwt = Jason.decode!(response.resp_body) |> Map.get("jwt")
-    {:ok, claims} = Guard.Guardian.decode_and_verify(jwt)
+    {:ok, claims} = Guard.Jwt.decode_and_verify(jwt)
 
     assert Map.get(claims, "typ") == "access"
 

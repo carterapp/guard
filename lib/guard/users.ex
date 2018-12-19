@@ -1,5 +1,5 @@
 defmodule Guard.Users do
-  alias Guard.{Repo, User, Device}
+  alias Guard.{Repo, User, Device, UserApiKey}
   import Ecto.Query
 
   def delete_user(user) do
@@ -99,5 +99,28 @@ defmodule Guard.Users do
 
   def list_devices(%User{} = user) do
     Repo.all(from(d in Device, where: d.user_id == ^user.id))
+  end
+
+  def create_api_key(%User{} = user, permissions \\ %{}) do
+    key = :crypto.strong_rand_bytes(64) |> Base.encode64()
+    UserApiKey.changeset(%UserApiKey{}, %{key: key, permissions: permissions, user_id: user.id})
+    |> Repo.insert()
+  end
+
+  def get_api_by_key(key) do
+    Repo.get_by(UserApiKey, key: key)
+  end
+
+  def delete_api_key(%UserApiKey{} = api_key) do
+    Repo.delete(api_key)
+  end
+
+  def delete_api_key(key) do
+    api_key = Repo.get_by!(UserApiKey, key: key)
+    delete_api_key(api_key)
+  end
+
+  def list_api_keys(%User{} = user) do
+    Repo.all(from k in UserApiKey, where: k.user_id == ^user.id)
   end
 end

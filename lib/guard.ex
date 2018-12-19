@@ -6,7 +6,7 @@ defmodule Guard do
     import Supervisor.Spec
 
     Logger.info "Waking up Guard"
-    {children, guard_started} = 
+    {children, repo_started} =
       if Application.get_env(:guard, Guard.Repo) do
         {[ # Start the Ecto repository
           supervisor(Guard.Repo, []),
@@ -35,7 +35,7 @@ defmodule Guard do
     opts = [strategy: :one_for_one, name: Guard.Supervisor]
     {ok, sup_pid} = Supervisor.start_link(children, opts)
     
-    if ok && guard_started do 
+    if ok && repo_started do
       Guard.Migrations.run(Guard.Repo)
     end
 

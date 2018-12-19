@@ -7,6 +7,7 @@ defmodule Guard.Migrations do
     Ecto.Migrator.up(repo, 20180131210142, Guard.Repo.Migrations.AddMobile)
     Ecto.Migrator.up(repo, 20180516143801, Guard.Repo.Migrations.ModifyUserPin)
     Ecto.Migrator.up(repo, 20181128202721, Guard.Repo.Migrations.ConfirmationPin)
+    Ecto.Migrator.up(repo, 20181217105542, Guard.Repo.Migrations.CreateApiKey)
   end
 
 end

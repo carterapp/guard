@@ -98,14 +98,14 @@ defmodule Guard.Session do
 
 
   def authenticate(%{"token" => token}) do
-    case Guard.Guardian.decode_and_verify(token) do
+    case Guard.Jwt.decode_and_verify(token) do
       {:ok, claims} -> user_from_claim(claims)
       _ -> {:error, :bad_token}
     end
   end
 
   def authenticate({:jwt, jwt}) do
-    case Guard.Guardian.decode_and_verify(jwt) do
+    case Guard.Jwt.decode_and_verify(jwt) do
       {:ok, claims} -> user_from_claim(claims)
       _ -> {:error, :bad_token}
     end
@@ -122,7 +122,7 @@ defmodule Guard.Session do
         case Guardian.Plug.current_token(conn) do
           nil -> {:error, :missing_token}
           token ->
-            case Guard.Guardian.refresh(token) do
+            case Guard.Jwt.refresh(token) do
               {:ok, _old, {new_token, new_claims}} -> {:ok, new_token, new_claims}
               other -> other
             end

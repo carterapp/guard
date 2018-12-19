@@ -1,6 +1,6 @@
 defmodule Guard.Plug.AuditLogger do
   @moduledoc """
-    Attached metadata to Logger for audit logging
+    Attach metadata to Logger for audit logging
   """
 
   require Logger
@@ -17,18 +17,11 @@ defmodule Guard.Plug.AuditLogger do
       _ -> Enum.join(Tuple.to_list(conn.remote_ip), ".")
     end
     Logger.metadata(remote_ip: remote_ip)
-    case Authenticator.current_claims(conn) do
-      { :ok, _claims } ->
-        user = Guardian.Plug.current_resource(conn)
-        if user do
-          Logger.metadata(user_id: user.id)
-        else
-          Logger.metadata(user_id: "no_user")
-        end
+    case Authenticator.current_user(conn) do
+      nil -> conn
+      user  ->
+        Logger.metadata(user_id: user.id)
         conn
-      _ -> 
-        conn
-
     end
   end
 
