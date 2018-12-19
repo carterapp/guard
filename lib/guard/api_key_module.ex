@@ -13,7 +13,7 @@ defmodule Guard.ApiKey do
 
   def subject_for_token(_, _), do: {:error, :unknown_resource}
 
-  def load_resource("key:" <> id), do: Repo.get!(UserApiKey, id)
+  def load_resource("key:" <> id), do: Repo.get(UserApiKey, id)
 
   def load_resource(_), do: nil
 

@@ -42,6 +42,8 @@ dry_run: true
 
 config :plug, :validate_header_keys_during_test, true
 
+config :phoenix, :json_library, Jason
+
 config :logger,
   backends: [:console],
   compile_time_purge_level: :debug

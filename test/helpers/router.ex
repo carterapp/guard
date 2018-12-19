@@ -6,7 +6,7 @@ defmodule Guard.Router do
     plug :accepts, ["json"]
     plug Guard.ApiPipeline
     plug Guard.Plug.AuditLogger
-    plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], pass: ["*/*"], json_decoder: Jason
+    plug Plug.Parsers, parsers: [:urlencoded, :multipart, :json], pass: ["*/*"], json_decoder: Jason, json_encode: Jason
 
     plug Plug.RequestId
     plug Plug.Logger
@@ -25,6 +25,7 @@ defmodule Guard.Router do
   scope "/guard" do
     pipe_through :api
     Guard.Controller.resources
+    Guard.Controller.key_resources
   end
   
   scope "/jeeves" do

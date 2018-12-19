@@ -5,8 +5,8 @@ defmodule Guard.UserApiKey do
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
-  @derive {Jason.Encoder, only: [:id, :key, :user_id, :name, :permissions, :inserted_at, :updated_at]}
-  @derive {Poison.Encoder, only: [:id, :key, :user_id, :name, :permissions, :inserted_at, :updated_at]}
+  @derive {Jason.Encoder, only: [:key, :user_id, :name, :permissions, :inserted_at]}
+  @derive {Poison.Encoder, only: [:key, :user_id, :name, :permissions, :inserted_at]}
 
   schema "user_api_keys" do
     field :key, :string

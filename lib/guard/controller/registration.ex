@@ -37,11 +37,6 @@ defmodule Guard.Controller.Registration do
     check_user(conn, Users.get_by_mobile(mobile))
   end
 
-  def list_all_users(conn, _params) do
-    users = Guard.Repo.all(Guard.User)
-    conn
-    |> json(%{data: users})
-  end
 
   def create(conn, %{"user" => user}) do
     case Authenticator.create_and_confirm_user(user) do

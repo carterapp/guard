@@ -12,7 +12,7 @@ defmodule Guard.Jwt do
 
   def subject_for_token(_, _), do: {:error, :unknown_resource}
 
-  def load_resource("User:" <> id), do: Repo.get!(User, id)
+  def load_resource("User:" <> id), do: Repo.get(User, id)
 
   def load_resource(resource), do: Guard.ApiKey.load_resource(resource)
 

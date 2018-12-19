@@ -96,6 +96,37 @@ defmodule Guard.Users do
   def get_by!(opts) do
     Repo.get_by!(User, opts)
   end
+  
+  defmacro build_user_query(query, key, direction, start_key, start_id) do
+    if direction == :desc || direction == :desc_nulls_last || direction == :desc_nulls_first do
+      quote do
+        unquote(query) |> where([u], u.username < ^unquote(start_key) or (u.username == ^unquote(start_key) and u.id < ^unquote(start_id)))
+      end
+    else
+      quote do
+        unquote(query) |> where([u], u.username > ^unquote(start_key) or (u.username == ^unquote(start_key) and u.id > ^unquote(start_id)))
+      end
+    end
+  end
+
+  def list_users(opts \\ []) do
+    limit = Keyword.get(opts, :limit, 100)
+    direction = Keyword.get(opts, :direction, :asc)
+    key = Keyword.get(opts, :key, :username)
+    start_key = Keyword.get(opts, :start_key, nil)
+    start_id = Keyword.get(opts, :start_id, nil)
+    query = from u in User,
+      order_by: [{^direction, ^key}, {^direction, :id}],
+      limit: ^limit
+
+    query = if start_key do
+      query |> build_user_query(key, direction, start_key, start_id)
+    else
+      query
+    end
+
+    Repo.all(query)
+  end
 
   def list_devices(%User{} = user) do
     Repo.all(from(d in Device, where: d.user_id == ^user.id))

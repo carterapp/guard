@@ -33,11 +33,23 @@ defmodule Guard.Controller do
     end
   end
 
+  defmacro key_resources do
+    quote do
+      get "/keys", Guard.Controller.KeyController, :list_keys
+      post "/keys", Guard.Controller.KeyController, :create_key
+      delete "/keys/:key", Guard.Controller.KeyController, :revoke_key
+    end
+  end
+
   defmacro admin_resources do
     quote do
-      put "/users/:userid", Guard.Controller.Registration, :update_user #Update given user
-      delete "/users/:userid", Guard.Controller.Registration, :delete_user #Delete given user
-      get "/users", Guard.Controller.Registration, :list_all_users #Show all registered uses
+      get "/users/:id", Guard.Controller.UserController, :get_user 
+      get "/users/username/:username", Guard.Controller.UserController, :get_user 
+      get "/users/email/:email", Guard.Controller.UserController, :get_user 
+      get "/users/mobile/:mobile", Guard.Controller.UserController, :get_user 
+      put "/users/:id", Guard.Controller.UserController, :update_user #Update given user
+      delete "/users/:id", Guard.Controller.UserController, :delete_user #Delete given user
+      get "/users", Guard.Controller.UserController, :list_all_users #Show all registered uses
     end
   end
 
@@ -49,8 +61,21 @@ defmodule Guard.Controller do
     send_error(conn, Guard.Repo.changeset_errors(cs), :unprocessable_entity)
   end
 
+  def send_error(conn, %Ecto.Query.CastError{}) do
+    send_error(conn, :not_found, :not_found)
+  end
+
+  def send_error(conn, %Ecto.NoResultsError{}) do
+    send_error(conn, :not_found, :not_found)
+  end
+
+  def send_error(conn, %Plug.Conn.WrapperError{reason: reason}) do
+    send_error(conn, reason)
+  end
+
+
   def send_error(conn, error, status_code \\ :unprocessable_entity) do
-    Logger.debug("#{conn.request_path} #{inspect error}")
+    Logger.debug("ERROR: #{conn.request_path}\n#{inspect error}")
     conn
     |> put_status(status_code)
     |> json(%{error: translate_error(error)})
