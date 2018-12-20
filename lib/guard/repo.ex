@@ -1,10 +1,9 @@
 defmodule Guard.Repo do
-  if Application.get_env(:guard,  Guard.Repo) do
+  if Application.get_env(:guard, Guard.Repo) do
     use Ecto.Repo, otp_app: :guard, adapter: Application.get_env(:guard, Guard.Repo)[:adapter]
   else
     use Guard.ExternalRepo
   end
-
 
   def changeset_errors(changeset) do
     Ecto.Changeset.traverse_errors(changeset, &translate_error/1)
@@ -17,6 +16,4 @@ defmodule Guard.Repo do
   def translate_error(msg) do
     Gettext.dgettext(Guard.Gettext, "errors", msg)
   end
-
-
 end

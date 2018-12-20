@@ -4,57 +4,79 @@ defmodule Guard.Controller do
 
   defmacro resources do
     quote do
-      post "/registration", Guard.Controller.Registration, :create #Create new account
+      # Create new account
+      post("/registration", Guard.Controller.Registration, :create)
 
-      post "/registration/reset", Guard.Controller.Registration, :send_password_reset #Request a password reset
-      post "/registration/link", Guard.Controller.Registration, :send_login_link #Send magic link
-      post "/registration/check", Guard.Controller.Registration, :check_account #Check availability
+      # Request a password reset
+      post("/registration/reset", Guard.Controller.Registration, :send_password_reset)
+      # Send magic link
+      post("/registration/link", Guard.Controller.Registration, :send_login_link)
+      # Check availability
+      post("/registration/check", Guard.Controller.Registration, :check_account)
 
-      post "/registration/device", Guard.Controller.Registration, :register_device #Register for push
-      delete "/registration/device/:platform/:token", Guard.Controller.Registration, :unregister_device #Unregister for push
+      # Register for push
+      post("/registration/device", Guard.Controller.Registration, :register_device)
+      # Unregister for push
+      delete(
+        "/registration/device/:platform/:token",
+        Guard.Controller.Registration,
+        :unregister_device
+      )
 
-      post "/session", Guard.Controller.Session, :create #Login
-      get "/session", Guard.Controller.ActiveSession, :show #Show current session
-      get "/session/:token", Guard.Controller.Session, :restore #Restore session with given JWT
-      delete "/session", Guard.Controller.Session, :delete #Logout
-      put "/session/switch/:id", Guard.Controller.Session, :switch_user
-      put "/session/switch/username/:username", Guard.Controller.Session, :switch_user
-      put "/session/switch/email/:email", Guard.Controller.Session, :switch_user
-      put "/session/switch/mobile/:mobile", Guard.Controller.Session, :switch_user
+      # Login
+      post("/session", Guard.Controller.Session, :create)
+      # Show current session
+      get("/session", Guard.Controller.ActiveSession, :show)
+      # Restore session with given JWT
+      get("/session/:token", Guard.Controller.Session, :restore)
+      # Logout
+      delete("/session", Guard.Controller.Session, :delete)
+      put("/session/switch/:id", Guard.Controller.Session, :switch_user)
+      put("/session/switch/username/:username", Guard.Controller.Session, :switch_user)
+      put("/session/switch/email/:email", Guard.Controller.Session, :switch_user)
+      put("/session/switch/mobile/:mobile", Guard.Controller.Session, :switch_user)
 
-      delete "/session/switch", Guard.Controller.Session, :reset_user
+      delete("/session/switch", Guard.Controller.Session, :reset_user)
 
-      put "/account", Guard.Controller.Account, :update #Update current account
-      post "/account/attributes", Guard.Controller.Account, :update_attributes #Update attributes for current account
-      delete "/account", Guard.Controller.Account, :delete #Delete account
-      put "/account/password", Guard.Controller.PasswordReset, :update_password #Update password for current account
-      put "/account/setpassword", Guard.Controller.Registration, :update_password #Update password for account by one-time-pin
-
+      # Update current account
+      put("/account", Guard.Controller.Account, :update)
+      # Update attributes for current account
+      post("/account/attributes", Guard.Controller.Account, :update_attributes)
+      # Delete account
+      delete("/account", Guard.Controller.Account, :delete)
+      # Update password for current account
+      put("/account/password", Guard.Controller.PasswordReset, :update_password)
+      # Update password for account by one-time-pin
+      put("/account/setpassword", Guard.Controller.Registration, :update_password)
     end
   end
 
   defmacro key_resources do
     quote do
-      get "/keys", Guard.Controller.KeyController, :list_keys
-      post "/keys", Guard.Controller.KeyController, :create_key
-      delete "/keys/:key", Guard.Controller.KeyController, :revoke_key
+      get("/keys", Guard.Controller.KeyController, :list_keys)
+      post("/keys", Guard.Controller.KeyController, :create_key)
+      delete("/keys/:key", Guard.Controller.KeyController, :revoke_key)
     end
   end
 
   defmacro admin_resources do
     quote do
-      get "/users/:id", Guard.Controller.UserController, :get_user 
-      get "/users/username/:username", Guard.Controller.UserController, :get_user 
-      get "/users/email/:email", Guard.Controller.UserController, :get_user 
-      get "/users/mobile/:mobile", Guard.Controller.UserController, :get_user 
-      post "/users", Guard.Controller.UserController, :create_user #Create user
-      put "/users/:id", Guard.Controller.UserController, :update_user #Update given user
-      delete "/users/:id", Guard.Controller.UserController, :delete_user #Delete given user
-      get "/users", Guard.Controller.UserController, :list_all_users #Show all registered uses
+      get("/users/:id", Guard.Controller.UserController, :get_user)
+      get("/users/username/:username", Guard.Controller.UserController, :get_user)
+      get("/users/email/:email", Guard.Controller.UserController, :get_user)
+      get("/users/mobile/:mobile", Guard.Controller.UserController, :get_user)
+      # Create user
+      post("/users", Guard.Controller.UserController, :create_user)
+      # Update given user
+      put("/users/:id", Guard.Controller.UserController, :update_user)
+      # Delete given user
+      delete("/users/:id", Guard.Controller.UserController, :delete_user)
+      # Show all registered uses
+      get("/users", Guard.Controller.UserController, :list_all_users)
     end
   end
 
-  def send_error(conn, %{message: message, plug_status: status_code}=_error) do
+  def send_error(conn, %{message: message, plug_status: status_code} = _error) do
     send_error(conn, message, status_code)
   end
 
@@ -74,9 +96,9 @@ defmodule Guard.Controller do
     send_error(conn, reason)
   end
 
-
   def send_error(conn, error, status_code \\ :unprocessable_entity) do
-    Logger.debug("ERROR: #{conn.request_path}\n#{inspect error}")
+    Logger.debug("ERROR: #{conn.request_path}\n#{inspect(error)}")
+
     conn
     |> put_status(status_code)
     |> json(%{error: translate_error(error)})
@@ -97,7 +119,5 @@ defmodule Guard.Controller do
     else
       acc
     end
-
   end
-
 end

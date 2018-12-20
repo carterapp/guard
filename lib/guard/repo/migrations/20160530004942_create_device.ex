@@ -7,16 +7,15 @@ defmodule Guard.Repo.Migrations.CreateDevice do
 
   def change do
     create table(device_table(), primary_key: false) do
-      add :id, :binary_id, primary_key: true
-      add :token, :string, null: false
-      add :platform, :string, null: false
-      add :user_id, :uuid
-      add :last_sent, :utc_datetime
+      add(:id, :binary_id, primary_key: true)
+      add(:token, :string, null: false)
+      add(:platform, :string, null: false)
+      add(:user_id, :uuid)
+      add(:last_sent, :utc_datetime)
 
       timestamps()
     end
 
-    create unique_index(device_table(), [:token, :platform])
-
+    create(unique_index(device_table(), [:token, :platform]))
   end
 end

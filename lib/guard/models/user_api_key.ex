@@ -9,10 +9,10 @@ defmodule Guard.UserApiKey do
   @derive {Poison.Encoder, only: [:key, :user_id, :name, :permissions, :inserted_at]}
 
   schema "user_api_keys" do
-    field :key, :string
-    field :user_id, :binary_id
-    field :name, :string
-    field :permissions, :map, default: %{}
+    field(:key, :string)
+    field(:user_id, :binary_id)
+    field(:name, :string)
+    field(:permissions, :map, default: %{})
 
     timestamps()
   end
@@ -31,5 +31,4 @@ defmodule Guard.UserApiKey do
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
   end
-
 end

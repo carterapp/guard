@@ -7,11 +7,13 @@ defmodule Guard.ApiKeyToken do
   @default_token_type "access"
 
   def peek(_mod, nil), do: nil
-  
+
   def peek(mod, token) do
     case Users.get_api_by_key(token) do
-      nil -> nil
-      api_key -> 
+      nil ->
+        nil
+
+      api_key ->
         {:ok, sub, claims} = create_claims(api_key)
         {:ok, claims} = build_claims(mod, nil, sub, claims, [])
         %{claims: claims}
@@ -25,7 +27,7 @@ defmodule Guard.ApiKeyToken do
   end
 
   def build_claims(mod, _resource, sub, claims, options) do
-     claims =
+    claims =
       claims
       |> Guardian.stringify_keys()
       |> Map.put("sub", sub)
@@ -42,8 +44,10 @@ defmodule Guard.ApiKeyToken do
 
   def decode_token(mod, token, opts) do
     case Users.get_api_by_key(token) do
-      nil -> {:error, :api_key_not_found}
-      key -> 
+      nil ->
+        {:error, :api_key_not_found}
+
+      key ->
         {:ok, sub, claims} = create_claims(key)
         build_claims(mod, nil, sub, claims, opts)
     end
@@ -66,6 +70,7 @@ defmodule Guard.ApiKeyToken do
       nil -> nil
       key -> Users.delete_api_key(key)
     end
+
     {:ok, claims}
   end
 

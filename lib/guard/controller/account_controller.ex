@@ -3,7 +3,7 @@ defmodule Guard.Controller.Account do
   alias Guard.{Authenticator, Users}
   import Guard.Controller, only: [send_error: 2, send_error: 3]
 
-  plug Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"}
+  plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
   def call(conn, opts) do
     try do
@@ -13,14 +13,15 @@ defmodule Guard.Controller.Account do
     end
   end
 
-
   def update_attributes(conn, params) do
     user = Authenticator.authenticated_user!(conn)
     attrs = if user.attrs == nil, do: params, else: Map.merge(user.attrs, params)
+
     case Users.update_user(user, %{attrs: attrs}) do
-      {:ok, user} -> 
-        json conn, %{user: user}
-      {:error, error, _} -> 
+      {:ok, user} ->
+        json(conn, %{user: user})
+
+      {:error, error, _} ->
         send_error(conn, error)
     end
   end
@@ -28,31 +29,34 @@ defmodule Guard.Controller.Account do
   def update(conn, params) do
     updatable_fields = MapSet.new(["attrs", "requested_email", "username"])
     user = Authenticator.authenticated_user!(conn)
-    changes = Enum.reduce(params, %{},
-      fn ({k,v}, sum)->
-        if MapSet.member?(updatable_fields, k) do 
-          Map.put(sum,k,v)
-        else 
+
+    changes =
+      Enum.reduce(params, %{}, fn {k, v}, sum ->
+        if MapSet.member?(updatable_fields, k) do
+          Map.put(sum, k, v)
+        else
           sum
         end
       end)
 
     case Users.update_user(user, changes) do
-      {:ok, user} -> 
-        json conn, %{user: user}
-      {:error, error, _} -> 
+      {:ok, user} ->
+        json(conn, %{user: user})
+
+      {:error, error, _} ->
         send_error(conn, error)
     end
   end
 
   def delete(conn, _) do
     user = Authenticator.authenticated_user!(conn)
+
     case Users.delete_user(user) do
-      {:ok, user} -> 
-      json conn, %{user: user}
-      {:error, error, _} -> 
-      send_error(conn, error)
+      {:ok, user} ->
+        json(conn, %{user: user})
+
+      {:error, error, _} ->
+        send_error(conn, error)
     end
   end
-
 end

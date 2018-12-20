@@ -2,7 +2,6 @@ defmodule Guard.Session do
   alias Guard.{User, Authenticator, Users}
   require Logger
 
-
   defp has_perm?(user, perm) do
     Map.has_key?(user.perms || %{}, perm)
   end
@@ -15,32 +14,35 @@ defmodule Guard.Session do
         else
           {:error, :forbidden}
         end
+
       %{"all_perms" => all_perms} ->
-        if Enum.reduce_while(all_perms, true, fn (perm, _acc) ->
-          if has_perm?(user, perm) do
-            {:cont, true}
-          else
-            {:halt, false}
-          end
-        end) do
+        if Enum.reduce_while(all_perms, true, fn perm, _acc ->
+             if has_perm?(user, perm) do
+               {:cont, true}
+             else
+               {:halt, false}
+             end
+           end) do
           {:ok, user}
         else
           {:error, :forbidden}
         end
 
       %{"any_perms" => any_perms} ->
-        if Enum.reduce_while(any_perms, true, fn (perm, _acc) ->
-          if has_perm?(user, perm) do
-            {:halt, true}
-          else
-            {:cont, false}
-          end
-        end) do
+        if Enum.reduce_while(any_perms, true, fn perm, _acc ->
+             if has_perm?(user, perm) do
+               {:halt, true}
+             else
+               {:cont, false}
+             end
+           end) do
           {:ok, user}
         else
           {:error, :forbidden}
         end
-      _ -> {:ok, user}
+
+      _ ->
+        {:ok, user}
     end
   end
 
@@ -48,7 +50,9 @@ defmodule Guard.Session do
     case check_password(user, password) do
       true ->
         verify_params(user, params)
-      _ -> {:error, :wrong_password}
+
+      _ ->
+        {:error, :wrong_password}
     end
   end
 
@@ -56,7 +60,9 @@ defmodule Guard.Session do
     case pin_fn.(user, pin) do
       {:ok, user} ->
         verify_params(user, params)
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -79,23 +85,27 @@ defmodule Guard.Session do
 
   def authenticate(params = %{"mobile" => mobile, "pin" => pin}) do
     user = Users.get_by_mobile(mobile)
+
     case check_pin_with_message(&Authenticator.use_pin/2, user, pin, params) do
       {:ok, user} ->
         Users.confirm_user_mobile(user, mobile)
-      error -> error
+
+      error ->
+        error
     end
   end
 
   def authenticate(params = %{"email" => email, "pin" => pin}) do
     user = Users.get_by_email(email)
+
     case check_pin_with_message(&Authenticator.use_email_pin/2, user, pin, params) do
       {:ok, user} ->
         Users.confirm_user_email(user, email)
-      error -> error
+
+      error ->
+        error
     end
   end
-
-
 
   def authenticate(%{"token" => token}) do
     case Guard.Jwt.decode_and_verify(token) do
@@ -117,20 +127,25 @@ defmodule Guard.Session do
 
   def authenticate(conn, params) do
     case authenticate(params) do
-      {:ok, user} -> {:ok, user}
+      {:ok, user} ->
+        {:ok, user}
+
       {:error, :missing_credentials} ->
         case Guardian.Plug.current_token(conn) do
-          nil -> {:error, :missing_token}
+          nil ->
+            {:error, :missing_token}
+
           token ->
             case Guard.Jwt.refresh(token) do
               {:ok, _old, {new_token, new_claims}} -> {:ok, new_token, new_claims}
               other -> other
             end
         end
-      other -> other
+
+      other ->
+        other
     end
   end
-
 
   defp user_from_claim(claims) do
     case claims do
@@ -139,20 +154,24 @@ defmodule Guard.Session do
           nil -> {:error, :bad_claims}
           user -> confirm_user_email_from_claims(claims, user)
         end
-      _ -> {:error, :bad_claims}
+
+      _ ->
+        {:error, :bad_claims}
     end
   end
 
   defp confirm_user_email_from_claims(claims, user) do
     case Map.get(claims, "typ") do
       "login" ->
-        if user.requested_email != nil && user.requested_email == Map.get(claims, "requested_email") do
+        if user.requested_email != nil &&
+             user.requested_email == Map.get(claims, "requested_email") do
           Users.update_user(user, %{email: user.requested_email, requested_email: nil})
         else
           {:ok, user}
         end
 
-      _ -> {:ok, user}
+      _ ->
+        {:ok, user}
     end
   end
 
@@ -162,6 +181,4 @@ defmodule Guard.Session do
       _ -> User.check_password(user, password)
     end
   end
-
-
 end

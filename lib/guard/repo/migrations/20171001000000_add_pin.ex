@@ -7,9 +7,8 @@ defmodule Guard.Repo.Migrations.AddPin do
 
   def change do
     alter table(users_table()) do
-      add :pin, :string
-      add :pin_timestamp, :utc_datetime
+      add(:pin, :string)
+      add(:pin_timestamp, :utc_datetime)
     end
-
   end
 end

@@ -1,6 +1,7 @@
 defmodule Guard.Jwt do
-    use Guardian, otp_app: :guard,
-      permissions: Application.get_env(:guard, Guard.Guardian)[:permissions] 
+  use Guardian,
+    otp_app: :guard,
+    permissions: Application.get_env(:guard, Guard.Guardian)[:permissions]
 
   use Guardian.Permissions.Bitwise
 
@@ -26,8 +27,7 @@ defmodule Guard.Jwt do
     claims =
       claims
       |> encode_permissions_into_claims!(Keyword.get(opts, :perms))
+
     {:ok, claims}
   end
-
-
 end

@@ -5,14 +5,16 @@ defmodule Guard.Device do
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
-  @derive {Jason.Encoder, only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
-  @derive {Poison.Encoder, only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
+  @derive {Jason.Encoder,
+           only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
+  @derive {Poison.Encoder,
+           only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
 
   schema "devices" do
-    field :token, :string
-    field :platform, :string
-    field :user_id, :binary_id
-    field :last_sent, :utc_datetime
+    field(:token, :string)
+    field(:platform, :string)
+    field(:user_id, :binary_id)
+    field(:last_sent, :utc_datetime)
 
     timestamps()
   end
@@ -31,5 +33,4 @@ defmodule Guard.Device do
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
   end
-
 end

@@ -33,10 +33,10 @@ defmodule Guard.Users do
     end
   end
 
-
   def get_by_email(email) do
     if email do
       trimmed = trimmer(email)
+
       case get_by(email: trimmed) do
         nil -> get_by(requested_email: trimmed)
         confirmed -> confirmed
@@ -46,6 +46,7 @@ defmodule Guard.Users do
 
   def get_by_email!(email) do
     trimmed = trimmer(email)
+
     case get_by(email: trimmed) do
       nil -> get_by!(requested_email: trimmed)
       confirmed -> confirmed
@@ -55,6 +56,7 @@ defmodule Guard.Users do
   def get_by_mobile(mobile) do
     if mobile do
       mobile = User.clean_mobile_number(mobile)
+
       case get_by(mobile: mobile) do
         nil -> get_by(requested_mobile: mobile)
         confirmed -> confirmed
@@ -96,22 +98,33 @@ defmodule Guard.Users do
   def get_by!(opts) do
     Repo.get_by!(User, opts)
   end
-  
+
   defmacrop build_user_query(query, key, direction, start_key, start_id) do
     quote do
       d = unquote(direction)
-      direction_symbol = if d == :desc || d == :desc_nulls_last || d == :desc_nulls_first do
-        :<
-      else
-        :>
-      end
+
+      direction_symbol =
+        if d == :desc || d == :desc_nulls_last || d == :desc_nulls_first do
+          :<
+        else
+          :>
+        end
+
       s_id = unquote(start_id)
-      s_key =  unquote(start_key)
+      s_key = unquote(start_key)
 
       if direction_symbol == :> do
-        unquote(query) |> where([u], field(u, ^unquote(key)) > ^s_key or (field(u, ^unquote(key)) == ^s_key and u.id > ^s_id))
+        unquote(query)
+        |> where(
+          [u],
+          field(u, ^unquote(key)) > ^s_key or (field(u, ^unquote(key)) == ^s_key and u.id > ^s_id)
+        )
       else
-        unquote(query) |> where([u], field(u, ^unquote(key)) < ^s_key or (field(u, ^unquote(key)) == ^s_key and u.id < ^s_id))
+        unquote(query)
+        |> where(
+          [u],
+          field(u, ^unquote(key)) < ^s_key or (field(u, ^unquote(key)) == ^s_key and u.id < ^s_id)
+        )
       end
     end
   end
@@ -122,15 +135,19 @@ defmodule Guard.Users do
     key = Keyword.get(opts, :key, :username)
     start_key = Keyword.get(opts, :start_key, nil)
     start_id = Keyword.get(opts, :start_id, nil)
-    query = from u in User,
-      order_by: [{^direction, ^key}, {^direction, :id}],
-      limit: ^limit
 
-    query = if start_key do
-      query |> build_user_query(key, direction, start_key, start_id)
-    else
-      query
-    end
+    query =
+      from(u in User,
+        order_by: [{^direction, ^key}, {^direction, :id}],
+        limit: ^limit
+      )
+
+    query =
+      if start_key do
+        query |> build_user_query(key, direction, start_key, start_id)
+      else
+        query
+      end
 
     Repo.all(query)
   end
@@ -141,6 +158,7 @@ defmodule Guard.Users do
 
   def create_api_key(%User{} = user, permissions \\ %{}) do
     key = :crypto.strong_rand_bytes(64) |> Base.encode64()
+
     UserApiKey.changeset(%UserApiKey{}, %{key: key, permissions: permissions, user_id: user.id})
     |> Repo.insert()
   end
@@ -159,6 +177,6 @@ defmodule Guard.Users do
   end
 
   def list_api_keys(%User{} = user) do
-    Repo.all(from k in UserApiKey, where: k.user_id == ^user.id)
+    Repo.all(from(k in UserApiKey, where: k.user_id == ^user.id))
   end
 end

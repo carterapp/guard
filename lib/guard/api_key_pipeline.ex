@@ -1,5 +1,4 @@
 defmodule Guard.ApiKeyPipeline do
-
   @default_realm "Key"
 
   @module_key :api_pipeline
@@ -13,7 +12,6 @@ defmodule Guard.ApiKeyPipeline do
   realm = Application.get_env(:guard, Guard.ApiKey)[:realm]
   realm = if realm, do: realm, else: @default_realm
 
-  plug Guardian.Plug.VerifyHeader, realm: realm, key: @module_key
-  plug Guardian.Plug.LoadResource, allow_blank: true, key: @module_key
-
+  plug(Guardian.Plug.VerifyHeader, realm: realm, key: @module_key)
+  plug(Guardian.Plug.LoadResource, allow_blank: true, key: @module_key)
 end

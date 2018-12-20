@@ -30,11 +30,11 @@ use Mix.Config
 
 config :phoenix, :format_encoders,
   "json-api": Jason,
-  filter_parameters:  []
+  filter_parameters: []
 
-config :phoenix, 
-  filter_parameters:  []
+config :phoenix,
+  filter_parameters: []
 
 config :guard, ecto_repos: [Guard.Repo]
 
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

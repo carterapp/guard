@@ -1,7 +1,7 @@
 defmodule Guard.APITest do
   use Guard.ModelCase
   use Plug.Test
-  import  Guard.RouterTestHelper
+  import Guard.RouterTestHelper
   alias Guard.{Users, Authenticator, Session}
 
   defp get_body(response) do
@@ -29,15 +29,17 @@ defmodule Guard.APITest do
     assert u1["username"] == "a_user"
     assert u2["username"] == "b_user"
 
-    resp = send_auth_json("post", "/jeeves/users", jwt, %{user: %{username: "c_user", password: "test123"}})
+    resp =
+      send_auth_json("post", "/jeeves/users", jwt, %{
+        user: %{username: "c_user", password: "test123"}
+      })
+
     c1 = get_body(resp)
     %{"username" => "c_user", "id" => c_id} = c1
 
     resp = send_auth_json("put", "/jeeves/users/#{c_id}", jwt, %{user: %{fullname: "User C"}})
     c1 = get_body(resp)
     %{"username" => "c_user", "fullname" => "User C"} = c1
-
-
 
     resp = send_auth_json("get", "/jeeves/users?direction=desc", jwt)
     %{"data" => [u1, u2, u3]} = get_body(resp)
@@ -53,10 +55,16 @@ defmodule Guard.APITest do
     %{"data" => [u1]} = get_body(resp)
     assert u1["username"] == "c_user"
 
-    resp = send_auth_json("get", "/jeeves/users?direction=desc&limit=1&key_inserted_at&start_key=c_user", jwt)
+    resp =
+      send_auth_json(
+        "get",
+        "/jeeves/users?direction=desc&limit=1&key_inserted_at&start_key=c_user",
+        jwt
+      )
+
     %{"data" => [u1]} = get_body(resp)
     assert u1["username"] == "b_user"
-    
+
     resp = send_auth_json("get", "/jeeves/users/#{b_id}", jwt)
     assert b1 == get_body(resp)
 
@@ -82,7 +90,6 @@ defmodule Guard.APITest do
     {:ok, user_key} = Authenticator.create_api_key(user)
     {:ok, key} = Authenticator.create_api_key(user, perms)
 
-
     response = send_auth_json("get", "/guard/session", user_jwt)
     assert response.status == 200
     jwt_body = response |> get_body
@@ -93,7 +100,7 @@ defmodule Guard.APITest do
 
     response = send_auth_json("get", "/jeeves/users", jwt)
     assert response.status == 200
- 
+
     response = send_app_json("get", "/guard/session", user_key.key)
     assert response.status == 200
     app_body = response |> get_body
@@ -138,7 +145,6 @@ defmodule Guard.APITest do
     [k] = get_body(response)
     assert k == user2_key
 
-
     response = send_auth_json("post", "/guard/keys", jwt, %{permissions: %{system: [:read]}})
     key2 = get_body(response)
     assert key2["permissions"] == %{"system" => ["read"]}
@@ -162,13 +168,14 @@ defmodule Guard.APITest do
     response = send_app_json("get", "/jeeves/users", key2["key"])
     assert response.status == 401
 
-    response = send_auth_json("post", "/guard/keys", jwt, %{permissions: %{system: [:read, :write]}})
+    response =
+      send_auth_json("post", "/guard/keys", jwt, %{permissions: %{system: [:read, :write]}})
+
     key3 = get_body(response)
 
     response = send_app_json("get", "/jeeves/users", key3["key"])
     assert response.status == 200
 
- 
     encoded_key = URI.encode_www_form(key["key"])
     response = send_auth_json("delete", "/guard/keys/#{encoded_key}", jwt)
     assert response.status == 200
@@ -196,9 +203,5 @@ defmodule Guard.APITest do
     assert response.status == 200
     [k] = get_body(response)
     assert k == key3
-
-
-
-
   end
 end

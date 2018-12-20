@@ -1,7 +1,8 @@
 defmodule Guard.Sms.Server do
   use GenServer
   use Tesla
-  adapter Tesla.Adapter.Httpc #Hackney does not play well with gatewayapi.com
+  # Hackney does not play well with gatewayapi.com
+  adapter(Tesla.Adapter.Httpc)
 
   def start_link(name, config) do
     GenServer.start_link(__MODULE__, config, name: name)
@@ -18,11 +19,13 @@ defmodule Guard.Sms.Server do
   ## GenServer Callbacks
 
   def init(config) do
-    client = Tesla.client([
-      {Tesla.Middleware.BaseUrl, "https://gatewayapi.com/rest"},
-      {Tesla.Middleware.BasicAuth, [{:username, (config[:token] || "")}]},
-      Tesla.Middleware.JSON
-    ])
+    client =
+      Tesla.client([
+        {Tesla.Middleware.BaseUrl, "https://gatewayapi.com/rest"},
+        {Tesla.Middleware.BasicAuth, [{:username, config[:token] || ""}]},
+        Tesla.Middleware.JSON
+      ])
+
     {:ok, %{options: config[:options], client: client}}
   end
 
@@ -31,27 +34,33 @@ defmodule Guard.Sms.Server do
   end
 
   def handle_cast({:message, recipients, message, callback}, state) do
-    resp = try do
-      recip = if is_list(recipients) do
-        recipients
-      else
-        [recipients]
-      end
-      recip = Enum.map(recip, fn(r) -> %{msisdn: r} end)
+    resp =
+      try do
+        recip =
+          if is_list(recipients) do
+            recipients
+          else
+            [recipients]
+          end
 
-      payload = if is_map(message) do
-        Map.put(message, :recipients, recip)
-      else
-        %{recipients: recip, message: message}
+        recip = Enum.map(recip, fn r -> %{msisdn: r} end)
+
+        payload =
+          if is_map(message) do
+            Map.put(message, :recipients, recip)
+          else
+            %{recipients: recip, message: message}
+          end
+
+        do_post(state.client, state.options, payload)
+      rescue
+        error -> {:error, error}
       end
-      do_post(state.client, state.options, payload)
-    rescue
-      error -> {:error, error}
-    end
 
     if !is_nil(callback) do
       callback.(resp)
     end
+
     {:noreply, state, :hibernate}
   end
 
@@ -59,5 +68,4 @@ defmodule Guard.Sms.Server do
     msg = Map.merge(options, payload)
     post!(client, "/mtsms", msg)
   end
-
 end

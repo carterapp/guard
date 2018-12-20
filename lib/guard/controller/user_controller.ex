@@ -34,12 +34,14 @@ defmodule Guard.Controller.UserController do
   def list_user_devices(conn, %{"user_id" => user_id}) do
     user = Users.get!(user_id)
     devices = Users.list_devices(user)
-    conn 
+
+    conn
     |> json(devices)
   end
 
   def delete_user(conn, %{"id" => user_id}) do
     user = Users.get!(user_id)
+
     with {:ok, %User{}} <- Users.delete_user(user) do
       conn
       |> send_resp(:no_content, "")
@@ -48,6 +50,7 @@ defmodule Guard.Controller.UserController do
 
   def update_user(conn, %{"id" => user_id, "user" => user_params}) do
     user = Users.get!(user_id)
+
     with {:ok, %User{} = user} <- Users.update_user(user, user_params) do
       conn
       |> json(user)
@@ -65,19 +68,29 @@ defmodule Guard.Controller.UserController do
     limit = Map.get(params, "limit", nil)
     start_id = Map.get(params, "start_id", nil)
     start_key = Map.get(params, "start_key", nil)
-    key = case Map.get(params, "key", "username") do
-      nil -> nil
-      val -> String.to_existing_atom(val)
-    end
-    direction = case Map.get(params, "direction", "asc") do
-      nil -> nil
-      val -> String.to_existing_atom(val)
-    end
 
-    users = Users.list_users(limit: limit, start_key: start_key, start_id: start_id, key: key, direction: direction)
+    key =
+      case Map.get(params, "key", "username") do
+        nil -> nil
+        val -> String.to_existing_atom(val)
+      end
+
+    direction =
+      case Map.get(params, "direction", "asc") do
+        nil -> nil
+        val -> String.to_existing_atom(val)
+      end
+
+    users =
+      Users.list_users(
+        limit: limit,
+        start_key: start_key,
+        start_id: start_id,
+        key: key,
+        direction: direction
+      )
+
     conn
     |> json(%{data: users})
   end
-
-
 end

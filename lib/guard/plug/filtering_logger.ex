@@ -21,11 +21,11 @@ defmodule Guard.Plug.FilteringLogger do
   def call(conn, opts) do
     level = opts[:level]
     filter = opts[:filter]
+
     if !filter || filter.(conn) do
       Plug.Logger.call(conn, level)
     else
       conn
     end
   end
-
 end

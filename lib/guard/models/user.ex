@@ -5,29 +5,52 @@ defmodule Guard.User do
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
-  @derive {Poison.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at, :mobile, :requested_mobile]}
-  @derive {Jason.Encoder, only: [:id, :username, :fullname, :email, :requested_email, :attrs, :inserted_at, :updated_at, :mobile, :requested_mobile]}
+  @derive {Poison.Encoder,
+           only: [
+             :id,
+             :username,
+             :fullname,
+             :email,
+             :requested_email,
+             :attrs,
+             :inserted_at,
+             :updated_at,
+             :mobile,
+             :requested_mobile
+           ]}
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :username,
+             :fullname,
+             :email,
+             :requested_email,
+             :attrs,
+             :inserted_at,
+             :updated_at,
+             :mobile,
+             :requested_mobile
+           ]}
 
   schema "users" do
-    field :username, :string
-    field :fullname, :string
-    field :locale, :string
-    field :email, :string
-    field :requested_email, :string
-    field :mobile, :string
-    field :requested_mobile, :string
-    field :password, :string, virtual: true
-    field :enc_password, :string
-    field :perms, :map
-    field :provider, :map
-    field :attrs, :map
-    field :pin, :string, virtual: true
-    field :enc_pin, :string
-    field :pin_expiration, :utc_datetime
-    field :email_pin, :string, virtual: true
-    field :enc_email_pin, :string
-    field :email_pin_expiration, :utc_datetime
-
+    field(:username, :string)
+    field(:fullname, :string)
+    field(:locale, :string)
+    field(:email, :string)
+    field(:requested_email, :string)
+    field(:mobile, :string)
+    field(:requested_mobile, :string)
+    field(:password, :string, virtual: true)
+    field(:enc_password, :string)
+    field(:perms, :map)
+    field(:provider, :map)
+    field(:attrs, :map)
+    field(:pin, :string, virtual: true)
+    field(:enc_pin, :string)
+    field(:pin_expiration, :utc_datetime)
+    field(:email_pin, :string, virtual: true)
+    field(:enc_email_pin, :string)
+    field(:email_pin_expiration, :utc_datetime)
 
     timestamps()
   end
@@ -46,24 +69,24 @@ defmodule Guard.User do
     model
     |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
-
     |> validate_format(:email, ~r/@/)
     |> validate_format(:requested_email, ~r/@/)
     |> validate_length(:password, min: 6)
     |> validate_length(:username, min: 1)
-
     |> validate_confirmation(:password, message: "password_mismatch")
-
-    |> update_change(:email, &downcase/1) #Lowercase email, so we can check for duplicates
-    |> update_change(:requested_email, &downcase/1) #Lowercase email, so we can check for duplicates
-    |> update_change(:username, &downcase/1) #Lowercase username, so we can check for duplicates
-    |> update_change(:mobile, &clean_mobile_number/1) #Remove all spaces and leading + from mobile phone
-    |> update_change(:requested_mobile, &clean_mobile_number/1) #Remove all spaces and leading + from mobile phone
-
+    # Lowercase email, so we can check for duplicates
+    |> update_change(:email, &downcase/1)
+    # Lowercase email, so we can check for duplicates
+    |> update_change(:requested_email, &downcase/1)
+    # Lowercase username, so we can check for duplicates
+    |> update_change(:username, &downcase/1)
+    # Remove all spaces and leading + from mobile phone
+    |> update_change(:mobile, &clean_mobile_number/1)
+    # Remove all spaces and leading + from mobile phone
+    |> update_change(:requested_mobile, &clean_mobile_number/1)
     |> unique_constraint(:email, message: "email_taken")
     |> unique_constraint(:mobile, message: "mobile_taken")
     |> unique_constraint(:username, message: "username_taken")
-
     |> encrypt_password()
     |> encrypt_pin()
     |> encrypt_email_pin()
@@ -106,7 +129,6 @@ defmodule Guard.User do
     validate_pin(user.enc_email_pin, user.email_pin_expiration, pin)
   end
 
-
   def validate_pin(user, pin) do
     validate_pin(user.enc_pin, user.pin_expiration, pin)
   end
@@ -122,6 +144,7 @@ defmodule Guard.User do
     case current_changeset do
       %Ecto.Changeset{valid?: true, changes: %{password: password}} ->
         put_change(current_changeset, :enc_password, hash_password(password))
+
       _ ->
         current_changeset
     end
@@ -131,6 +154,7 @@ defmodule Guard.User do
     case current_changeset do
       %Ecto.Changeset{valid?: true, changes: %{pin: pin}} ->
         put_change(current_changeset, :enc_pin, hash_password(pin))
+
       _ ->
         current_changeset
     end
@@ -140,10 +164,9 @@ defmodule Guard.User do
     case current_changeset do
       %Ecto.Changeset{valid?: true, changes: %{email_pin: pin}} ->
         put_change(current_changeset, :enc_email_pin, hash_password(pin))
+
       _ ->
         current_changeset
     end
   end
-
-
 end

@@ -11,7 +11,5 @@ defmodule Guard.Pusher.Supervisor do
     ]
 
     supervise(children, strategy: :one_for_one)
-
   end
-
 end

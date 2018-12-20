@@ -7,9 +7,8 @@ defmodule Guard.Repo.Migrations.AddMobile do
 
   def change do
     alter table(users_table()) do
-      add :mobile, :string
-      add :requested_mobile, :string
+      add(:mobile, :string)
+      add(:requested_mobile, :string)
     end
-
   end
 end

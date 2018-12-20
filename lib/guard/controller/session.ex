@@ -17,10 +17,11 @@ defmodule Guard.Controller.Session do
         conn
         |> put_status(:created)
         |> json(%{jwt: jwt, user: user, perms: user.perms})
+
       {:error, error} ->
         send_error(conn, error)
     end
-  end 
+  end
 
   defp process_session(conn, {:error, message}) do
     conn
@@ -32,39 +33,48 @@ defmodule Guard.Controller.Session do
     case Guard.Jwt.resource_from_claims(claims) do
       {:ok, user} ->
         root_user = claims["usr"]
-        extra = if root_user do
-          %{root_user: root_user}
-        else
-          %{}
-        end
+
+        extra =
+          if root_user do
+            %{root_user: root_user}
+          else
+            %{}
+          end
 
         conn
         |> put_status(:created)
-        |> json(Map.merge(%{jwt: jwt, user: user, perms: user.perms, root_user: root_user}, extra))
+        |> json(
+          Map.merge(%{jwt: jwt, user: user, perms: user.perms, root_user: root_user}, extra)
+        )
+
       {:error, error} ->
         send_error(conn, error)
     end
   end
 
   def restore(conn, %{"token" => token}) do
-    process_session conn, Session.authenticate({:jwt, token})
-  end  
+    process_session(conn, Session.authenticate({:jwt, token}))
+  end
 
   def create(conn, %{"session" => session_params}) do
-    process_session conn, Session.authenticate(session_params)
+    process_session(conn, Session.authenticate(session_params))
   end
 
   def create(conn, params) do
-    process_session conn, Session.authenticate(conn, params)
+    process_session(conn, Session.authenticate(conn, params))
   end
 
   def delete(conn, _) do
     case Authenticator.current_claims(conn) do
-      {:ok, claims} -> conn
-      |> Guardian.Plug.current_token
-      |> Guard.Jwt.revoke(claims)
-      _ -> nil
+      {:ok, claims} ->
+        conn
+        |> Guardian.Plug.current_token()
+        |> Guard.Jwt.revoke(claims)
+
+      _ ->
+        nil
     end
+
     conn
     |> json(%{ok: true})
   end
@@ -73,14 +83,17 @@ defmodule Guard.Controller.Session do
     user = Guard.Users.get!(id)
     process_session(conn, Authenticator.switch_user(conn, user))
   end
+
   def switch_user(conn, %{"username" => username}) do
     user = Guard.Users.get_by_username!(username)
     process_session(conn, Authenticator.switch_user(conn, user))
   end
+
   def switch_user(conn, %{"mobile" => mobile}) do
     user = Guard.Users.get_by_mobile!(mobile)
     process_session(conn, Authenticator.switch_user(conn, user))
   end
+
   def switch_user(conn, %{"email" => email}) do
     user = Guard.Users.get_by_email!(email)
     process_session(conn, Authenticator.switch_user(conn, user))
@@ -89,6 +102,4 @@ defmodule Guard.Controller.Session do
   def reset_user(conn, _params) do
     process_session(conn, Authenticator.reset_user(conn))
   end
-
-
 end

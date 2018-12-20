@@ -6,9 +6,9 @@ defmodule Guard.Repo.Migrations.ModifyUserPin do
   end
 
   def change do
-    rename table(users_table()), :pin, to: :enc_pin
-    rename table(users_table()), :pin_timestamp, to: :pin_expiration
+    rename(table(users_table()), :pin, to: :enc_pin)
+    rename(table(users_table()), :pin_timestamp, to: :pin_expiration)
 
-    create unique_index(users_table(), [:mobile])
+    create(unique_index(users_table(), [:mobile]))
   end
 end

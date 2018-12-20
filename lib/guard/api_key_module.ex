@@ -1,7 +1,8 @@
 defmodule Guard.ApiKey do
-    use Guardian, otp_app: :guard,
-      token_module: Guard.ApiKeyToken,
-      permissions: Application.get_env(:guard, Guard.Guardian)[:permissions] 
+  use Guardian,
+    otp_app: :guard,
+    token_module: Guard.ApiKeyToken,
+    permissions: Application.get_env(:guard, Guard.Guardian)[:permissions]
 
   use Guardian.Permissions.Bitwise
 
@@ -27,8 +28,7 @@ defmodule Guard.ApiKey do
     claims =
       claims
       |> encode_permissions_into_claims!(Keyword.get(opts, :permissions))
+
     {:ok, claims}
   end
-
-
 end
