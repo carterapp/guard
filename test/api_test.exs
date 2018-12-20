@@ -22,26 +22,54 @@ defmodule Guard.APITest do
     resp = send_auth_json("get", "/jeeves/users/username/b_user", jwt)
     assert resp.status == 200
     b1 = get_body(resp)
-    %{"username" => "b_user", "id" => id} = b1
+    %{"username" => "b_user", "id" => b_id} = b1
 
     resp = send_auth_json("get", "/jeeves/users", jwt)
     %{"data" => [u1, u2]} = get_body(resp)
+    assert u1["username"] == "a_user"
+    assert u2["username"] == "b_user"
 
+    resp = send_auth_json("post", "/jeeves/users", jwt, %{user: %{username: "c_user", password: "test123"}})
+    c1 = get_body(resp)
+    %{"username" => "c_user", "id" => c_id} = c1
+
+    resp = send_auth_json("put", "/jeeves/users/#{c_id}", jwt, %{user: %{fullname: "User C"}})
+    c1 = get_body(resp)
+    %{"username" => "c_user", "fullname" => "User C"} = c1
+
+
+
+    resp = send_auth_json("get", "/jeeves/users?direction=desc", jwt)
+    %{"data" => [u1, u2, u3]} = get_body(resp)
+    assert u1["username"] == "c_user"
+    assert u2["username"] == "b_user"
+    assert u3["username"] == "a_user"
+
+    resp = send_auth_json("get", "/jeeves/users?direction=desc&limit=1", jwt)
+    %{"data" => [u1]} = get_body(resp)
+    assert u1["username"] == "c_user"
+
+    resp = send_auth_json("get", "/jeeves/users?direction=desc&limit=1&key_inserted_at", jwt)
+    %{"data" => [u1]} = get_body(resp)
+    assert u1["username"] == "c_user"
+
+    resp = send_auth_json("get", "/jeeves/users?direction=desc&limit=1&key_inserted_at&start_key=c_user", jwt)
+    %{"data" => [u1]} = get_body(resp)
+    assert u1["username"] == "b_user"
     
-    resp = send_auth_json("get", "/jeeves/users/#{id}", jwt)
+    resp = send_auth_json("get", "/jeeves/users/#{b_id}", jwt)
     assert b1 == get_body(resp)
 
-    resp = send_auth_json("delete", "/jeeves/users/#{id}", jwt)
+    resp = send_auth_json("delete", "/jeeves/users/#{b_id}", jwt)
     assert resp.status == 204
 
-    resp = send_auth_json("delete", "/jeeves/users/#{id}", jwt)
+    resp = send_auth_json("delete", "/jeeves/users/#{b_id}", jwt)
     assert resp.status == 404
 
     resp = send_auth_json("get", "/jeeves/users", jwt)
-    %{"data" => [u1]} = get_body(resp)
-    resp = send_auth_json("get", "/jeeves/users/username/a_user", jwt)
-    assert u1 == get_body(resp)
-
+    %{"data" => [u1, u3]} = get_body(resp)
+    assert u1["username"] == "a_user"
+    assert u3["username"] == "c_user"
   end
 
   @tag api: true

@@ -97,14 +97,21 @@ defmodule Guard.Users do
     Repo.get_by!(User, opts)
   end
   
-  defmacro build_user_query(query, key, direction, start_key, start_id) do
-    if direction == :desc || direction == :desc_nulls_last || direction == :desc_nulls_first do
-      quote do
-        unquote(query) |> where([u], u.username < ^unquote(start_key) or (u.username == ^unquote(start_key) and u.id < ^unquote(start_id)))
+  defmacrop build_user_query(query, key, direction, start_key, start_id) do
+    quote do
+      d = unquote(direction)
+      direction_symbol = if d == :desc || d == :desc_nulls_last || d == :desc_nulls_first do
+        :<
+      else
+        :>
       end
-    else
-      quote do
-        unquote(query) |> where([u], u.username > ^unquote(start_key) or (u.username == ^unquote(start_key) and u.id > ^unquote(start_id)))
+      s_id = unquote(start_id)
+      s_key =  unquote(start_key)
+
+      if direction_symbol == :> do
+        unquote(query) |> where([u], field(u, ^unquote(key)) > ^s_key or (field(u, ^unquote(key)) == ^s_key and u.id > ^s_id))
+      else
+        unquote(query) |> where([u], field(u, ^unquote(key)) < ^s_key or (field(u, ^unquote(key)) == ^s_key and u.id < ^s_id))
       end
     end
   end

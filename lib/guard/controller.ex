@@ -47,6 +47,7 @@ defmodule Guard.Controller do
       get "/users/username/:username", Guard.Controller.UserController, :get_user 
       get "/users/email/:email", Guard.Controller.UserController, :get_user 
       get "/users/mobile/:mobile", Guard.Controller.UserController, :get_user 
+      post "/users", Guard.Controller.UserController, :create_user #Create user
       put "/users/:id", Guard.Controller.UserController, :update_user #Update given user
       delete "/users/:id", Guard.Controller.UserController, :delete_user #Delete given user
       get "/users", Guard.Controller.UserController, :list_all_users #Show all registered uses
