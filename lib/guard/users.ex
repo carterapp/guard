@@ -33,6 +33,18 @@ defmodule Guard.Users do
     end
   end
 
+  def get_by_confirmed_email(email) do
+    if email do
+      get_by(email: trimmer(email))
+    end
+  end
+
+  def get_by_confirmed_email!(email) do
+    if email do
+      get_by!(email: trimmer(email))
+    end
+  end
+
   def get_by_email(email) do
     if email do
       trimmed = trimmer(email)
@@ -53,6 +65,16 @@ defmodule Guard.Users do
     end
   end
 
+  def get_by_confirmed_mobile(mobile) do
+    if mobile do
+      get_by(mobile: User.clean_mobile_number(mobile))
+    end
+  end
+
+  def get_by_confirmed_mobile!(mobile) do
+    get_by!(mobile: User.clean_mobile_number(mobile))
+  end
+
   def get_by_mobile(mobile) do
     if mobile do
       mobile = User.clean_mobile_number(mobile)
@@ -66,6 +88,7 @@ defmodule Guard.Users do
 
   def get_by_mobile!(mobile) do
     mobile = User.clean_mobile_number(mobile)
+
     case get_by(mobile: mobile) do
       nil -> get_by!(requested_mobile: mobile)
       confirmed -> confirmed

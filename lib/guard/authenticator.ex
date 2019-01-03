@@ -24,19 +24,19 @@ defmodule Guard.Authenticator do
   end
 
   def send_welcome_email(user) do
-    {:ok, token, _} = generate_login_claim(user, user.requested_email)
+    {:ok, token, _} = generate_login_claim(user)
     {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_welcome_email(user, token, pin)
   end
 
   def send_confirm_email(user) do
-    {:ok, token, _} = generate_login_claim(user, user.requested_email)
+    {:ok, token, _} = generate_login_claim(user)
     Mailer.send_confirm_email(user, token)
   end
 
   def send_login_email(user) do
-    {:ok, token, _} = generate_login_claim(user, user.requested_email)
-    {:ok, pin, user} = generate_pin(user)
+    {:ok, token, _} = generate_login_claim(user)
+    {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_login_link(user, token, pin)
   end
 
@@ -314,7 +314,7 @@ defmodule Guard.Authenticator do
   end
 
   def generate_login_claim(%User{} = user, email \\ nil) do
-    Guard.Jwt.encode_and_sign(user, %{requested_email: email},
+    Guard.Jwt.encode_and_sign(user, %{requested_email: email || user.requested_email},
       token_type: "login",
       token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours})
     )

@@ -17,6 +17,53 @@ defmodule Guard.RegistrationTest do
     assert response.status == 201
   end
 
+  test 'registering by email jwt' do
+    response =
+      send_json(:post, "/guard/registration", %{"user" => %{"email" => "test@example.com"}})
+
+    assert response.status == 201
+
+    assert nil == Users.get_by_confirmed_email("test@example.com")
+    user = %{requested_email: "test@example.com"} = Users.get_by_email("test@example.com")
+
+    {:ok, jwt, claims} = Authenticator.generate_login_claim(user)
+    response = send_json(:get, "/guard/session/" <> jwt)
+    assert response.status == 201
+
+    %{email: "test@example.com", requested_email: nil} =
+      Users.get_by_confirmed_email("test@example.com")
+  end
+
+  test 'registering by email pin' do
+    response =
+      send_json(:post, "/guard/registration", %{"user" => %{"email" => "test@example.com"}})
+
+    assert response.status == 201
+
+    assert nil == Users.get_by_confirmed_email("test@example.com")
+    user = %{requested_email: "test@example.com"} = Users.get_by_email("test@example.com")
+
+    {:ok, pin, user} = Authenticator.generate_email_pin(user)
+    {:ok, user1} = Session.authenticate(%{"email" => user.requested_email, "pin" => pin})
+
+    %{email: "test@example.com", requested_email: nil} =
+      Users.get_by_confirmed_email("test@example.com")
+  end
+
+  test 'registering by mobile' do
+    response = send_json(:post, "/guard/registration", %{"user" => %{"mobile" => "5554221"}})
+    assert response.status == 201
+
+    assert nil == Users.get_by_confirmed_mobile("5554221")
+    user = %{requested_mobile: "5554221"} = Users.get_by_mobile("5554221")
+
+    {:ok, pin, user} = Authenticator.generate_pin(user)
+    {:ok, user1} = Session.authenticate(%{"mobile" => user.requested_mobile, "pin" => pin})
+
+    %{mobile: "5554221", requested_mobile: nil} =
+      Users.get_by_confirmed_mobile(user.requested_mobile)
+  end
+
   test 'registering admin user' do
     response =
       send_json(:post, "/guard/registration", %{
@@ -207,6 +254,7 @@ defmodule Guard.RegistrationTest do
     assert response.status == 201
 
     user1 = Guard.Users.get(user.id)
+    # Only update email if requested change and token match
     assert user.requested_email == user1.requested_email
     assert user.email == user1.email
 
@@ -215,8 +263,8 @@ defmodule Guard.RegistrationTest do
     assert response.status == 201
 
     user1 = Guard.Users.get(user.id)
-    assert user.requested_email == user1.requested_email
-    assert user.email == user1.email
+    assert nil == user1.requested_email
+    assert user.requested_email == user1.email
 
     {:ok, user} = Authenticator.request_mobile_change(user, "5551234")
     {:ok, pin, user} = Authenticator.generate_pin(user)
