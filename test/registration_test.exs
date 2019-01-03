@@ -44,7 +44,7 @@ defmodule Guard.RegistrationTest do
     user = %{requested_email: "test@example.com"} = Users.get_by_email("test@example.com")
 
     {:ok, pin, user} = Authenticator.generate_email_pin(user)
-    {:ok, user1} = Session.authenticate(%{"email" => user.requested_email, "pin" => pin})
+    {:ok, user1} = Session.authenticate(%{"email" => " #{user.requested_email} ", "pin" => pin})
 
     %{email: "test@example.com", requested_email: nil} =
       Users.get_by_confirmed_email("test@example.com")
@@ -58,7 +58,7 @@ defmodule Guard.RegistrationTest do
     user = %{requested_mobile: "5554221"} = Users.get_by_mobile("5554221")
 
     {:ok, pin, user} = Authenticator.generate_pin(user)
-    {:ok, user1} = Session.authenticate(%{"mobile" => user.requested_mobile, "pin" => pin})
+    {:ok, user1} = Session.authenticate(%{"mobile" => "555 4221", "pin" => pin})
 
     %{mobile: "5554221", requested_mobile: nil} =
       Users.get_by_confirmed_mobile(user.requested_mobile)
