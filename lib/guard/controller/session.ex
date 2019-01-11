@@ -1,7 +1,7 @@
 defmodule Guard.Controller.Session do
   use Phoenix.Controller
   import Guard.Controller, only: [send_error: 2, send_error: 3]
-  alias Guard.{Session, Authenticator}
+  alias Guard.{Session, Authenticator, User, UserApiKey}
 
   def call(conn, opts) do
     try do
@@ -11,12 +11,15 @@ defmodule Guard.Controller.Session do
     end
   end
 
-  defp process_session(conn, {:ok, user}) do
-    case Guard.Authenticator.generate_access_claim(user) do
-      {:ok, jwt, _full_claims} ->
+  defp process_session(conn, {:ok, %User{} = user}) do
+    conn
+    |> Authenticator.sign_in(user)
+    |> Session.current_session()
+    |> case do
+      {:ok, session} ->
         conn
         |> put_status(:created)
-        |> json(%{jwt: jwt, user: user, perms: user.perms})
+        |> json(session)
 
       {:error, error} ->
         send_error(conn, error)
@@ -65,13 +68,17 @@ defmodule Guard.Controller.Session do
   end
 
   def delete(conn, _) do
-    case Authenticator.current_claims(conn) do
-      {:ok, claims} ->
+    case Guardian.Plug.current_resource(conn) do
+      %User{} = user ->
+        conn
+        |> Guard.Jwt.Plug.sign_out(user)
+
+      %UserApiKey{} ->
         conn
         |> Guardian.Plug.current_token()
-        |> Guard.Jwt.revoke(claims)
+        |> Guard.ApiKey.revoke()
 
-      _ ->
+      _any ->
         nil
     end
 

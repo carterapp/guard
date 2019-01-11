@@ -19,6 +19,7 @@ defmodule Guard.Users do
 
   def confirm_user_mobile(%User{} = user, mobile) do
     mobile = User.clean_mobile_number(mobile)
+
     if mobile && user.requested_mobile == mobile do
       update_user(user, %{mobile: mobile, requested_mobile: nil})
     else
@@ -28,6 +29,7 @@ defmodule Guard.Users do
 
   def confirm_user_email(%User{} = user, email) do
     email = trimmer(email)
+
     if email && user.requested_email == email do
       update_user(user, %{email: email, requested_email: nil})
     else

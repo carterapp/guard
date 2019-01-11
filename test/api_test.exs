@@ -117,6 +117,12 @@ defmodule Guard.APITest do
 
     response = send_app_json("get", "/guard/session", user_key.key)
     assert response.status == 401
+
+    response = send_app_json("delete", "/guard/session", key.key)
+    assert response.status == 200
+
+    response = send_app_json("get", "/jeeves/users", key.key)
+    assert response.status == 401
   end
 
   @tag api: true

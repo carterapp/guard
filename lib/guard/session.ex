@@ -1,5 +1,5 @@
 defmodule Guard.Session do
-  alias Guard.{User, Authenticator, Users}
+  alias Guard.{User, Authenticator, Users, UserApiKey}
   require Logger
 
   defp has_perm?(user, perm) do
@@ -179,6 +179,52 @@ defmodule Guard.Session do
     case user do
       nil -> false
       _ -> User.check_password(user, password)
+    end
+  end
+
+  defp decode_permissions(%User{}, claims) do
+    Guard.Jwt.decode_permissions_from_claims(claims)
+  end
+
+  defp decode_permissions(%UserApiKey{}, claims) do
+    Guard.Jwt.decode_permissions_from_claims(claims)
+  end
+
+  defp decode_permissions(_resource, _claims) do
+    %{}
+  end
+
+  defp add_token(map, conn, %User{}) do
+    map |> Map.put(:jwt, Guardian.Plug.current_token(conn))
+  end
+
+  defp add_token(map, conn, %UserApiKey{}) do
+    map |> Map.put(:key, Guardian.Plug.current_token(conn))
+  end
+
+  defp add_token(map, _conn, _resource) do
+    map
+  end
+
+  def current_session(conn) do
+    case Authenticator.current_claims(conn) do
+      {:ok, claims} ->
+        resource = Guardian.Plug.current_resource(conn)
+        perms = decode_permissions(resource, claims)
+        user = Guard.Authenticator.current_user(conn)
+        root_user = claims["usr"]
+
+        extra =
+          if root_user do
+            %{root_user: root_user}
+          else
+            %{}
+          end
+
+        {:ok, %{perms: perms, user: user} |> Map.merge(extra) |> add_token(conn, resource)}
+
+      any ->
+        any
     end
   end
 end

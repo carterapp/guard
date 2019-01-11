@@ -308,6 +308,11 @@ defmodule Guard.Authenticator do
     )
   end
 
+  def sign_in(conn, %User{} = user) do
+    perms = process_perms(user.perms)
+    conn |> Guard.Jwt.Plug.sign_in(user, %{}, token_type: "access", perms: perms || %{})
+  end
+
   def generate_access_claim(%User{} = user) do
     perms = process_perms(user.perms)
     Guard.Jwt.encode_and_sign(user, %{}, token_type: "access", perms: perms || %{})
