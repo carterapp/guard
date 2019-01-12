@@ -1,9 +1,6 @@
 defmodule Guard.Controller.Account do
-  use Phoenix.Controller
+  use Guard.Controller
   alias Guard.{Authenticator, Users}
-  require Logger
-
-  import Guard.Controller, only: [send_error: 2]
 
   plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
@@ -44,7 +41,6 @@ defmodule Guard.Controller.Account do
 
   def delete(conn, _) do
     user = Authenticator.authenticated_user!(conn)
-    Logger.info("asdlfjasdlfajsdlkfjasldf")
 
     with {:ok, user} <- Users.delete_user(user) do
       json(conn, %{user: user})

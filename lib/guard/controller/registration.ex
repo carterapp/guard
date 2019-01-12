@@ -1,14 +1,13 @@
 defmodule Guard.Controller.Registration do
   require Logger
-  use Phoenix.Controller
+  use Guard.Controller
   alias Guard.{Repo, User, Authenticator, Device, Mailer, Users}
-  import Guard.Controller, only: [send_error: 2, send_error: 3]
 
   def call(conn, opts) do
     try do
       super(conn, opts)
     rescue
-      error -> send_error(conn, error, :internal_server_error)
+      error -> send_error(conn, error)
     end
   end
 
@@ -45,8 +44,8 @@ defmodule Guard.Controller.Registration do
         |> put_status(:created)
         |> json(%{user: user, jwt: jwt, extra: extra})
 
-      {:error, error, _} ->
-        send_error(conn, error)
+      {:error, _error, changeset} ->
+        send_error(conn, changeset)
     end
   end
 
@@ -212,14 +211,10 @@ defmodule Guard.Controller.Registration do
         Repo.update(changeset)
       end
 
-    case res do
-      {:ok, updated_device} ->
-        conn
-        |> put_status(:created)
-        |> json(%{device: updated_device})
-
-      {:error, changeset} ->
-        send_error(conn, Repo.changeset_errors(changeset))
+    with {:ok, updated_device} <- res do
+      conn
+      |> put_status(:created)
+      |> json(%{device: updated_device})
     end
   end
 
@@ -233,12 +228,8 @@ defmodule Guard.Controller.Registration do
       |> json(%{device: nil})
     else
       if existing.user_id == nil || existing.user_id == user.id do
-        case Repo.delete(existing) do
-          {:ok, model} ->
-            json(conn, %{ok: true, device: model})
-
-          {:error, changeset} ->
-            send_error(conn, Repo.changeset_errors(changeset))
+        with {:ok, model} <- Repo.delete(existing) do
+          json(conn, %{ok: true, device: model})
         end
       else
         conn

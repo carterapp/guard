@@ -1,7 +1,6 @@
 defmodule Guard.Controller.KeyController do
-  use Phoenix.Controller
+  use Guard.Controller
   alias Guard.{Authenticator, Users}
-  import Guard.Controller, only: [send_error: 3]
 
   plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
@@ -9,7 +8,7 @@ defmodule Guard.Controller.KeyController do
     try do
       super(conn, opts)
     rescue
-      error -> send_error(conn, error, :internal_server_error)
+      error -> send_error(conn, error)
     end
   end
 

@@ -406,7 +406,7 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response.status == 422
+    assert response.status == 401
     assert %{"error" => "bad_claim"} == get_body(response)
 
     response =
@@ -416,7 +416,7 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "not_testing"
       })
 
-    assert response.status == 422
+    assert response.status == 401
     assert %{"error" => "wrong_password"} == get_body(response)
 
     response =
@@ -533,7 +533,7 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response.status == 422
+    assert response.status == 401
     assert %{"error" => "no_pin"} = get_body(response)
 
     {:ok, pin, user} = Authenticator.generate_pin(user)
@@ -560,7 +560,7 @@ defmodule Guard.RegistrationTest do
         new_password_confirmation: "testing"
       })
 
-    assert response.status == 422
+    assert response.status == 401
     assert %{"error" => "wrong_pin"} = get_body(response)
 
     response =

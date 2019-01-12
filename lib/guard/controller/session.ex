@@ -1,13 +1,12 @@
 defmodule Guard.Controller.Session do
-  use Phoenix.Controller
-  import Guard.Controller, only: [send_error: 2, send_error: 3]
+  use Guard.Controller
   alias Guard.{Session, Authenticator, User, UserApiKey}
 
   def call(conn, opts) do
     try do
       super(conn, opts)
     rescue
-      error -> send_error(conn, error, :internal_server_error)
+      error -> send_error(conn, error)
     end
   end
 

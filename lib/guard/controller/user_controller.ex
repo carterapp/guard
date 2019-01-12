@@ -1,7 +1,6 @@
 defmodule Guard.Controller.UserController do
-  use Phoenix.Controller
+  use Guard.Controller
   alias Guard.{User, Users}
-  import Guard.Controller, only: [send_error: 2]
 
   def call(conn, opts) do
     try do

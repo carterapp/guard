@@ -5,9 +5,10 @@ defmodule Guard.Controller do
 
   defmacro __using__(_opts) do
     quote do
-      use Plug.Builder
+      # use Plug.Builder
+      use Phoenix.Controller
       import Plug.Conn
-      import Guard.Controller
+      import Guard.Controller, only: [send_error: 2]
 
       plug(Plug.Parsers,
         parsers: [:urlencoded, :multipart, :json],
@@ -103,15 +104,36 @@ defmodule Guard.Controller do
     send_error(conn, :not_found, :not_found)
   end
 
+  def send_error(conn, {:error, error}) do
+    send_error(conn, error)
+  end
+
+
   def send_error(conn, %Ecto.NoResultsError{}) do
     send_error(conn, :not_found, :not_found)
+  end
+
+  def send_error(conn, :no_pin = error) do
+    send_error(conn, error, :unauthorized)
+  end
+
+  def send_error(conn, :wrong_pin = error) do
+    send_error(conn, error, :unauthorized)
+  end
+
+  def send_error(conn, :wrong_password = error) do
+    send_error(conn, error, :unauthorized)
+  end
+
+  def send_error(conn, :bad_claim = error) do
+    send_error(conn, error, :unauthorized)
   end
 
   def send_error(conn, %Plug.Conn.WrapperError{reason: reason}) do
     send_error(conn, reason)
   end
 
-  def send_error(conn, error, status_code \\ :unprocessable_entity) do
+  def send_error(conn, error, status_code \\ :internal_server_error) do
     Logger.debug("ERROR: #{conn.request_path}\n#{inspect(error)}")
 
     conn

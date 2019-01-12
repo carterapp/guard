@@ -1,7 +1,6 @@
 defmodule Guard.Controller.ActiveSession do
-  use Phoenix.Controller
+  use Guard.Controller
   alias Guard.{Session}
-  import Guard.Controller, only: [send_error: 2]
 
   plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
