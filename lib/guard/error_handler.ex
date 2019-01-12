@@ -1,6 +1,6 @@
 defmodule Guard.ErrorHandler do
   import Plug.Conn
-  import Phoenix.Controller, only: [json: 2]
+  import Guard.Controller, only: [json: 2]
   alias Guard.Controller
 
   # Guardian's ensure_authenticated sends :unauthenticated for 403, but Plug.Status

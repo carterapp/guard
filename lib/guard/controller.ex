@@ -1,6 +1,21 @@
 defmodule Guard.Controller do
   require Logger
-  use Phoenix.Controller
+
+  import Plug.Conn, only: [put_status: 2, put_resp_content_type: 2, send_resp: 3]
+
+  defmacro __using__(_opts) do
+    quote do
+      use Plug.Builder
+      import Plug.Conn
+      import Guard.Controller
+
+      plug(Plug.Parsers,
+        parsers: [:urlencoded, :multipart, :json],
+        pass: ["*/*"],
+        json_decoder: Jason
+      )
+    end
+  end
 
   defmacro resources do
     quote do
@@ -102,6 +117,12 @@ defmodule Guard.Controller do
     conn
     |> put_status(status_code)
     |> json(%{error: translate_error(error)})
+  end
+
+  def json(conn, value) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(conn.status || :ok, Jason.encode_to_iodata!(value))
   end
 
   def translate_error(reason) do

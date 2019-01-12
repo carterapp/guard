@@ -1,7 +1,7 @@
 defmodule Guard.Controller.ActiveSession do
   use Phoenix.Controller
-  alias Guard.{Controller, Session}
-  import Guard.Controller, only: [send_error: 3]
+  alias Guard.{Session}
+  import Guard.Controller, only: [send_error: 2]
 
   plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
@@ -9,21 +9,15 @@ defmodule Guard.Controller.ActiveSession do
     try do
       super(conn, opts)
     rescue
-      error -> send_error(conn, error, :internal_server_error)
+      error -> send_error(conn, error)
     end
   end
 
   def show(conn, _) do
-    case Session.current_session(conn) do
-      {:ok, session} ->
-        conn
-        |> put_status(:ok)
-        |> json(session)
-
-      {:error, reason} ->
-        conn
-        |> put_status(:not_found)
-        |> Controller.send_error(reason)
+    with {:ok, session} <- Session.current_session(conn) do
+      conn
+      |> put_status(:ok)
+      |> json(session)
     end
   end
 end

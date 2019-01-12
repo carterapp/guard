@@ -1,7 +1,9 @@
 defmodule Guard.Controller.Account do
   use Phoenix.Controller
   alias Guard.{Authenticator, Users}
-  import Guard.Controller, only: [send_error: 2, send_error: 3]
+  require Logger
+
+  import Guard.Controller, only: [send_error: 2]
 
   plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
@@ -9,7 +11,7 @@ defmodule Guard.Controller.Account do
     try do
       super(conn, opts)
     rescue
-      error -> send_error(conn, error, :internal_server_error)
+      error -> send_error(conn, error)
     end
   end
 
@@ -17,12 +19,8 @@ defmodule Guard.Controller.Account do
     user = Authenticator.authenticated_user!(conn)
     attrs = if user.attrs == nil, do: params, else: Map.merge(user.attrs, params)
 
-    case Users.update_user(user, %{attrs: attrs}) do
-      {:ok, user} ->
-        json(conn, %{user: user})
-
-      {:error, error, _} ->
-        send_error(conn, error)
+    with {:ok, user} <- Users.update_user(user, %{attrs: attrs}) do
+      json(conn, %{user: user})
     end
   end
 
@@ -39,24 +37,17 @@ defmodule Guard.Controller.Account do
         end
       end)
 
-    case Users.update_user(user, changes) do
-      {:ok, user} ->
-        json(conn, %{user: user})
-
-      {:error, error, _} ->
-        send_error(conn, error)
+    with {:ok, user} <- Users.update_user(user, changes) do
+      json(conn, %{user: user})
     end
   end
 
   def delete(conn, _) do
     user = Authenticator.authenticated_user!(conn)
+    Logger.info("asdlfjasdlfajsdlkfjasldf")
 
-    case Users.delete_user(user) do
-      {:ok, user} ->
-        json(conn, %{user: user})
-
-      {:error, error, _} ->
-        send_error(conn, error)
+    with {:ok, user} <- Users.delete_user(user) do
+      json(conn, %{user: user})
     end
   end
 end

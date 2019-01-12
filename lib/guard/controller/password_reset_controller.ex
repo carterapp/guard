@@ -1,7 +1,7 @@
 defmodule Guard.Controller.PasswordReset do
   use Phoenix.Controller
   alias Guard.{Authenticator, User, Users}
-  import Guard.Controller, only: [send_error: 2, send_error: 3]
+  import Guard.Controller, only: [send_error: 2]
 
   plug(Guardian.Plug.EnsureAuthenticated)
 
@@ -9,7 +9,7 @@ defmodule Guard.Controller.PasswordReset do
     try do
       super(conn, opts)
     rescue
-      error -> send_error(conn, error, :internal_server_error)
+      error -> send_error(conn, error)
     end
   end
 
@@ -24,12 +24,8 @@ defmodule Guard.Controller.PasswordReset do
         Users.update_user(user, %{"password" => new_password})
       end
 
-    case update do
-      {:ok, _user} ->
-        json(conn, %{ok: true})
-
-      {:error, changeset} ->
-        send_error(conn, changeset)
+    with {:ok, _user} <- update do
+      json(conn, %{ok: true})
     end
   end
 
