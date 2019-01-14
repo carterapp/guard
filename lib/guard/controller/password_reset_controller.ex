@@ -4,15 +4,6 @@ defmodule Guard.Controller.PasswordReset do
 
   plug(Guardian.Plug.EnsureAuthenticated)
 
-  def call(conn, opts) do
-    try do
-      super(conn, opts)
-    rescue
-      error -> 
-        send_error(conn, error)
-    end
-  end
-
   defp do_update_password(conn, user, new_password, new_password_confirmation) do
     update =
       if new_password_confirmation do

@@ -3,14 +3,6 @@ defmodule Guard.Controller.Registration do
   use Guard.Controller
   alias Guard.{Repo, User, Authenticator, Device, Mailer, Users}
 
-  def call(conn, opts) do
-    try do
-      super(conn, opts)
-    rescue
-      error -> send_error(conn, error)
-    end
-  end
-
   defp check_user(conn, user) do
     case user do
       nil ->

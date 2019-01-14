@@ -2,14 +2,6 @@ defmodule Guard.Controller.UserController do
   use Guard.Controller
   alias Guard.{User, Users}
 
-  def call(conn, opts) do
-    try do
-      super(conn, opts)
-    rescue
-      error -> send_error(conn, error)
-    end
-  end
-
   def get_user(conn, %{"id" => id}) do
     conn
     |> json(Users.get!(id))

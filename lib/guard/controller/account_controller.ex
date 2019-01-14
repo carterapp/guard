@@ -4,14 +4,6 @@ defmodule Guard.Controller.Account do
 
   plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
-  def call(conn, opts) do
-    try do
-      super(conn, opts)
-    rescue
-      error -> send_error(conn, error)
-    end
-  end
-
   def update_attributes(conn, params) do
     user = Authenticator.authenticated_user!(conn)
     attrs = if user.attrs == nil, do: params, else: Map.merge(user.attrs, params)

@@ -2,14 +2,6 @@ defmodule Guard.Controller.Session do
   use Guard.Controller
   alias Guard.{Session, Authenticator, User, UserApiKey}
 
-  def call(conn, opts) do
-    try do
-      super(conn, opts)
-    rescue
-      error -> send_error(conn, error)
-    end
-  end
-
   defp process_session(conn, {:ok, %User{} = user}) do
     conn
     |> Authenticator.sign_in(user)

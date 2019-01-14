@@ -5,16 +5,16 @@ defmodule Guard.Controller do
 
   defmacro __using__(_opts) do
     quote do
-      # use Plug.Builder
       use Phoenix.Controller
-      import Plug.Conn
       import Guard.Controller, only: [send_error: 2]
 
-      plug(Plug.Parsers,
-        parsers: [:urlencoded, :multipart, :json],
-        pass: ["*/*"],
-        json_decoder: Jason
-      )
+      def call(conn, opts) do
+        try do
+          super(conn, opts)
+        rescue
+          error -> send_error(conn, error)
+        end
+      end
     end
   end
 
@@ -107,7 +107,6 @@ defmodule Guard.Controller do
   def send_error(conn, {:error, error}) do
     send_error(conn, error)
   end
-
 
   def send_error(conn, %Ecto.NoResultsError{}) do
     send_error(conn, :not_found, :not_found)

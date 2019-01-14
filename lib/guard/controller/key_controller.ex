@@ -4,14 +4,6 @@ defmodule Guard.Controller.KeyController do
 
   plug(Guardian.Plug.EnsureAuthenticated, claims: %{"typ" => "access"})
 
-  def call(conn, opts) do
-    try do
-      super(conn, opts)
-    rescue
-      error -> send_error(conn, error)
-    end
-  end
-
   def create_key(conn, params) do
     permissions = Map.get(params, "permissions", %{})
 
