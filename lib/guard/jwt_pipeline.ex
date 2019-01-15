@@ -10,6 +10,7 @@ defmodule Guard.JwtPipeline do
   realm = Application.get_env(:guard, Guard.Jwt)[:realm]
   realm = if realm, do: realm, else: @default_realm
 
-  plug(Guardian.Plug.VerifyHeader, realm: realm)
-  plug(Guardian.Plug.LoadResource, allow_blank: true)
+  plug(Guardian.Plug.VerifyHeader, realm: realm, module: Guard.Jwt)
+  plug(Guardian.Plug.VerifySession, realm: realm, module: Guard.Jwt)
+  plug(Guardian.Plug.LoadResource, allow_blank: true, module: Guard.Jwt)
 end
