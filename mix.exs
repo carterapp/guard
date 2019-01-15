@@ -59,7 +59,7 @@ defmodule Guard.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [
-      {:guardian, "~> 1.1.1"},
+      {:guardian, "~> 1.2.0"},
       {:phoenix, "~> 1.3 or ~> 1.4"},
       {:gettext, "~> 0.15 or ~> 0.16"},
       {:ecto, "~> 2.2 or ~> 3.0", optional: false},
