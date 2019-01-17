@@ -80,11 +80,11 @@ defmodule Guard.Authenticator do
     user = Map.delete(user, "perms")
     # Generate password if user has not provided one
     user =
-      unless Map.get(user, "password") do
+      if Map.get(user, "password") do
+        user
+      else
         password = random_bytes()
         Map.put(user, "password", password)
-      else
-        user
       end
 
     Repo.transaction(fn ->
