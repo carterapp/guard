@@ -52,7 +52,7 @@ defmodule Guard.Controller.Registration do
   def send_password_reset(conn, user, name) do
     case user do
       nil ->
-        Logger.debug("Failed to send link to unknown user #{name}")
+        Logger.debug(fn -> "Failed to send link to unknown user #{name}" end)
         # Do not allow people to probe which users are on the system
         json(conn, %{ok: true})
 
@@ -64,7 +64,7 @@ defmodule Guard.Controller.Registration do
             json(conn, %{ok: true})
 
           _ ->
-            Logger.debug("Failed to generate claim for #{name}")
+            Logger.debug(fn -> "Failed to generate claim for #{name}" end)
             # Do not allow people to probe which users are on the system
             json(conn, %{ok: true})
         end
@@ -88,7 +88,7 @@ defmodule Guard.Controller.Registration do
   def send_login_link(conn, user, name) do
     case user do
       nil ->
-        Logger.debug("Failed to send link to unknown user #{name}")
+        Logger.debug(fn -> "Failed to send link to unknown user #{name}" end)
         # Do not allow people to probe which users are on the system
         json(conn, %{ok: true})
 
@@ -100,7 +100,7 @@ defmodule Guard.Controller.Registration do
             json(conn, %{ok: true, user: user})
 
           _ ->
-            Logger.debug("Failed to generate claim for #{name}")
+            Logger.debug(fn -> "Failed to generate claim for #{name}" end)
             # Do not allow people to probe which users are on the system
             json(conn, %{ok: true})
         end
@@ -177,7 +177,7 @@ defmodule Guard.Controller.Registration do
 
   def register_device(conn, %{"device" => %{"platform" => platform, "token" => token} = device}) do
     user = Authenticator.current_user(conn)
-    Logger.debug("Registering '#{token}'")
+    Logger.debug(fn -> "Registering '#{token}'" end)
     existing = find_device(token, platform)
 
     model =

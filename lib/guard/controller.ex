@@ -133,7 +133,7 @@ defmodule Guard.Controller do
   end
 
   def send_error(conn, error, status_code \\ :internal_server_error) do
-    Logger.debug("ERROR: #{conn.request_path}\n#{inspect(error)}")
+    Logger.debug(fn -> "ERROR: #{conn.request_path}\n#{inspect(error)}" end)
 
     conn
     |> put_status(status_code)

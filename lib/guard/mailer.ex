@@ -32,7 +32,7 @@ defmodule Guard.Mailer do
   end
 
   def send_unverified_user_mail(user, type, meta \\ %{}) do
-    Logger.debug("Sending #{type} mail to #{user.requested_email}")
+    Logger.debug(fn -> "Sending #{type} mail to #{user.requested_email}" end)
 
     create_mail(type, user.requested_email, user.locale, user, meta)
     |> deliver_now
@@ -40,7 +40,7 @@ defmodule Guard.Mailer do
 
   def send_user_mail(user, type, meta \\ %{}) do
     email = user_email(user)
-    Logger.debug("Sending #{type} mail to #{email}")
+    Logger.debug(fn -> "Sending #{type} mail to #{email}" end)
 
     create_mail(type, email, user.locale, user, meta)
     |> deliver_now
@@ -48,7 +48,7 @@ defmodule Guard.Mailer do
 
   def send_welcome_email(user, token, pin) do
     if user.requested_email != nil do
-      Logger.debug("Sending welcome mail to #{user.requested_email}")
+      Logger.debug(fn -> "Sending welcome mail to #{user.requested_email}" end)
 
       create_mail(:welcome, user.requested_email, user.locale, user, %{token: token, pin: pin})
       |> deliver_now
@@ -56,7 +56,7 @@ defmodule Guard.Mailer do
   end
 
   def send_confirm_email(user, token) do
-    Logger.debug("Sending confirmation mail to #{user.requested_email}")
+    Logger.debug(fn -> "Sending confirmation mail to #{user.requested_email}" end)
 
     create_mail(:confirm, user.requested_email, user.locale, user, %{token: token})
     |> deliver_now
@@ -64,7 +64,7 @@ defmodule Guard.Mailer do
 
   def send_reset_password_link(user, token, pin) do
     email = user_email(user)
-    Logger.debug("Sending reset mail to #{email}")
+    Logger.debug(fn -> "Sending reset mail to #{email}" end)
 
     create_mail(:reset, email, user.locale, user, %{token: token, pin: pin})
     |> deliver_now
@@ -72,7 +72,7 @@ defmodule Guard.Mailer do
 
   def send_login_link(user, token, pin) do
     email = user_email(user)
-    Logger.debug("Sending login mail to #{email}")
+    Logger.debug(fn -> "Sending login mail to #{email}" end)
 
     create_mail(:login, email, user.locale, user, %{token: token, pin: pin})
     |> deliver_now
