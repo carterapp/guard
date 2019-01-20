@@ -123,6 +123,15 @@ defmodule Guard.APITest do
 
     response = send_app_json("get", "/jeeves/users", key.key)
     assert response.status == 401
+
+    response = send_auth_json("get", "/jeeves/users", jwt)
+    assert response.status == 200
+
+    response = send_auth_json("get", "/guard/session", jwt)
+    assert response.status == 200
+
+    response = send_auth_json("delete", "/guard/session", jwt)
+    assert response.status == 200
   end
 
   @tag api: true

@@ -60,9 +60,9 @@ defmodule Guard.Controller.Session do
 
   def delete(conn, _) do
     case Guardian.Plug.current_resource(conn) do
-      %User{} = user ->
+      %User{} ->
         conn
-        |> Guard.Jwt.Plug.sign_out(user)
+        |> Guard.Jwt.Plug.sign_out()
 
       %UserApiKey{} ->
         conn
