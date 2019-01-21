@@ -7,7 +7,8 @@ defmodule Guard.Users do
   end
 
   def update_user(user, changes) do
-    User.changeset(user, changes)
+    user
+    |> User.changeset(changes)
     |> Repo.update()
   end
 
@@ -185,9 +186,10 @@ defmodule Guard.Users do
   end
 
   def create_api_key(%User{} = user, permissions \\ %{}) do
-    key = :crypto.strong_rand_bytes(64) |> Base.encode64()
+    key = 64 |> :crypto.strong_rand_bytes() |> Base.encode64()
 
-    UserApiKey.changeset(%UserApiKey{}, %{key: key, permissions: permissions, user_id: user.id})
+    %UserApiKey{}
+    |> UserApiKey.changeset(%{key: key, permissions: permissions, user_id: user.id})
     |> Repo.insert()
   end
 

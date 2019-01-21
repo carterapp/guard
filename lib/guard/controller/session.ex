@@ -2,9 +2,15 @@ defmodule Guard.Controller.Session do
   use Guard.Controller
   alias Guard.{Session, Authenticator, User, UserApiKey}
 
+  @claim_whitelist ["usr"]
+
   defp process_session(conn, {:ok, %User{} = user}) do
+    process_session(conn, {:ok, user, %{}})
+  end
+
+  defp process_session(conn, {:ok, %User{} = user, claims}) do
     conn
-    |> Authenticator.sign_in(user)
+    |> Authenticator.sign_in(user, claims |> Map.take(@claim_whitelist))
     |> Session.current_session()
     |> case do
       {:ok, session} ->

@@ -34,7 +34,8 @@ defmodule Guard.Mailer do
   def send_unverified_user_mail(user, type, meta \\ %{}) do
     Logger.debug(fn -> "Sending #{type} mail to #{user.requested_email}" end)
 
-    create_mail(type, user.requested_email, user.locale, user, meta)
+    type
+    |> create_mail(user.requested_email, user.locale, user, meta)
     |> deliver_now
   end
 
@@ -42,7 +43,8 @@ defmodule Guard.Mailer do
     email = user_email(user)
     Logger.debug(fn -> "Sending #{type} mail to #{email}" end)
 
-    create_mail(type, email, user.locale, user, meta)
+    type
+    |> create_mail(email, user.locale, user, meta)
     |> deliver_now
   end
 

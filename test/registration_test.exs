@@ -220,11 +220,16 @@ defmodule Guard.RegistrationTest do
     response2 = send_auth_json(:post, "/guard/session/", user_jwt)
     user_jwt2 = get_jwt(response2)
     assert user_jwt != user_jwt2
-    assert %{"user" => %{"username" => "user"}} = get_body(response2)
+    assert %{"root_user" => admin_id, "user" => %{"username" => "user"}} = get_body(response2)
+    assert admin_id == admin.id
 
     response3 = send_auth_json(:delete, "/guard/session/switch", user_jwt2)
     assert response3.status == 201
     assert %{"user" => %{"username" => "admin"}} = get_body(response3)
+
+    # Make sure the usr claim is restored as well
+    response4 = send_json(:get, "/guard/session/#{user_jwt}")
+    assert %{"root_user" => admin_id, "user" => %{"username" => "user"}} = get_body(response4)
   end
 
   test 'confirm email and mobile' do
@@ -243,7 +248,7 @@ defmodule Guard.RegistrationTest do
     assert user.requested_email == nil
     assert user.email == new_email
 
-    jwt = Jason.decode!(response.resp_body) |> Map.get("jwt")
+    jwt = response.resp_body |> Jason.decode!() |> Map.get("jwt")
     {:ok, claims} = Guard.Jwt.decode_and_verify(jwt)
 
     assert Map.get(claims, "typ") == "access"
@@ -435,10 +440,10 @@ defmodule Guard.RegistrationTest do
 
     # password_reset token
     user = Users.get_by_username("new_user")
-    {:ok, resetToken, _claims} = Authenticator.generate_password_reset_claim(user)
+    {:ok, reset_token, _claims} = Authenticator.generate_password_reset_claim(user)
 
     response =
-      send_auth_json(:put, "/guard/account/password", resetToken, %{
+      send_auth_json(:put, "/guard/account/password", reset_token, %{
         new_password: "testing",
         new_password_confirmation: "testing"
       })
@@ -446,7 +451,7 @@ defmodule Guard.RegistrationTest do
     assert response.status == 200
 
     response =
-      send_auth_json(:put, "/guard/account/password", resetToken, %{
+      send_auth_json(:put, "/guard/account/password", reset_token, %{
         new_password: "testing",
         new_password_confirmation: "testing_blah"
       })

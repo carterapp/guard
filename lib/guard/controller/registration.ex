@@ -75,7 +75,7 @@ defmodule Guard.Controller.Registration do
     send_login_link(conn, Users.get_by_username(username), username)
   end
 
-  def send_login_link(conn, user = %{"email" => email}) do
+  def send_login_link(conn, %{"email" => email} = user) do
     existing_user = Users.get_by_email(email)
 
     if existing_user do

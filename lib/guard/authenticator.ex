@@ -238,11 +238,11 @@ defmodule Guard.Authenticator do
 
   defp process_perms(perms) do
     if perms do
-      Enum.to_list(perms)
-      |> Enum.map(fn {k, v} ->
+      perms
+      |> Enum.to_list()
+      |> Enum.into(%{}, fn {k, v} ->
         {k, Enum.map(v, fn v -> if is_atom(v), do: v, else: String.to_atom(v) end)}
       end)
-      |> Enum.into(%{})
     else
       nil
     end
@@ -308,14 +308,14 @@ defmodule Guard.Authenticator do
     )
   end
 
-  def sign_in(conn, %User{} = user) do
+  def sign_in(conn, %User{} = user, claims \\ %{}) do
     perms = process_perms(user.perms)
-    conn |> Guard.Jwt.Plug.sign_in(user, %{}, token_type: "access", perms: perms || %{})
+    conn |> Guard.Jwt.Plug.sign_in(user, claims, token_type: "access", perms: perms || %{})
   end
 
-  def generate_access_claim(%User{} = user) do
+  def generate_access_claim(%User{} = user, claims \\ %{}) do
     perms = process_perms(user.perms)
-    Guard.Jwt.encode_and_sign(user, %{}, token_type: "access", perms: perms || %{})
+    Guard.Jwt.encode_and_sign(user, claims, token_type: "access", perms: perms || %{})
   end
 
   def generate_login_claim(%User{} = user, email \\ nil) do

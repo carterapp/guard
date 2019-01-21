@@ -7,12 +7,15 @@ defmodule Guard.Controller do
     quote do
       use Phoenix.Controller
       import Guard.Controller, only: [send_error: 2]
+      require Logger
 
       def call(conn, opts) do
         try do
           super(conn, opts)
         rescue
-          error -> send_error(conn, error)
+          error ->
+            Logger.metadata(stacktrace: __STACKTRACE__)
+            send_error(conn, error)
         end
       end
     end
@@ -134,6 +137,8 @@ defmodule Guard.Controller do
 
   def send_error(conn, error, status_code \\ :internal_server_error) do
     Logger.debug(fn -> "ERROR: #{conn.request_path}\n#{inspect(error)}" end)
+
+    Logger.debug(fn -> "#{inspect(Logger.metadata())}" end)
 
     conn
     |> put_status(status_code)

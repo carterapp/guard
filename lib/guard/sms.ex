@@ -22,10 +22,11 @@ defmodule Guard.Sms do
     send_message(user, message, callback)
   end
 
-  def send_template_with_options(%User{} = user, type, meta, options = %{}, callback \\ nil) do
+  def send_template_with_options(%User{} = user, type, meta, options, callback \\ nil) do
     module = Map.get(email_setup()[:templates], type)
     locale = user.locale
     message = apply(module, :text_body, [locale, user, meta])
+    options = options || %{}
     send_message(user, Map.put(options, :message, message), callback)
   end
 

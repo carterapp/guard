@@ -66,24 +66,24 @@ defmodule Guard.Session do
     end
   end
 
-  def authenticate(params = %{"email" => email, "password" => password}) do
+  def authenticate(%{"email" => email, "password" => password} = params) do
     user = Users.get_by_email(email)
     check_password_with_message(user, password, params)
   end
 
-  def authenticate(params = %{"username" => username, "password" => password}) do
+  def authenticate(%{"username" => username, "password" => password} = params) do
     user = Users.get_by_username(username)
 
     check_password_with_message(user, password, params)
   end
 
-  def authenticate(params = %{"username" => username, "pin" => pin}) do
+  def authenticate(%{"username" => username, "pin" => pin} = params) do
     user = Users.get_by_username(username)
 
     check_pin_with_message(&Authenticator.use_either_pin/2, user, pin, params)
   end
 
-  def authenticate(params = %{"mobile" => mobile, "pin" => pin}) do
+  def authenticate(%{"mobile" => mobile, "pin" => pin} = params) do
     user = Users.get_by_mobile(mobile)
 
     case check_pin_with_message(&Authenticator.use_pin/2, user, pin, params) do
@@ -95,7 +95,7 @@ defmodule Guard.Session do
     end
   end
 
-  def authenticate(params = %{"email" => email, "pin" => pin}) do
+  def authenticate(%{"email" => email, "pin" => pin} = params) do
     user = Users.get_by_email(email)
 
     case check_pin_with_message(&Authenticator.use_email_pin/2, user, pin, params) do
@@ -108,17 +108,11 @@ defmodule Guard.Session do
   end
 
   def authenticate(%{"token" => token}) do
-    case Guard.Jwt.decode_and_verify(token) do
-      {:ok, claims} -> user_from_claim(claims)
-      _ -> {:error, :bad_token}
-    end
+    authenticate_token(token)
   end
 
   def authenticate({:jwt, jwt}) do
-    case Guard.Jwt.decode_and_verify(jwt) do
-      {:ok, claims} -> user_from_claim(claims)
-      _ -> {:error, :bad_token}
-    end
+    authenticate_token(jwt)
   end
 
   def authenticate(_) do
@@ -144,6 +138,18 @@ defmodule Guard.Session do
 
       other ->
         other
+    end
+  end
+
+  defp authenticate_token(token) do
+    case Guard.Jwt.decode_and_verify(token) do
+      {:ok, claims} ->
+        with {:ok, user} <- user_from_claim(claims) do
+          {:ok, user, claims}
+        end
+
+      _ ->
+        {:error, :bad_token}
     end
   end
 
