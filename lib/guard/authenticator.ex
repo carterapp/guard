@@ -3,6 +3,10 @@ defmodule Guard.Authenticator do
 
   defexception message: "not_authenticated"
 
+  @access_token "access"
+  @login_token "login"
+  @password_reset_token "password_reset"
+
   defp pin_range() do
     Application.get_env(:guard, :pin_range, 100_000..999_999)
   end
@@ -138,6 +142,7 @@ defmodule Guard.Authenticator do
       raise Guard.Authenticator, message: "not_authenticated"
     end
   end
+
   def request_email_change(user, email) do
     Users.update_user(user, %{"requested_email" => email})
   end
@@ -302,48 +307,33 @@ defmodule Guard.Authenticator do
     perms = process_perms(user.perms)
 
     Guard.Jwt.encode_and_sign(user, %{usr: root_user_id},
-      token_type: "access",
+      token_type: @access_token,
       perms: perms || %{}
     )
   end
 
-  defp remember_user?(_conn) do
-    Application.get_env(:guard, Guard.Jwt)[:remember_user]
-  end
-
-  defp remember_me(conn, %User{} = user, claims, opts) do
-    if remember_user?(conn) do
-      conn
-      |> Guard.Jwt.Plug.remember_me(user, claims, opts)
-    else
-      conn
-    end
-  end
-
   def sign_in(conn, %User{} = user, claims \\ %{}) do
     perms = process_perms(user.perms) || %{}
-    opts = [token_type: "access", perms: perms]
 
     conn
-    |> Guard.Jwt.Plug.sign_in(user, claims, opts)
-    |> remember_me(user, claims, opts)
+    |> Guard.Jwt.Plug.sign_in(user, claims, token_type: @access_token, perms: perms)
   end
 
   def generate_access_claim(%User{} = user, claims \\ %{}) do
-    perms = process_perms(user.perms)
-    Guard.Jwt.encode_and_sign(user, claims, token_type: "access", perms: perms || %{})
+    perms = process_perms(user.perms) || %{}
+    Guard.Jwt.encode_and_sign(user, claims, token_type: @access_token, perms: perms)
   end
 
   def generate_login_claim(%User{} = user, email \\ nil) do
     Guard.Jwt.encode_and_sign(user, %{requested_email: email || user.requested_email},
-      token_type: "login",
+      token_type: @login_token,
       token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours})
     )
   end
 
   def generate_password_reset_claim(%User{} = user) do
     Guard.Jwt.encode_and_sign(user, %{},
-      token_type: "password_reset",
+      token_type: @password_reset_token,
       token_ttl: Application.get_env(:guard, :login_ttl, {12, :hours})
     )
   end

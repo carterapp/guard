@@ -3,10 +3,25 @@ defmodule Guard.Controller.Session do
   alias Guard.{Session, Authenticator, User, UserApiKey}
 
   @claim_whitelist ["usr"]
+  @refresh_token "refresh"
 
-  defp output_new_session(conn) do
+  defp remember_user?(_conn) do
+    Application.get_env(:guard, Guard.Jwt)[:remember_user]
+  end
+
+  defp remember_me(conn, %User{} = user, claims, opts) do
+    if remember_user?(conn) do
+      conn
+      |> Guard.Jwt.Plug.remember_me(user, claims, opts)
+    else
+      conn
+    end
+  end
+
+  defp output_new_session(conn, user, claims) do
     with {:ok, session} <- Session.current_session(conn) do
       conn
+      |> remember_me(user, claims, token_type: @refresh_token)
       |> put_status(:created)
       |> json(session)
     end
@@ -19,7 +34,7 @@ defmodule Guard.Controller.Session do
   defp process_session(conn, {:ok, %User{} = user, claims}) do
     conn
     |> Authenticator.sign_in(user, claims |> Map.take(@claim_whitelist))
-    |> output_new_session()
+    |> output_new_session(user, claims)
   end
 
   defp process_session(conn, {:error, message}) do

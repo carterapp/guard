@@ -445,14 +445,19 @@ defmodule Guard.RegistrationTest do
     response = send_json(:post, "/guard/session?username=new_user&password=testing")
 
     assert response.status == 201
+
     %{"guardian_api_pipeline_token" => cookie} = response.resp_cookies
     assert cookie.value != nil
     {:ok, claims} = Guard.Jwt.decode_and_verify(cookie.value)
     {:ok, user} = Guard.Jwt.resource_from_claims(claims)
-    assert claims["typ"] == "access"
+    assert claims["typ"] == "refresh"
     assert user.username == "new_user"
 
-    response = send_auth_json(:get, "/guard/session", cookie.value)
+    response =
+      send_json(:get, "/guard/session", nil, [
+        {"cookie", "guardian_api_pipeline_token=#{cookie.value}"}
+      ])
+
     assert response.status == 200
     body = get_body(response)
     assert body["user"]["username"] == "new_user"
