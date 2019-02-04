@@ -12,5 +12,6 @@ defmodule Guard.JwtPipeline do
 
   plug(Guardian.Plug.VerifyHeader, realm: realm, module: Guard.Jwt)
   plug(Guardian.Plug.VerifySession, realm: realm, module: Guard.Jwt)
+  plug(Guardian.Plug.VerifyCookie, realm: realm, module: Guard.Jwt)
   plug(Guardian.Plug.LoadResource, allow_blank: true, module: Guard.Jwt)
 end

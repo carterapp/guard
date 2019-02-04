@@ -4,6 +4,14 @@ defmodule Guard.Controller.Session do
 
   @claim_whitelist ["usr"]
 
+  defp output_new_session(conn) do
+    with {:ok, session} <- Session.current_session(conn) do
+      conn
+      |> put_status(:created)
+      |> json(session)
+    end
+  end
+
   defp process_session(conn, {:ok, %User{} = user}) do
     process_session(conn, {:ok, user, %{}})
   end
@@ -11,16 +19,7 @@ defmodule Guard.Controller.Session do
   defp process_session(conn, {:ok, %User{} = user, claims}) do
     conn
     |> Authenticator.sign_in(user, claims |> Map.take(@claim_whitelist))
-    |> Session.current_session()
-    |> case do
-      {:ok, session} ->
-        conn
-        |> put_status(:created)
-        |> json(session)
-
-      {:error, error} ->
-        send_error(conn, error)
-    end
+    |> output_new_session()
   end
 
   defp process_session(conn, {:error, message}) do

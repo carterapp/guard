@@ -138,7 +138,6 @@ defmodule Guard.Authenticator do
       raise Guard.Authenticator, message: "not_authenticated"
     end
   end
-
   def request_email_change(user, email) do
     Users.update_user(user, %{"requested_email" => email})
   end
@@ -308,9 +307,26 @@ defmodule Guard.Authenticator do
     )
   end
 
+  defp remember_user?(_conn) do
+    Application.get_env(:guard, Guard.Jwt)[:remember_user]
+  end
+
+  defp remember_me(conn, %User{} = user, claims, opts) do
+    if remember_user?(conn) do
+      conn
+      |> Guard.Jwt.Plug.remember_me(user, claims, opts)
+    else
+      conn
+    end
+  end
+
   def sign_in(conn, %User{} = user, claims \\ %{}) do
-    perms = process_perms(user.perms)
-    conn |> Guard.Jwt.Plug.sign_in(user, claims, token_type: "access", perms: perms || %{})
+    perms = process_perms(user.perms) || %{}
+    opts = [token_type: "access", perms: perms]
+
+    conn
+    |> Guard.Jwt.Plug.sign_in(user, claims, opts)
+    |> remember_me(user, claims, opts)
   end
 
   def generate_access_claim(%User{} = user, claims \\ %{}) do

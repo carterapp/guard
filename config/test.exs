@@ -10,6 +10,7 @@ config :guard, Guard.Guardian,
   }
 
 config :guard, Guard.Jwt,
+  remember_user: true,
   issuer: "Codenaut",
   ttl: {180, :days},
   verify_issuer: true,
