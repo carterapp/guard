@@ -438,6 +438,17 @@ defmodule Guard.RegistrationTest do
 
     assert response.status == 201
 
+    response =
+      send_json(:post, "/guard/session?username=new_user&password=testing2")
+
+    assert response.status == 401
+
+    response =
+      send_json(:post, "/guard/session?username=new_user&password=testing")
+
+    assert response.status == 201
+
+
     # password_reset token
     user = Users.get_by_username("new_user")
     {:ok, reset_token, _claims} = Authenticator.generate_password_reset_claim(user)
