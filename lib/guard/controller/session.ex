@@ -88,12 +88,11 @@ defmodule Guard.Controller.Session do
         conn
         |> Guardian.Plug.current_token()
         |> Guard.ApiKey.revoke()
+        conn
 
       _any ->
-        nil
+       conn
     end
-
-    conn
     |> json(%{ok: true})
   end
 

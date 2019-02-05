@@ -462,6 +462,13 @@ defmodule Guard.RegistrationTest do
     body = get_body(response)
     assert body["user"]["username"] == "new_user"
 
+    response =
+      send_json(:delete, "/guard/session", nil, [
+        {"cookie", "guardian_api_pipeline_token=#{cookie.value}"}
+      ])
+    %{"guardian_api_pipeline_token" => cookie} = response.resp_cookies
+    assert cookie[:value] == nil
+
     # password_reset token
     user = Users.get_by_username("new_user")
     {:ok, reset_token, _claims} = Authenticator.generate_password_reset_claim(user)
