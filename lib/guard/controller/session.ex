@@ -82,7 +82,7 @@ defmodule Guard.Controller.Session do
     case Guardian.Plug.current_resource(conn) do
       %User{} ->
         conn
-        |> Guard.Jwt.Plug.sign_out()
+        |> Guard.Jwt.Plug.sign_out(clear_remember_me: remember_user?(conn))
 
       %UserApiKey{} ->
         conn
