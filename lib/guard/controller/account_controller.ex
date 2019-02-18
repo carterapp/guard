@@ -6,9 +6,8 @@ defmodule Guard.Controller.Account do
 
   def update_attributes(conn, params) do
     user = Authenticator.authenticated_user!(conn)
-    attrs = if user.attrs == nil, do: params, else: Map.merge(user.attrs, params)
 
-    with {:ok, user} <- Users.update_user(user, %{attrs: attrs}) do
+    with {:ok, user} <- Users.update_attributes(user, params) do
       json(conn, %{user: user})
     end
   end

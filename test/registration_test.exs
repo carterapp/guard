@@ -466,6 +466,7 @@ defmodule Guard.RegistrationTest do
       send_json(:delete, "/guard/session", nil, [
         {"cookie", "guardian_api_pipeline_token=#{cookie.value}"}
       ])
+
     %{"guardian_api_pipeline_token" => cookie} = response.resp_cookies
     assert cookie[:value] == nil
 

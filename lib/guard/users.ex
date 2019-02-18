@@ -12,6 +12,11 @@ defmodule Guard.Users do
     |> Repo.update()
   end
 
+  def update_attributes(user, attributes) do
+    existing = user.attrs || %{}
+    update_user(user, %{attrs: Map.merge(existing, attributes)})
+  end
+
   def create_user(changes \\ %{}) do
     %User{}
     |> User.changeset(changes)
