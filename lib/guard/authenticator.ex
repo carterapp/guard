@@ -124,11 +124,15 @@ defmodule Guard.Authenticator do
     end
   end
 
+  defp with_context(user, conn) do
+    user
+  end
+
   def current_user(conn) do
     case Guardian.Plug.current_resource(conn) do
       nil -> nil
-      user = %User{} -> user
-      key = %UserApiKey{} -> Users.get!(key.user_id)
+      user = %User{} -> user |> with_context(conn)
+      key = %UserApiKey{} -> key.user_id |> Users.get!() |> with_context(conn)
       _ -> nil
     end
   end
@@ -304,12 +308,7 @@ defmodule Guard.Authenticator do
   end
 
   defp generate_switched_user_access_claim(%User{} = user, root_user_id) do
-    perms = process_perms(user.perms)
-
-    Guard.Jwt.encode_and_sign(user, %{usr: root_user_id},
-      token_type: @access_token,
-      perms: perms || %{}
-    )
+    generate_access_claim(user, %{usr: root_user_id})
   end
 
   def sign_in(conn, %User{} = user, claims \\ %{}) do
@@ -378,7 +377,9 @@ defmodule Guard.Authenticator do
 
   def generate_pin(user) do
     {:ok, exp_time} =
-      ((DateTime.utc_now() |> DateTime.to_unix()) + 60 * pin_lifespan_mins())
+      DateTime.utc_now()
+      |> DateTime.to_unix()
+      |> Kernel.+(60 * pin_lifespan_mins())
       |> DateTime.from_unix()
 
     generate_pin(user, exp_time)
@@ -399,7 +400,9 @@ defmodule Guard.Authenticator do
 
   def generate_email_pin(user) do
     {:ok, exp_time} =
-      ((DateTime.utc_now() |> DateTime.to_unix()) + 60 * pin_lifespan_mins())
+      DateTime.utc_now()
+      |> DateTime.to_unix()
+      |> Kernel.+(60 * pin_lifespan_mins())
       |> DateTime.from_unix()
 
     generate_email_pin(user, exp_time)

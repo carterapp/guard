@@ -1,5 +1,5 @@
 #!/bin/sh
-name="doorman-test-postgres"
+name="guard-test-postgres"
 
 if [ "$1" == "clean" ]; then
     docker stop $name

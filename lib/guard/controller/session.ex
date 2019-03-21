@@ -2,7 +2,7 @@ defmodule Guard.Controller.Session do
   use Guard.Controller
   alias Guard.{Session, Authenticator, User, UserApiKey}
 
-  @claim_whitelist ["usr"]
+  @claim_whitelist ["usr", "ctx"]
   @refresh_token "refresh"
 
   defp remember_user?(_conn) do
@@ -79,7 +79,9 @@ defmodule Guard.Controller.Session do
   end
 
   def delete(conn, _) do
-    case Guardian.Plug.current_resource(conn) do
+    conn
+    |> Guardian.Plug.current_resource()
+    |> case do
       %User{} ->
         conn
         |> Guard.Jwt.Plug.sign_out(clear_remember_me: remember_user?(conn))

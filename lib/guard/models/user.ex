@@ -52,12 +52,14 @@ defmodule Guard.User do
     field(:enc_email_pin, :string)
     field(:email_pin_expiration, :utc_datetime)
 
+    field(:context, :map, virtual: true)
+
     timestamps()
   end
 
   @required_fields ~w(username)a
-  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin enc_pin pin_expiration 
-                      email_pin enc_email_pin email_pin_expiration mobile requested_mobile)a
+  @optional_fields ~w(password email enc_password perms requested_email provider fullname locale attrs pin enc_pin pin_expiration
+                      email_pin enc_email_pin email_pin_expiration mobile requested_mobile context)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.
@@ -109,18 +111,18 @@ defmodule Guard.User do
   end
 
   def hash_password(password) do
-    Comeonin.Bcrypt.hashpwsalt(password)
+    Bcrypt.hash_pwd_salt(password)
   end
 
   def check_password(user, password) do
-    Comeonin.Bcrypt.checkpw(password, user.enc_password)
+    Bcrypt.verify_pass(password, user.enc_password)
   end
 
   defp validate_pin(user_pin, exp_time, check_pin) do
     cond do
       !user_pin -> {:error, :no_pin}
       exp_time && DateTime.diff(DateTime.utc_now(), exp_time) > 0 -> {:error, :pin_expired}
-      Comeonin.Bcrypt.checkpw(check_pin, user_pin) -> :ok
+      Bcrypt.verify_pass(check_pin, user_pin) -> :ok
       true -> {:error, :wrong_pin}
     end
   end

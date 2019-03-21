@@ -212,6 +212,18 @@ defmodule Guard.Session do
     map
   end
 
+  def set_context(conn, context) do
+  end
+
+  def clear_context(conn) do
+  end
+
+  def get_context(conn) do
+    with {:ok, claims} <- Authenticator.current_claims(conn) do
+      ctx = claims["ctx"]
+    end
+  end
+
   def current_session(conn) do
     case Authenticator.current_claims(conn) do
       {:ok, claims} ->
@@ -219,13 +231,12 @@ defmodule Guard.Session do
         perms = decode_permissions(resource, claims)
         user = Guard.Authenticator.current_user(conn)
         root_user = claims["usr"]
+        context = claims["ctx"]
 
         extra =
-          if root_user do
-            %{root_user: root_user}
-          else
-            %{}
-          end
+          %{root_user: root_user, context: context}
+          |> Enum.filter(fn {_k, v} -> v end)
+          |> Enum.into(%{})
 
         {:ok, %{perms: perms, user: user} |> Map.merge(extra) |> add_token(conn, resource)}
 
