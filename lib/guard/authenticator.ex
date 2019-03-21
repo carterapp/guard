@@ -126,13 +126,14 @@ defmodule Guard.Authenticator do
 
   defp with_context(user, conn) do
     user
+    |> Map.put(:context, Guard.Session.get_context(conn))
   end
 
   def current_user(conn) do
     case Guardian.Plug.current_resource(conn) do
       nil -> nil
-      user = %User{} -> user |> with_context(conn)
-      key = %UserApiKey{} -> key.user_id |> Users.get!() |> with_context(conn)
+      user = %User{} -> user
+      key = %UserApiKey{} -> Users.get!(key.user_id)
       _ -> nil
     end
   end
@@ -141,7 +142,7 @@ defmodule Guard.Authenticator do
     user = Guardian.Plug.current_resource(conn)
 
     if user do
-      user
+      user |> with_context(conn)
     else
       raise Guard.Authenticator, message: "not_authenticated"
     end
@@ -274,11 +275,9 @@ defmodule Guard.Authenticator do
   def switch_user(conn, %User{} = user) do
     case current_claims(conn) do
       {:ok, claims} ->
-        current_claims(conn)
-
         if can_switch_user?(claims) do
           root_user = authenticated_user!(conn)
-          generate_switched_user_access_claim(user, root_user.id)
+          generate_switched_user_access_claim(user, root_user.id, claims)
         else
           {:error, :forbidden}
         end
@@ -307,8 +306,8 @@ defmodule Guard.Authenticator do
     end
   end
 
-  defp generate_switched_user_access_claim(%User{} = user, root_user_id) do
-    generate_access_claim(user, %{usr: root_user_id})
+  defp generate_switched_user_access_claim(%User{} = user, root_user_id, claims) do
+    generate_access_claim(user, Map.put(claims, :usr, root_user_id))
   end
 
   def sign_in(conn, %User{} = user, claims \\ %{}) do

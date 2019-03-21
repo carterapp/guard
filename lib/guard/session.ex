@@ -213,14 +213,21 @@ defmodule Guard.Session do
   end
 
   def set_context(conn, context) do
+    with user <- Authenticator.current_user(conn),
+         {:ok, claims} <- Authenticator.current_claims(conn) do
+      Authenticator.generate_access_claim(user, Map.put(claims, :context, context))
+    end
   end
 
   def clear_context(conn) do
+    set_context(conn, nil)
   end
 
   def get_context(conn) do
     with {:ok, claims} <- Authenticator.current_claims(conn) do
-      ctx = claims["ctx"]
+      claims["ctx"] || %{}
+    else
+      _ -> %{}
     end
   end
 
