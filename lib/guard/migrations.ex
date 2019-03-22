@@ -1,4 +1,5 @@
 defmodule Guard.Migrations do
+  @moduledoc false
   def run(repo) do
     Ecto.Migrator.up(repo, 20_160_226_111_455, Guard.Repo.Migrations.CreateUser)
     Ecto.Migrator.up(repo, 20_160_530_004_942, Guard.Repo.Migrations.CreateDevice)

@@ -1,4 +1,5 @@
 defmodule Guard.ErrorHandler do
+  @moduledoc false
   import Plug.Conn
   import Guard.Controller, only: [json: 2]
   alias Guard.Controller

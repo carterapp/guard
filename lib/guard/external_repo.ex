@@ -1,4 +1,5 @@
 defmodule Guard.ExternalRepo do
+  @moduledoc false
   defmacro __using__(_opts) do
     repo = Application.get_env(:guard, Guard.ExternalRepo)[:repo]
 

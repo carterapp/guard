@@ -1,4 +1,5 @@
 defmodule Guard.ApiKey do
+  @moduledoc false
   use Guardian,
     otp_app: :guard,
     token_module: Guard.ApiKeyToken,

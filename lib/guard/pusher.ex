@@ -1,4 +1,5 @@
 defmodule Guard.Pusher do
+  @moduledoc false
   alias Guard.User
 
   def send_user_message(user, message, callback \\ nil) do

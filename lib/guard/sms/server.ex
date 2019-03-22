@@ -1,4 +1,5 @@
 defmodule Guard.Sms.Server do
+  @moduledoc false
   use GenServer
   use Tesla
   # Hackney does not play well with gatewayapi.com

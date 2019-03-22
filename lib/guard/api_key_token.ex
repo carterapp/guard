@@ -1,4 +1,5 @@
 defmodule Guard.ApiKeyToken do
+  @moduledoc false
   @behaviour Guardian.Token
 
   alias Guard.{Users, UserApiKey, ApiKey}

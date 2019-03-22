@@ -1,4 +1,5 @@
 defmodule Guard.RouterTestHelper do
+  @moduledoc false
   use Plug.Test
   alias Guard.Router
   @opts Router.init([])

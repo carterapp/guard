@@ -1,4 +1,5 @@
 defmodule Guard.Repo.Migrations.AddMobile do
+  @moduledoc false
   use Ecto.Migration
 
   def users_table() do

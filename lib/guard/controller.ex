@@ -1,4 +1,5 @@
 defmodule Guard.Controller do
+  @moduledoc false
   require Logger
 
   import Plug.Conn, only: [put_status: 2, put_resp_content_type: 2, send_resp: 3]

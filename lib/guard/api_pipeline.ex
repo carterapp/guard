@@ -1,4 +1,5 @@
 defmodule Guard.ApiPipeline do
+  @moduledoc false
   use Plug.Builder
 
   plug(Guard.ApiKeyPipeline)

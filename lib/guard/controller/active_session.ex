@@ -1,4 +1,5 @@
 defmodule Guard.Controller.ActiveSession do
+  @moduledoc false
   use Guard.Controller
   alias Guard.{Session}
 

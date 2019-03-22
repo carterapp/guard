@@ -1,4 +1,5 @@
 defmodule Guard.Controller.Session do
+  @moduledoc false
   use Guard.Controller
   alias Guard.{Session, Authenticator, User, UserApiKey}
 

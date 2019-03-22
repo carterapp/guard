@@ -1,4 +1,5 @@
 defmodule Guard.Repo.Migrations.CreateDevice do
+  @moduledoc false
   use Ecto.Migration
 
   def device_table() do

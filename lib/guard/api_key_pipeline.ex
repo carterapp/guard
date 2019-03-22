@@ -1,4 +1,5 @@
 defmodule Guard.ApiKeyPipeline do
+  @moduledoc false
   @default_realm "Key"
 
   @module_key :api_pipeline

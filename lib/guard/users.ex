@@ -1,4 +1,5 @@
 defmodule Guard.Users do
+  @moduledoc false
   alias Guard.{Repo, User, Device, UserApiKey}
   import Ecto.Query
 

@@ -1,4 +1,5 @@
 defmodule Guard.Jwt do
+  @moduledoc false
   use Guardian,
     otp_app: :guard,
     permissions: Application.get_env(:guard, Guard.Guardian)[:permissions]

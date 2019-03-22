@@ -1,4 +1,5 @@
 defmodule Guard.Controller.PasswordReset do
+  @moduledoc false
   use Guard.Controller
   alias Guard.{Authenticator, User, Users}
 

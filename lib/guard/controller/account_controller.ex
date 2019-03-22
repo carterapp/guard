@@ -1,4 +1,5 @@
 defmodule Guard.Controller.Account do
+  @moduledoc false
   use Guard.Controller
   alias Guard.{Authenticator, Users}
 

@@ -1,4 +1,5 @@
 defmodule Guard.Mailer do
+  @moduledoc false
   require Logger
   use Bamboo.Mailer, otp_app: :guard
   import Bamboo.Email

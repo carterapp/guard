@@ -1,4 +1,5 @@
 defmodule Guard.Controller.Registration do
+  @moduledoc false
   require Logger
   use Guard.Controller
   alias Guard.{Repo, User, Authenticator, Device, Mailer, Users}

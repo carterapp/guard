@@ -1,4 +1,5 @@
 defmodule Guard.JwtPipeline do
+  @moduledoc false
   # Use :none to use no prefix before token
   @default_realm "Bearer"
 

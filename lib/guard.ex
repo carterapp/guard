@@ -1,4 +1,5 @@
 defmodule Guard do
+  @moduledoc false
   require Logger
   use Application
 

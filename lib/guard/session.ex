@@ -1,4 +1,5 @@
 defmodule Guard.Session do
+  @moduledoc false
   alias Guard.{User, Authenticator, Users, UserApiKey}
   require Logger
 
@@ -34,16 +35,16 @@ defmodule Guard.Session do
     end
   end
 
+  defp verify_params(user, _) do
+    {:ok, user}
+  end
+
   defp check_perm(user, perm, on_success, on_fail) do
     if has_perm?(user, perm) do
       on_success
     else
       on_fail
     end
-  end
-
-  defp verify_params(user, _) do
-    {:ok, user}
   end
 
   defp check_password_with_message(user, password, params) do

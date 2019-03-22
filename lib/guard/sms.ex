@@ -1,4 +1,5 @@
 defmodule Guard.Sms do
+  @moduledoc false
   alias Guard.User
 
   def send_message(user, message, callback \\ nil)

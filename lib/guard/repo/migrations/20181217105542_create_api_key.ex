@@ -1,4 +1,5 @@
 defmodule Guard.Repo.Migrations.CreateApiKey do
+  @moduledoc false
   use Ecto.Migration
 
   defp table() do

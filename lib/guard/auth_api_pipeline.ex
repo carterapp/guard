@@ -1,4 +1,5 @@
 defmodule Guard.AuthApiPipeline do
+  @moduledoc false
   @claims %{typ: "access"}
   @default_realm "Bearer"
 

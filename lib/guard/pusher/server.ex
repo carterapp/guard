@@ -1,4 +1,5 @@
 defmodule Guard.Pusher.Server do
+  @moduledoc false
   use GenServer
   use Tesla
   adapter(Tesla.Adapter.Hackney)
