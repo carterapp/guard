@@ -57,17 +57,21 @@ defmodule Guard.Controller.Registration do
         json(conn, %{ok: true})
 
       user ->
-        case Authenticator.generate_password_reset_claim(user) do
-          {:ok, token, _} ->
-            {:ok, pin, user} = Authenticator.generate_pin(user)
-            Mailer.send_reset_password_link(user, token, pin)
-            json(conn, %{ok: true})
+        do_send_password_reset(conn, user)
+    end
+  end
 
-          _ ->
-            Logger.debug(fn -> "Failed to generate claim for #{name}" end)
-            # Do not allow people to probe which users are on the system
-            json(conn, %{ok: true})
-        end
+  defp do_send_password_reset(conn, user) do
+    case Authenticator.generate_password_reset_claim(user) do
+      {:ok, token, _} ->
+        {:ok, pin, user} = Authenticator.generate_pin(user)
+        Mailer.send_reset_password_link(user, token, pin)
+        json(conn, %{ok: true})
+
+      _ ->
+        Logger.debug(fn -> "Failed to generate claim for #{user.username}" end)
+        # Do not allow people to probe which users are on the system
+        json(conn, %{ok: true})
     end
   end
 
@@ -93,17 +97,21 @@ defmodule Guard.Controller.Registration do
         json(conn, %{ok: true})
 
       user ->
-        case Authenticator.generate_login_claim(user) do
-          {:ok, token, _} ->
-            {:ok, pin, user} = Authenticator.generate_pin(user)
-            Mailer.send_login_link(user, token, pin)
-            json(conn, %{ok: true, user: user})
+        do_send_login_link(conn, user)
+    end
+  end
 
-          _ ->
-            Logger.debug(fn -> "Failed to generate claim for #{name}" end)
-            # Do not allow people to probe which users are on the system
-            json(conn, %{ok: true})
-        end
+  defp do_send_login_link(conn, user) do
+    case Authenticator.generate_login_claim(user) do
+      {:ok, token, _} ->
+        {:ok, pin, user} = Authenticator.generate_pin(user)
+        Mailer.send_login_link(user, token, pin)
+        json(conn, %{ok: true, user: user})
+
+      _ ->
+        Logger.debug(fn -> "Failed to generate claim for #{user.username}" end)
+        # Do not allow people to probe which users are on the system
+        json(conn, %{ok: true})
     end
   end
 
@@ -145,21 +153,21 @@ defmodule Guard.Controller.Registration do
 
     case validate_either_pin(user, pin) do
       {:ok, type} ->
-        case Users.update_user(user, %{
-               "password" => new_password,
-               "password_confirmation" => new_password_confirmation
-             }) do
-          {:ok, user} ->
-            if type == :mobile do
-              Users.confirm_user_mobile(user, Map.get(params, "mobile"))
-              Authenticator.clear_pin(user)
-            else
-              Users.confirm_user_email(user, Map.get(params, "email"))
-              Authenticator.clear_email_pin(user)
-            end
+        with {:ok, user} <-
+               Users.update_user(user, %{
+                 "password" => new_password,
+                 "password_confirmation" => new_password_confirmation
+               }) do
+          if type == :mobile do
+            Users.confirm_user_mobile(user, Map.get(params, "mobile"))
+            Authenticator.clear_pin(user)
+          else
+            Users.confirm_user_email(user, Map.get(params, "email"))
+            Authenticator.clear_email_pin(user)
+          end
 
-            json(conn, %{ok: true})
-
+          json(conn, %{ok: true})
+        else
           {:error, changeset} ->
             send_error(conn, changeset)
         end

@@ -55,6 +55,9 @@ defmodule Guard.Controller do
       put("/session/switch/email/:email", Guard.Controller.Session, :switch_user)
       put("/session/switch/mobile/:mobile", Guard.Controller.Session, :switch_user)
 
+      put("/session/context", Guard.Controller.Session, :set_context)
+      delete("/session/context", Guard.Controller.Session, :clear_context)
+
       delete("/session/switch", Guard.Controller.Session, :reset_user)
 
       # Update current account

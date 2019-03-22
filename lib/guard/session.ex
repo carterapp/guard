@@ -6,44 +6,44 @@ defmodule Guard.Session do
     Map.has_key?(user.perms || %{}, perm)
   end
 
-  defp verify_params(user, params) do
-    case params do
-      %{"perm" => perm} ->
-        if has_perm?(user, perm) do
-          {:ok, user}
-        else
-          {:error, :forbidden}
-        end
-
-      %{"all_perms" => all_perms} ->
-        if Enum.reduce_while(all_perms, true, fn perm, _acc ->
-             if has_perm?(user, perm) do
-               {:cont, true}
-             else
-               {:halt, false}
-             end
-           end) do
-          {:ok, user}
-        else
-          {:error, :forbidden}
-        end
-
-      %{"any_perms" => any_perms} ->
-        if Enum.reduce_while(any_perms, true, fn perm, _acc ->
-             if has_perm?(user, perm) do
-               {:halt, true}
-             else
-               {:cont, false}
-             end
-           end) do
-          {:ok, user}
-        else
-          {:error, :forbidden}
-        end
-
-      _ ->
-        {:ok, user}
+  defp verify_params(user, %{"perm" => perm}) do
+    if has_perm?(user, perm) do
+      {:ok, user}
+    else
+      {:error, :forbidden}
     end
+  end
+
+  defp verify_params(user, %{"all_perms" => all_perms}) do
+    if Enum.reduce_while(all_perms, true, fn perm, _acc ->
+         check_perm(user, perm, {:cont, true}, {:halt, false})
+       end) do
+      {:ok, user}
+    else
+      {:error, :forbidden}
+    end
+  end
+
+  defp verify_params(user, %{"any_perms" => any_perms}) do
+    if Enum.reduce_while(any_perms, true, fn perm, _acc ->
+         check_perm(user, perm, {:halt, true}, {:cont, false})
+       end) do
+      {:ok, user}
+    else
+      {:error, :forbidden}
+    end
+  end
+
+  defp check_perm(user, perm, on_success, on_fail) do
+    if has_perm?(user, perm) do
+      on_success
+    else
+      on_fail
+    end
+  end
+
+  defp verify_params(user, _) do
+    {:ok, user}
   end
 
   defp check_password_with_message(user, password, params) do
@@ -125,19 +125,23 @@ defmodule Guard.Session do
         {:ok, user}
 
       {:error, :missing_credentials} ->
-        case Guardian.Plug.current_token(conn) do
-          nil ->
-            {:error, :missing_token}
-
-          token ->
-            case Guard.Jwt.refresh(token) do
-              {:ok, _old, {new_token, new_claims}} -> {:ok, new_token, new_claims}
-              other -> other
-            end
-        end
+        refresh_token(conn)
 
       other ->
         other
+    end
+  end
+
+  defp refresh_token(conn) do
+    case Guardian.Plug.current_token(conn) do
+      nil ->
+        {:error, :missing_token}
+
+      token ->
+        case Guard.Jwt.refresh(token) do
+          {:ok, _old, {new_token, new_claims}} -> {:ok, new_token, new_claims}
+          other -> other
+        end
     end
   end
 
@@ -215,7 +219,7 @@ defmodule Guard.Session do
   def set_context(conn, context) do
     with user <- Authenticator.current_user(conn),
          {:ok, claims} <- Authenticator.current_claims(conn) do
-      Authenticator.generate_access_claim(user, Map.put(claims, :context, context))
+      Authenticator.generate_access_claim(user, Map.put(claims, "ctx", context))
     end
   end
 

@@ -36,31 +36,32 @@ defmodule Guard.Pusher.Server do
     {:reply, {:ok, state}, state}
   end
 
-  def handle_cast({:user, user, message, callback}, state) do
-    devices = Guard.Users.list_devices(user)
+  defp send_notification_payload(client, device, message, options) do
+    try do
+      resp = do_post(client, options, Map.merge(message, %{to: device.token}))
 
-    if length(devices) > 0 do
-      Enum.each(devices, fn d ->
-        resp =
-          try do
-            resp = do_post(state.client, state.options, Map.merge(message, %{to: d.token}))
-
-            if resp.body != nil do
-              if resp.body["failure"] == 1 do
-                Guard.Repo.delete(d)
-              end
-            end
-
-            resp
-          rescue
-            error -> {:error, error}
-          end
-
-        if !is_nil(callback) do
-          callback.(resp)
+      if resp.body != nil do
+        if resp.body["failure"] == 1 do
+          Guard.Repo.delete(device)
         end
-      end)
+      end
+
+      resp
+    rescue
+      error -> {:error, error}
     end
+  end
+
+  def handle_cast({:user, user, message, callback}, state) do
+    devices = Guard.Users.list_devices(user) || []
+
+    Enum.each(devices, fn d ->
+      resp = send_notification_payload(state.client, d, message, state.options)
+
+      if !is_nil(callback) do
+        callback.(resp)
+      end
+    end)
 
     {:noreply, state, :hibernate}
   end

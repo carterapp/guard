@@ -47,13 +47,12 @@ defmodule Guard.Controller.Session do
     case Guard.Jwt.resource_from_claims(claims) do
       {:ok, user} ->
         root_user = claims["usr"]
+        context = claims["ctx"]
 
         extra =
-          if root_user do
-            %{root_user: root_user}
-          else
-            %{}
-          end
+          %{root_user: root_user, context: context}
+          |> Enum.filter(fn {_k, v} -> v end)
+          |> Enum.into(%{})
 
         conn
         |> put_status(:created)
@@ -64,6 +63,18 @@ defmodule Guard.Controller.Session do
       {:error, error} ->
         send_error(conn, error)
     end
+  end
+
+  def set_context(conn, %{"context" => context}) do
+    process_session(conn, Session.set_context(conn, context))
+  end
+
+  def set_context(conn, context) do
+    process_session(conn, Session.set_context(conn, context))
+  end
+
+  def clear_context(conn, _) do
+    process_session(conn, Session.clear_context(conn))
   end
 
   def restore(conn, %{"token" => token}) do

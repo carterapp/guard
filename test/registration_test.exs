@@ -232,6 +232,34 @@ defmodule Guard.RegistrationTest do
     assert %{"root_user" => admin_id, "user" => %{"username" => "user"}} = get_body(response4)
   end
 
+  @tag context: true
+  test 'test context' do
+    {:ok, user, _, _} = Guard.Authenticator.create_user_by_username("user", "user12")
+    {:ok, jwt, _} = Authenticator.generate_access_claim(user)
+
+    response = send_auth_json(:get, "/guard/session", jwt)
+    body = get_body(response)
+    assert is_nil(body["context"])
+
+    response = send_auth_json(:put, "/guard/session/context", jwt, %{hello: "there"})
+    assert response.status == 201
+    body = get_body(response)
+    assert %{"user" => %{"username" => "user"}} = body
+    assert body["context"] == %{"hello" => "there"}
+    updated_jwt = get_jwt(response)
+
+    response = send_auth_json(:get, "/guard/session", updated_jwt)
+    body = get_body(response)
+    assert %{"user" => %{"username" => "user"}} = body
+    assert body["context"] == %{"hello" => "there"}
+
+    response = send_auth_json(:delete, "/guard/session/context", jwt)
+    updated_jwt = get_jwt(response)
+    response = send_auth_json(:get, "/guard/session", updated_jwt)
+    body = get_body(response)
+    assert is_nil(body["context"])
+  end
+
   test 'confirm email and mobile' do
     new_email = "metoo@nowhere.com"
     {:ok, user, _jwt, _resp} = Authenticator.create_user_by_email("me@nowhere.com")
