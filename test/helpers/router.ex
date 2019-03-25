@@ -2,6 +2,8 @@ defmodule Guard.Router do
   use Phoenix.Router
   require Guard.Controller
 
+
+
   pipeline :api do
     plug(:accepts, ["json"])
     plug(Guard.ApiPipeline)
@@ -32,6 +34,8 @@ defmodule Guard.Router do
     pipe_through(:api)
     Guard.Controller.resources()
     Guard.Controller.key_resources()
+
+    get "/hello_context",  Guard.Test.Controller, :context_test
   end
 
   scope "/jeeves" do

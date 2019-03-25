@@ -53,7 +53,7 @@ defmodule Guard.User do
     field(:enc_email_pin, :string)
     field(:email_pin_expiration, :utc_datetime)
 
-    field(:context, :map, virtual: true)
+    field(:context, :map, virtual: true, default: %{})
 
     timestamps()
   end

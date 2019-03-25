@@ -4,13 +4,14 @@ defmodule Guard.Users do
   import Ecto.Query
 
   def delete_user(user) do
-    Repo.delete(user)
+    user |> Repo.delete() |> broadcast_delete()
   end
 
   def update_user(user, changes) do
     user
     |> User.changeset(changes)
     |> Repo.update()
+    |> broadcast_update()
   end
 
   def update_attributes(user, attributes) do
@@ -22,6 +23,7 @@ defmodule Guard.Users do
     %User{}
     |> User.changeset(changes)
     |> Repo.insert()
+    |> broadcast_insert()
   end
 
   def confirm_user_mobile(%User{} = user, mobile) do
@@ -214,5 +216,41 @@ defmodule Guard.Users do
 
   def list_api_keys(%User{} = user) do
     Repo.all(from(k in UserApiKey, where: k.user_id == ^user.id))
+  end
+
+  def broadcast_insert({:ok, %User{} = user}) do
+    broadcast_message(:on_insert, user)
+  end
+
+  def broadcast_insert(any) do
+    any
+  end
+
+  def broadcast_update({:ok, %User{} = user}) do
+    broadcast_message(:on_update, user)
+  end
+
+  def broadcast_update(any) do
+    any
+  end
+
+  def broadcast_delete({:ok, %User{} = user}) do
+    broadcast_message(:on_delete, user)
+  end
+
+  def broadcast_delete(any) do
+    any
+  end
+
+  defp broadcast_message(topic, payload) do
+    case Application.get_env(:guard, Guard.Users)[topic] do
+      nil ->
+        nil
+
+      h ->
+        h.(payload)
+    end
+
+    {:ok, payload}
   end
 end

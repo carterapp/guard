@@ -80,8 +80,6 @@ defmodule Guard.Authenticator do
 
     user = Map.put(user, "username", username)
 
-    # Make sure user does not try to set permissions
-    user = Map.delete(user, "perms")
     # Generate password if user has not provided one
     user =
       if Map.get(user, "password") do
@@ -125,24 +123,29 @@ defmodule Guard.Authenticator do
   end
 
   defp with_context(user, conn) do
-    user
-    |> Map.put(:context, Guard.Session.get_context(conn))
+    if user do
+      user
+      |> Map.put(:context, Guard.Session.get_context(conn))
+    end
   end
 
   def current_user(conn) do
-    case Guardian.Plug.current_resource(conn) do
+    conn
+    |> Guardian.Plug.current_resource()
+    |> case do
       nil -> nil
       user = %User{} -> user
       key = %UserApiKey{} -> Users.get!(key.user_id)
       _ -> nil
     end
+    |> with_context(conn)
   end
 
   def authenticated_user!(conn) do
-    user = Guardian.Plug.current_resource(conn)
+    user = current_user(conn)
 
     if user do
-      user |> with_context(conn)
+      user
     else
       raise Guard.Authenticator, message: "not_authenticated"
     end
@@ -160,6 +163,22 @@ defmodule Guard.Authenticator do
     Users.update_user(user, %{password: new_password})
   end
 
+  defp check_user_role_permissions(permissions, users_perms) do
+    Enum.reduce_while(permissions, true, fn p, _acc ->
+      if Enum.any?(users_perms, fn up -> p == up end), do: {:cont, true}, else: {:halt, false}
+    end)
+  end
+
+  defp check_user_perms(user, key, ps) do
+    case Map.get(user.perms, key) do
+      nil ->
+        false
+
+      users_perms ->
+        check_user_role_permissions(ps, users_perms)
+    end
+  end
+
   @doc """
     Check that the given user has all the provider permissions
 
@@ -172,25 +191,10 @@ defmodule Guard.Authenticator do
   def has_perms?(user, %{} = required_perms) do
     !is_nil(user.perms) &&
       Enum.reduce_while(required_perms, true, fn {key, ps}, _acc ->
-        case Map.get(user.perms, key) do
-          nil ->
-            {:halt, false}
-
-          users_perms ->
-            user_has_perm =
-              Enum.reduce_while(ps, true, fn p, _acc ->
-                if Enum.any?(users_perms, fn up -> p == up end) do
-                  {:cont, true}
-                else
-                  {:halt, false}
-                end
-              end)
-
-            if user_has_perm do
-              {:cont, true}
-            else
-              {:halt, false}
-            end
+        if check_user_perms(user, key, ps) do
+          {:cont, true}
+        else
+          {:halt, false}
         end
       end)
   end

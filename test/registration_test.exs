@@ -19,12 +19,15 @@ defmodule Guard.RegistrationTest do
 
   test 'registering by email jwt' do
     response =
-      send_json(:post, "/guard/registration", %{"user" => %{"email" => "test@example.com"}})
+      send_json(:post, "/guard/registration", %{
+        "user" => %{"email" => "test@example.com", "perms" => %{"admin" => ["write"]}}
+      })
 
     assert response.status == 201
 
     assert nil == Users.get_by_confirmed_email("test@example.com")
     user = %{requested_email: "test@example.com"} = Users.get_by_email("test@example.com")
+    assert is_nil(user.perms)
 
     {:ok, jwt, claims} = Authenticator.generate_login_claim(user)
     response = send_json(:get, "/guard/session/" <> jwt)
@@ -240,6 +243,8 @@ defmodule Guard.RegistrationTest do
     response = send_auth_json(:get, "/guard/session", jwt)
     body = get_body(response)
     assert is_nil(body["context"])
+    response = send_auth_json(:get, "/guard/hello_context", jwt)
+    assert get_body(response) == %{}
 
     response = send_auth_json(:put, "/guard/session/context", jwt, %{hello: "there"})
     assert response.status == 201
@@ -252,12 +257,16 @@ defmodule Guard.RegistrationTest do
     body = get_body(response)
     assert %{"user" => %{"username" => "user"}} = body
     assert body["context"] == %{"hello" => "there"}
+    response = send_auth_json(:get, "/guard/hello_context", updated_jwt)
+    assert get_body(response) == %{"hello" => "there"}
 
     response = send_auth_json(:delete, "/guard/session/context", jwt)
     updated_jwt = get_jwt(response)
     response = send_auth_json(:get, "/guard/session", updated_jwt)
     body = get_body(response)
     assert is_nil(body["context"])
+    response = send_auth_json(:get, "/guard/hello_context", updated_jwt)
+    assert get_body(response) == %{}
   end
 
   test 'confirm email and mobile' do
