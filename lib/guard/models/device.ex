@@ -8,8 +8,6 @@ defmodule Guard.Device do
 
   @derive {Jason.Encoder,
            only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
-  @derive {Poison.Encoder,
-           only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
 
   schema "devices" do
     field(:token, :string)

@@ -4,7 +4,7 @@ defmodule Guard.Mixfile do
   def project do
     [
       app: :guard,
-      version: "0.13.1",
+      version: "0.14.0",
       elixir: "~> 1.4 or ~> 1.5 or ~> 1.6 or ~> 1.7 or ~> 1.8",
       elixirc_paths: elixirc_paths(Mix.env()),
       build_embedded: Mix.env() == :prod,
@@ -69,7 +69,6 @@ defmodule Guard.Mixfile do
       {:bcrypt_elixir, "~> 2.0.1"},
       {:tesla, "~> 1.2.1"},
       {:jason, "~> 1.1.2"},
-      {:poison, "~> 3.1", optional: true},
       {:plug_cowboy, "~> 1.0 or ~> 2.0"},
       {:postgrex, "~> 0.13.0 or ~> 0.14.0", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev},
