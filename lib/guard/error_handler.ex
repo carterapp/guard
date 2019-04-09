@@ -14,6 +14,7 @@ defmodule Guard.ErrorHandler do
 
   def auth_error(conn, {:invalid_token, reason}, _opts) do
     conn
+    |> Guard.Jwt.Plug.sign_out(clear_remember_me: Application.get_env(:guard, Guard.Jwt)[:remember_user])
     |> put_status(:unauthorized)
     |> json(%{error: :invalid_token, reason: Controller.translate_error(reason)})
   end
