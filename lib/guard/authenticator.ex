@@ -39,9 +39,28 @@ defmodule Guard.Authenticator do
   end
 
   def send_login_email(user) do
-    {:ok, token, _} = generate_login_claim(user)
+    {:ok, token, user} = generate_login_claim(user)
     {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_login_link(user, token, pin)
+  end
+
+  def send_contact_confirmation(user) do
+    user =
+      if user.requested_email && user.requested_email !== user.email do
+        {:ok, token, user} = generate_login_claim(user)
+        Mailer.send_confirm_email(user, token)
+        user
+      else
+        user
+      end
+
+    if user.requested_mobile && user.requested_mobile != user.mobile do
+      {:ok, pin, user} = generate_pin(user)
+      Guard.Sms.send_confirm_mobile(user, pin)
+      user
+    else
+      user
+    end
   end
 
   def create_user_by_username(username, password, extra \\ nil) do

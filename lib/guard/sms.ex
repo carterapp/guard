@@ -17,22 +17,30 @@ defmodule Guard.Sms do
   end
 
   def send_template(%User{} = user, type, meta, callback \\ nil) do
-    module = Map.get(email_setup()[:templates], type)
+    module = Map.get(sms_templates(), type)
     locale = user.locale
     message = apply(module, :text_body, [locale, user, meta])
     send_message(user, message, callback)
   end
 
   def send_template_with_options(%User{} = user, type, meta, options, callback \\ nil) do
-    module = Map.get(email_setup()[:templates], type)
+    module = Map.get(sms_templates(), type)
     locale = user.locale
     message = apply(module, :text_body, [locale, user, meta])
     options = options || %{}
     send_message(user, Map.put(options, :message, message), callback)
   end
 
-  # Templates are kept in the mailer module
-  defp email_setup do
-    Application.get_env(:guard, Guard.Mailer)
+  def send_confirm_mobile(user, pin, callback \\ nil) do
+    module = Map.get(sms_templates(), :confirm)
+    locale = user.locale
+    message = apply(module, :text_body, [locale, user, %{pin: pin}])
+    send_message(user.requested_mobile, message, callback)
+  end
+
+  defp sms_templates do
+    # Look for templates email module if one has been defined for Guard.Sms
+    Application.get_env(:guard, Guard.Sms)[:templates] ||
+      Application.get_env(:guard, Guard.Mailer)[:templates]
   end
 end
