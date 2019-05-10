@@ -80,6 +80,7 @@ defmodule Guard.User do
     |> encrypt_password()
     |> encrypt_pin()
     |> encrypt_email_pin()
+    |> validate_password()
   end
 
   def clean_mobile_number(v) do
@@ -104,6 +105,18 @@ defmodule Guard.User do
 
   def check_password(user, password) do
     Bcrypt.verify_pass(password, user.enc_password)
+  end
+
+  defp validate_password(changeset) do
+    if get_field(changeset, :enc_password, nil) do
+      changeset
+    else
+      if get_field(changeset, :password, nil) do
+        changeset
+      else
+        add_error(changeset, :password, "cannot be empty")
+      end
+    end
   end
 
   defp validate_pin(user_pin, exp_time, check_pin) do
