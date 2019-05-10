@@ -117,7 +117,11 @@ defmodule Guard.Users do
   end
 
   defp trimmer(str) do
-    str |> String.trim() |> String.downcase()
+    if str do
+      str |> String.trim() |> String.downcase()
+    else
+      str
+    end
   end
 
   def get(id) do
