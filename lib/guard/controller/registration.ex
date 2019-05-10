@@ -65,7 +65,7 @@ defmodule Guard.Controller.Registration do
   defp do_send_password_reset(conn, user) do
     case Authenticator.generate_password_reset_claim(user) do
       {:ok, token, _} ->
-        {:ok, pin, user} = Authenticator.generate_pin(user)
+        {:ok, pin, user} = Authenticator.generate_email_pin(user)
         Mailer.send_reset_password_link(user, token, pin)
         json(conn, %{ok: true})
 
@@ -105,7 +105,7 @@ defmodule Guard.Controller.Registration do
   defp do_send_login_link(conn, user) do
     case Authenticator.generate_login_claim(user) do
       {:ok, token, _} ->
-        {:ok, pin, user} = Authenticator.generate_pin(user)
+        {:ok, pin, user} = Authenticator.generate_email_pin(user)
         Mailer.send_login_link(user, token, pin)
         json(conn, %{ok: true, user: user})
 
