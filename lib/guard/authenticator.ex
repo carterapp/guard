@@ -38,6 +38,12 @@ defmodule Guard.Authenticator do
     Mailer.send_confirm_email(user, token)
   end
 
+  def send_reset_password_email(user) do
+    {:ok, token, _} = generate_password_reset_claim(user)
+    {:ok, pin, user} = generate_email_pin(user)
+    Mailer.send_reset_password_link(user, token, pin)
+  end
+
   def send_login_email(user) do
     {:ok, token, _} = generate_login_claim(user)
     {:ok, pin, user} = generate_email_pin(user)
