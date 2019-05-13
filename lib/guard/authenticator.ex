@@ -35,7 +35,8 @@ defmodule Guard.Authenticator do
 
   def send_confirm_email(user) do
     {:ok, token, _} = generate_login_claim(user)
-    Mailer.send_confirm_email(user, token)
+    {:ok, pin, user} = generate_email_pin(user)
+    Mailer.send_confirm_email(user, token, pin)
   end
 
   def send_reset_password_email(user) do
@@ -54,7 +55,8 @@ defmodule Guard.Authenticator do
     user =
       if user.requested_email && user.requested_email !== user.email do
         {:ok, token, _} = generate_login_claim(user)
-        Mailer.send_confirm_email(user, token)
+        {:ok, pin, user} = generate_email_pin(user)
+        Mailer.send_confirm_email(user, token, pin)
         user
       else
         user

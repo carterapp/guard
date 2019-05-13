@@ -58,10 +58,10 @@ defmodule Guard.Mailer do
     end
   end
 
-  def send_confirm_email(user, token) do
+  def send_confirm_email(user, token, pin) do
     Logger.debug(fn -> "Sending confirmation mail to #{user.requested_email}" end)
 
-    create_mail(:confirm, user.requested_email, user.locale, user, %{token: token})
+    create_mail(:confirm, user.requested_email, user.locale, user, %{token: token, pin: pin})
     |> deliver_now
   end
 

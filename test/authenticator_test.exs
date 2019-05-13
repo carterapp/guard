@@ -14,7 +14,8 @@ defmodule Guard.AuthenticatorTest do
   end
 
   test "Create user with nil password" do
-    {:error, %{errors: [password: {"cannot be empty", []}]}} = Users.create_user(%{username: "hey there"})
+    {:error, %{errors: [password: {"cannot be empty", []}]}} =
+      Users.create_user(%{username: "hey there"})
   end
 
   test "Test transactional creation" do
