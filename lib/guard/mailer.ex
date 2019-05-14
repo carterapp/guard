@@ -7,18 +7,23 @@ defmodule Guard.Mailer do
   def create_mail(type, to, locale, user, meta \\ %{}) do
     mail_conf = email_setup()
 
-    if mail_conf != nil do
-      module = Map.get(email_setup()[:templates], type)
+    cond do
+      mail_conf && to ->
+        module = Map.get(email_setup()[:templates], type)
 
-      new_email(
-        to: to,
-        from: email_setup()[:default_sender],
-        subject: apply(module, :subject, [locale, user, meta]),
-        html_body: apply(module, :html_body, [locale, user, meta]),
-        text_body: apply(module, :text_body, [locale, user, meta])
-      )
-    else
-      {:error, :no_configuration}
+        new_email(
+          to: to,
+          from: email_setup()[:default_sender],
+          subject: apply(module, :subject, [locale, user, meta]),
+          html_body: apply(module, :html_body, [locale, user, meta]),
+          text_body: apply(module, :text_body, [locale, user, meta])
+        )
+
+      !mail_conf ->
+        {:error, :no_configuration}
+
+      !to ->
+        {:error, :no_recipient}
     end
   end
 
@@ -82,7 +87,7 @@ defmodule Guard.Mailer do
   end
 
   def user_email(user) do
-    user.email || user.requested_email
+    user.email || user.requested_email || user.username
   end
 
   defp email_setup do
