@@ -109,11 +109,11 @@ defmodule Guard.Session do
   end
 
   def authenticate(%{"token" => token}) do
-    authenticate_token(token)
+    authenticate_with_token(token)
   end
 
   def authenticate({:jwt, jwt}) do
-    authenticate_token(jwt)
+    authenticate_with_token(jwt)
   end
 
   def authenticate(_) do
@@ -146,7 +146,7 @@ defmodule Guard.Session do
     end
   end
 
-  defp authenticate_token(token) do
+  def authenticate_with_token(token) do
     case Guard.Jwt.decode_and_verify(token) do
       {:ok, claims} ->
         with {:ok, user} <- user_from_claim(claims) do

@@ -54,6 +54,18 @@ defmodule Guard.AuthenticatorTest do
     assert is_nil(Users.get_by_username("555-512"))
   end
 
+  test "Test confirm by token" do
+    {:ok, user} = Users.create_user(%{username: "tester", password: "Blahblah", requested_email: "fisk@example.dk"})
+    assert user.email == nil
+    assert user.requested_email == "fisk@example.dk"
+
+    {:ok, jwt, _claims} = Authenticator.generate_login_claim(user)
+    {:ok, user, _claims} = Session.authenticate_with_token(jwt)
+
+    assert user.email == "fisk@example.dk"
+    assert user.requested_email == nil
+  end
+
   test "Create mobile user" do
     {:ok, user, _, _} = Authenticator.create_user_by_mobile("4530123456")
     {:error, _, _} = Authenticator.create_user_by_mobile("4530123456")
