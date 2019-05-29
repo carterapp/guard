@@ -138,7 +138,7 @@ defmodule Guard.Controller.Registration do
     |> json(%{ok: true})
   end
 
-  defp send_link(conn, send_fn, %User{} = user, name, method) do
+  defp send_link(conn, send_fn, %User{} = user, _name, method) do
     resp =
       case send_fn.(user, method) do
         {:ok, user} -> %{ok: true, user: user}
