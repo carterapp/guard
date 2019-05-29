@@ -141,7 +141,7 @@ defmodule Guard.Controller.Registration do
   defp send_link(conn, send_fn, %User{} = user, _name, method) do
     resp =
       case send_fn.(user, method) do
-        {:ok, user} -> %{ok: true, user: user}
+        {:ok, _user} -> %{ok: true}
         _ -> %{ok: true}
       end
 
@@ -160,7 +160,7 @@ defmodule Guard.Controller.Registration do
     with {:ok, token, _claims} <- Authenticator.generate_login_claim(user),
          {:ok, pin, user} = Authenticator.generate_email_pin(user) do
       Mailer.send_login_link(user, token, pin)
-      %{ok: true, user: user}
+      {:ok, user}
     end
   end
 
@@ -175,7 +175,7 @@ defmodule Guard.Controller.Registration do
     with {:ok, token, _claims} <- Authenticator.generate_login_claim(user),
          {:ok, pin, user} = Authenticator.generate_email_pin(user) do
       Mailer.send_confirm_email(user, token, pin)
-      %{ok: true, user: user}
+      {:ok, user}
     end
   end
 
