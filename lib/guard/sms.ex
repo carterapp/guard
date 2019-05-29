@@ -42,7 +42,7 @@ defmodule Guard.Sms do
     module = Map.get(sms_templates(), :login)
     locale = user.locale
     message = apply(module, :text_body, [locale, user, %{pin: pin}])
-    send_message(user.requested_mobile, message, callback)
+    send_message(user, message, callback)
   end
 
   defp sms_templates do

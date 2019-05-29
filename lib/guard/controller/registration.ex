@@ -119,23 +119,34 @@ defmodule Guard.Controller.Registration do
     send_link(conn, send_fn, Users.get_by_email(email), email, :email)
   end
 
-  defp send_link(conn, send_fn, user, name, method) do
-    case user do
-      nil ->
-        Logger.debug(fn -> "Failed to send link to unknown user #{name}" end)
-        # Do not allow people to probe which users are on the system
-        json(conn, %{ok: true})
+  defp send_link(conn, send_fn, %{"mobile" => mobile}) do
+    send_link(conn, send_fn, Users.get_by_mobile(mobile), mobile, :mobile)
+  end
 
-      user ->
-        resp =
-          case send_fn.(user, method) do
-            {:ok, user} -> %{ok: true, user: user}
-            _ -> %{ok: true}
-          end
+  defp send_link(conn, _send_fn, params) do
+    conn
+    |> put_status(406)
+    |> json(%{ok: false, params: params})
+  end
 
-        conn
-        |> json(resp)
-    end
+  defp send_link(conn, _, nil, name, _) do
+    Logger.debug(fn -> "Failed to send link to unknown user #{name}" end)
+
+    # Do not allow people to probe which users are on the system, so return ok when no user is found
+    conn
+    |> put_status(200)
+    |> json(%{ok: true})
+  end
+
+  defp send_link(conn, send_fn, %User{} = user, name, method) do
+    resp =
+      case send_fn.(user, method) do
+        {:ok, user} -> %{ok: true, user: user}
+        _ -> %{ok: true}
+      end
+
+    conn
+    |> json(resp)
   end
 
   defp send_login_sms(user) do
