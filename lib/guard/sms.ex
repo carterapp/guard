@@ -38,6 +38,13 @@ defmodule Guard.Sms do
     send_message(user.requested_mobile, message, callback)
   end
 
+  def send_login_mobile(user, pin, callback \\ nil) do
+    module = Map.get(sms_templates(), :login)
+    locale = user.locale
+    message = apply(module, :text_body, [locale, user, %{pin: pin}])
+    send_message(user.requested_mobile, message, callback)
+  end
+
   defp sms_templates do
     # Look for templates email module if one has been defined for Guard.Sms
     Application.get_env(:guard, Guard.Sms)[:templates] ||

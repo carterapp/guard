@@ -419,6 +419,13 @@ defmodule Guard.RegistrationTest do
 
     response = send_json(:post, "/guard/registration/link?email=createondemand@codenaut.com")
     assert response.status == 201
+
+    assert Guard.Users.get_by_email("createondemand@codenaut.com") != nil
+
+    response =
+      send_json(:post, "/guard/registration/send_confirmation?email=createondemand@codenaut.com")
+
+    assert response.status == 200
   end
 
   test 'update password normal' do

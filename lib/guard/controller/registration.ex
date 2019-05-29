@@ -76,21 +76,50 @@ defmodule Guard.Controller.Registration do
     end
   end
 
-  def send_login_link(conn, %{"username" => username}) do
-    send_login_link(conn, Users.get_by_username(username), username)
-  end
-
-  def send_login_link(conn, %{"email" => email} = user) do
-    existing_user = Users.get_by_email(email)
-
-    if existing_user do
-      send_login_link(conn, existing_user, email)
+  defp send_login(user, method) do
+    if method == :mobile do
+      send_login_sms(user)
     else
-      create(conn, %{"user" => user})
+      do_send_login_link_email(user)
     end
   end
 
-  def send_login_link(conn, user, name) do
+  defp send_confirm(user, method) do
+    if method == :mobile do
+      send_confirm_sms(user)
+    else
+      do_send_confirm_link_email(user)
+    end
+  end
+
+  def send_login_link(conn, %{"email" => email} = params) do
+    existing = Users.get_by_email(email)
+
+    if existing do
+      send_link(conn, &send_login/2, existing, email, :email)
+    else
+      create(conn, %{"user" => params})
+    end
+  end
+
+  def send_login_link(conn, params) do
+    send_link(conn, &send_login/2, params)
+  end
+
+  def send_confirmation_link(conn, params) do
+    send_link(conn, &send_confirm/2, params)
+  end
+
+  defp send_link(conn, send_fn, %{"username" => username} = params) do
+    method = if Map.get(params, "method") == "mobile", do: :mobile, else: :email
+    send_link(conn, send_fn, Users.get_by_username(username), username, method)
+  end
+
+  defp send_link(conn, send_fn, %{"email" => email}) do
+    send_link(conn, send_fn, Users.get_by_email(email), email, :email)
+  end
+
+  defp send_link(conn, send_fn, user, name, method) do
     case user do
       nil ->
         Logger.debug(fn -> "Failed to send link to unknown user #{name}" end)
@@ -98,21 +127,44 @@ defmodule Guard.Controller.Registration do
         json(conn, %{ok: true})
 
       user ->
-        do_send_login_link(conn, user)
+        resp =
+          case send_fn.(user, method) do
+            {:ok, user} -> %{ok: true, user: user}
+            _ -> %{ok: true}
+          end
+
+        conn
+        |> json(resp)
     end
   end
 
-  defp do_send_login_link(conn, user) do
-    case Authenticator.generate_login_claim(user) do
-      {:ok, token, _} ->
-        {:ok, pin, user} = Authenticator.generate_email_pin(user)
-        Mailer.send_login_link(user, token, pin)
-        json(conn, %{ok: true, user: user})
+  defp send_login_sms(user) do
+    with {:ok, pin, user} <- Authenticator.generate_pin(user) do
+      Guard.Sms.send_login_mobile(user, pin)
+      {:ok, user}
+    end
+  end
 
-      _ ->
-        Logger.debug(fn -> "Failed to generate claim for #{user.username}" end)
-        # Do not allow people to probe which users are on the system
-        json(conn, %{ok: true})
+  defp do_send_login_link_email(user) do
+    with {:ok, token, _claims} <- Authenticator.generate_login_claim(user),
+         {:ok, pin, user} = Authenticator.generate_email_pin(user) do
+      Mailer.send_login_link(user, token, pin)
+      %{ok: true, user: user}
+    end
+  end
+
+  defp send_confirm_sms(user) do
+    with {:ok, pin, user} <- Authenticator.generate_pin(user) do
+      Guard.Sms.send_confirm_mobile(user, pin)
+      {:ok, user}
+    end
+  end
+
+  defp do_send_confirm_link_email(user) do
+    with {:ok, token, _claims} <- Authenticator.generate_login_claim(user),
+         {:ok, pin, user} = Authenticator.generate_email_pin(user) do
+      Mailer.send_confirm_email(user, token, pin)
+      %{ok: true, user: user}
     end
   end
 

@@ -55,7 +55,13 @@ defmodule Guard.AuthenticatorTest do
   end
 
   test "Test confirm by token" do
-    {:ok, user} = Users.create_user(%{username: "tester", password: "Blahblah", requested_email: "fisk@example.dk"})
+    {:ok, user} =
+      Users.create_user(%{
+        username: "tester",
+        password: "Blahblah",
+        requested_email: "fisk@example.dk"
+      })
+
     assert user.email == nil
     assert user.requested_email == "fisk@example.dk"
 

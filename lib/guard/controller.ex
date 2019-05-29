@@ -29,6 +29,13 @@ defmodule Guard.Controller do
 
       # Request a password reset
       post("/registration/reset", Guard.Controller.Registration, :send_password_reset)
+      # Resend confirmation link
+      post(
+        "/registration/send_confirmation",
+        Guard.Controller.Registration,
+        :send_confirmation_link
+      )
+
       # Send magic link
       post("/registration/link", Guard.Controller.Registration, :send_login_link)
       # Check availability
