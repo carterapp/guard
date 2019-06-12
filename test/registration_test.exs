@@ -118,7 +118,7 @@ defmodule Guard.RegistrationTest do
 
     assert response.status == 422
 
-    assert %{"error" => %{"password" => ["should be at least 6 character(s)"]}} ==
+    assert %{"errors" => %{"password" => ["should be at least 6 character(s)"]}} ==
              get_body(response)
   end
 
@@ -132,7 +132,7 @@ defmodule Guard.RegistrationTest do
 
     response = send_json(:post, "/guard/registration", %{"user" => %{"username" => "testuser"}})
     assert response.status == 422
-    assert %{"error" => %{"username" => ["username_taken"]}} == get_body(response)
+    assert %{"errors" => %{"username" => ["username_taken"]}} == get_body(response)
 
     response =
       send_json(:post, "/guard/session", %{
@@ -355,7 +355,7 @@ defmodule Guard.RegistrationTest do
       })
 
     assert response.status == 422
-    assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} == get_body(response)
+    assert %{"errors" => %{"password_confirmation" => ["password_mismatch"]}} == get_body(response)
 
     response =
       send_json(:post, "/guard/registration", %{
@@ -401,13 +401,13 @@ defmodule Guard.RegistrationTest do
   test 'registering empty' do
     response = send_json(:post, "/guard/registration", %{"user" => %{}})
     assert response.status == 422
-    assert %{"error" => %{"username" => ["can't be blank"]}} == get_body(response)
+    assert %{"errors" => %{"username" => ["can't be blank"]}} == get_body(response)
   end
 
   test 'registering bad username' do
     response = send_json(:post, "/guard/registration", %{"user" => %{"username" => ""}})
     assert response.status == 422
-    assert %{"error" => %{"username" => ["can't be blank"]}} == get_body(response)
+    assert %{"errors" => %{"username" => ["can't be blank"]}} == get_body(response)
   end
 
   test 'password and other things' do
@@ -646,7 +646,7 @@ defmodule Guard.RegistrationTest do
 
     assert mismatch_response.status == 422
 
-    assert %{"error" => %{"password_confirmation" => ["password_mismatch"]}} =
+    assert %{"errors" => %{"password_confirmation" => ["password_mismatch"]}} =
              get_body(mismatch_response)
 
     response =

@@ -111,7 +111,12 @@ defmodule Guard.Controller do
   end
 
   def send_error(conn, %Ecto.Changeset{} = cs) do
-    send_error(conn, Guard.Repo.changeset_errors(cs), :unprocessable_entity)
+    error = Guard.Repo.changeset_errors(cs)
+    Logger.debug(fn -> "Changeset error: #{conn.request_path}\n#{inspect(error)}" end)
+
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{errors: translate_error(error)})
   end
 
   def send_error(conn, %Ecto.Query.CastError{}) do
