@@ -34,6 +34,7 @@ defmodule Guard.Router do
     Guard.Controller.key_resources()
 
     get("/hello_context", Guard.Test.Controller, :context_test)
+    get("/hello_permissions", Guard.Test.Controller, :permission_test)
   end
 
   scope "/jeeves" do

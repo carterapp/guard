@@ -27,31 +27,31 @@ defmodule Guard.Authenticator do
     create_user(%{"mobile" => mobile, "username" => User.clean_mobile_number(mobile)}, extra)
   end
 
-  def send_welcome_email(user) do
+  def send_welcome_email(%User{} = user) do
     {:ok, token, _} = generate_login_claim(user)
     {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_welcome_email(user, token, pin)
   end
 
-  def send_confirm_email(user) do
+  def send_confirm_email(%User{} = user) do
     {:ok, token, _} = generate_login_claim(user)
     {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_confirm_email(user, token, pin)
   end
 
-  def send_reset_password_email(user) do
+  def send_reset_password_email(%User{} = user) do
     {:ok, token, _} = generate_password_reset_claim(user)
     {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_reset_password_link(user, token, pin)
   end
 
-  def send_login_email(user) do
+  def send_login_email(%User{} = user) do
     {:ok, token, _} = generate_login_claim(user)
     {:ok, pin, user} = generate_email_pin(user)
     Mailer.send_login_link(user, token, pin)
   end
 
-  def send_contact_confirmation(user, opts \\ [email: true, mobile: true]) do
+  def send_contact_confirmation(%User{} = user, opts \\ [email: true, mobile: true]) do
     user =
       if opts[:email] && user.requested_email && user.requested_email !== user.email do
         {:ok, token, _} = generate_login_claim(user)
@@ -178,15 +178,15 @@ defmodule Guard.Authenticator do
     end
   end
 
-  def request_email_change(user, email) do
+  def request_email_change(%User{} = user, email) do
     Users.update_user(user, %{"requested_email" => email})
   end
 
-  def request_mobile_change(user, mobile) do
+  def request_mobile_change(%User{} = user, mobile) do
     Users.update_user(user, %{"requested_mobile" => mobile})
   end
 
-  def change_password(user, new_password) do
+  def change_password(%User{} = user, new_password) do
     Users.update_user(user, %{password: new_password})
   end
 
@@ -215,7 +215,7 @@ defmodule Guard.Authenticator do
   iex> Guard.Authenticator.has_perms?(user, %{"admin" => ["read", "write"]})
   false
   """
-  def has_perms?(user, %{} = required_perms) do
+  def has_perms?(%User{} = user, %{} = required_perms) do
     !is_nil(user.perms) &&
       Enum.reduce_while(required_perms, true, fn {key, ps}, _acc ->
         if check_user_perms(user, key, ps) do
@@ -226,7 +226,7 @@ defmodule Guard.Authenticator do
       end)
   end
 
-  def has_perms?(user, [_ | _] = perm_names) do
+  def has_perms?(%User{} = user, [_ | _] = perm_names) do
     Enum.reduce_while(perm_names, true, fn v, _acc ->
       if has_perms?(user, v) do
         {:cont, true}
@@ -236,11 +236,31 @@ defmodule Guard.Authenticator do
     end)
   end
 
-  def has_perms?(user, perm_name) do
+  def has_perms?(%User{} = user, perm_name) do
     !is_nil(user.perms) && Map.has_key?(user.perms, perm_name)
   end
 
-  def add_perms(user, perms) do
+
+  def current_permissions(conn) do
+    claims =  Guardian.Plug.current_claims(conn)
+    Guard.Jwt.decode_permissions(claims["pem"])
+  end
+
+
+  def all_permissions?(conn, permissions) do
+    conn
+    |> current_permissions()
+    |> Guard.Jwt.all_permissions?(permissions)
+  end
+
+  def any_permissions?(conn, permissions) do
+    conn
+    |> current_permissions()
+    |> Guard.Jwt.any_permissions?(permissions)
+  end
+
+
+  def add_perms(%User{} = user, perms) do
     case user do
       nil ->
         {:error}
@@ -251,7 +271,7 @@ defmodule Guard.Authenticator do
     end
   end
 
-  def drop_perm(user, name) do
+  def drop_perm(%User{} = user, name) do
     case user do
       nil ->
         {:error}
