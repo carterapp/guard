@@ -8,5 +8,6 @@ defmodule Guard.Migrations do
     Ecto.Migrator.up(repo, 20_180_516_143_801, Guard.Repo.Migrations.ModifyUserPin)
     Ecto.Migrator.up(repo, 20_181_128_202_721, Guard.Repo.Migrations.ConfirmationPin)
     Ecto.Migrator.up(repo, 20_181_217_105_542, Guard.Repo.Migrations.CreateApiKey)
+    Ecto.Migrator.up(repo, 20_190_711_132_100, Guard.Repo.Migrations.AddRegisteredAt)
   end
 end

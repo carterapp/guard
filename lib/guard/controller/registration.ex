@@ -266,14 +266,16 @@ defmodule Guard.Controller.Registration do
         device
       end
 
-    changeset = Device.changeset(model, device)
+    changeset =
+      model
+      |> Device.changeset(device)
+      |> Ecto.Changeset.change(registered_at: DateTime.utc_now() |> DateTime.truncate(:second))
 
     res =
       if existing == nil do
         Repo.insert(changeset)
       else
-        # Force update so we can see when device has reported in
-        Repo.update(changeset, force: true)
+        Repo.update(changeset)
       end
 
     with {:ok, updated_device} <- res do

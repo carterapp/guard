@@ -7,19 +7,29 @@ defmodule Guard.Device do
   @primary_key {:id, :binary_id, autogenerate: true}
 
   @derive {Jason.Encoder,
-           only: [:id, :token, :platform, :user_id, :last_sent, :inserted_at, :updated_at]}
+           only: [
+             :id,
+             :token,
+             :platform,
+             :user_id,
+             :last_sent,
+             :inserted_at,
+             :updated_at,
+             :registered_at
+           ]}
 
   schema "devices" do
     field(:token, :string)
     field(:platform, :string)
     field(:user_id, :binary_id)
     field(:last_sent, :utc_datetime)
+    field(:registered_at, :utc_datetime)
 
     timestamps()
   end
 
   @required_fields ~w(token platform)a
-  @optional_fields ~w(user_id last_sent)a
+  @optional_fields ~w(user_id last_sent registered_at)a
 
   @doc """
   Creates a changeset based on the `model` and `params`.
