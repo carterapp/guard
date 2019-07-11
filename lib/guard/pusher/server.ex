@@ -40,7 +40,7 @@ defmodule Guard.Pusher.Server do
   defp update_last_sent(device) do
     device
     |> Guard.Device.changeset(%{last_sent: DateTime.utc_now()})
-    |> Repo.update()
+    |> Guard.Repo.update()
   end
 
   defp send_notification_payload(client, device, message, options) do
