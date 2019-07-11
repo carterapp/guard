@@ -268,7 +268,7 @@ defmodule Guard.RegistrationTest do
     response = send_auth_json(:get, "/guard/hello_context", updated_jwt)
     assert get_body(response) == %{}
   end
-  
+
   @tag permissions: true
   test 'test permissions' do
     {:ok, user, _, _} = Guard.Authenticator.create_user_by_username("user", "user12")
@@ -281,18 +281,24 @@ defmodule Guard.RegistrationTest do
     {:ok, jwt, _} = Authenticator.generate_access_claim(user)
 
     response = send_auth_json(:get, "/guard/hello_permissions", jwt)
-    assert get_body(response) == %{"permissions" => %{"admin" => ["read"], "system" => ["read"]}, "is_admin" => true, "is_user" => true}
+
+    assert get_body(response) == %{
+             "permissions" => %{"admin" => ["read"], "system" => ["read"]},
+             "is_admin" => true,
+             "is_user" => true
+           }
 
     {:ok, user} = Guard.Authenticator.drop_perm(user, :admin)
     {:ok, user} = Guard.Authenticator.add_perms(user, %{user: [:read]})
     {:ok, jwt, _} = Authenticator.generate_access_claim(user)
     response = send_auth_json(:get, "/guard/hello_permissions", jwt)
-    assert get_body(response) == %{"permissions" => %{"user" => ["read"], "system" => ["read"]}, "is_admin" => false, "is_user" => true}
 
-
-
+    assert get_body(response) == %{
+             "permissions" => %{"user" => ["read"], "system" => ["read"]},
+             "is_admin" => false,
+             "is_user" => true
+           }
   end
-
 
   test 'confirm email and mobile' do
     new_email = "metoo@nowhere.com"
@@ -380,7 +386,9 @@ defmodule Guard.RegistrationTest do
       })
 
     assert response.status == 422
-    assert %{"errors" => %{"password_confirmation" => ["password_mismatch"]}} == get_body(response)
+
+    assert %{"errors" => %{"password_confirmation" => ["password_mismatch"]}} ==
+             get_body(response)
 
     response =
       send_json(:post, "/guard/registration", %{

@@ -37,6 +37,12 @@ defmodule Guard.Pusher.Server do
     {:reply, {:ok, state}, state}
   end
 
+  defp update_last_sent(device) do
+    device
+    |> Guard.Device.changeset(%{last_sent: DateTime.utc_now()})
+    |> Repo.update()
+  end
+
   defp send_notification_payload(client, device, message, options) do
     try do
       resp = do_post(client, options, Map.merge(message, %{to: device.token}))
@@ -46,6 +52,8 @@ defmodule Guard.Pusher.Server do
           Guard.Repo.delete(device)
         end
       end
+
+      update_last_sent(device)
 
       resp
     rescue

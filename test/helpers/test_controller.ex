@@ -19,4 +19,3 @@ defmodule(Guard.Test.Controller) do
     |> json(%{permissions: permissions, is_admin: is_admin, is_user: is_user})
   end
 end
-

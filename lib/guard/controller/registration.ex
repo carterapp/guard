@@ -272,7 +272,8 @@ defmodule Guard.Controller.Registration do
       if existing == nil do
         Repo.insert(changeset)
       else
-        Repo.update(changeset)
+        # Force update so we can see when device has reported in
+        Repo.update(changeset, force: true)
       end
 
     with {:ok, updated_device} <- res do

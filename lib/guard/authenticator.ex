@@ -240,12 +240,10 @@ defmodule Guard.Authenticator do
     !is_nil(user.perms) && Map.has_key?(user.perms, perm_name)
   end
 
-
   def current_permissions(conn) do
-    claims =  Guardian.Plug.current_claims(conn)
+    claims = Guardian.Plug.current_claims(conn)
     Guard.Jwt.decode_permissions(claims["pem"])
   end
-
 
   def all_permissions?(conn, permissions) do
     conn
@@ -258,7 +256,6 @@ defmodule Guard.Authenticator do
     |> current_permissions()
     |> Guard.Jwt.any_permissions?(permissions)
   end
-
 
   def add_perms(%User{} = user, perms) do
     case user do
