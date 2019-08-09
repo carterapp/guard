@@ -215,6 +215,15 @@ defmodule Guard.RegistrationTest do
     response = send_auth_json(:put, "/guard/session/switch/username/user", admin_jwt)
     assert response.status == 201
     assert %{"user" => %{"username" => "user"}} = get_body(response)
+
+    %{"guardian_api_pipeline_token" => cookie} = response.resp_cookies
+    assert cookie.value != nil
+    {:ok, claims} = Guard.Jwt.decode_and_verify(cookie.value)
+    {:ok, user} = Guard.Jwt.resource_from_claims(claims)
+    assert claims["typ"] == "access"
+    assert user.username == "user"
+
+
     user_jwt = get_jwt(response)
 
     response1 = send_auth_json(:put, "/guard/session/switch/username/user", user_jwt)

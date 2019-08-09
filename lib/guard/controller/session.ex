@@ -57,6 +57,7 @@ defmodule Guard.Controller.Session do
 
         conn
         |> put_status(:created)
+        |> remember_me(user, claims, token_type: @refresh_token)
         |> json(
           Map.merge(%{jwt: jwt, user: user, perms: user.perms, root_user: root_user}, extra)
         )
