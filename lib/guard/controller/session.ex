@@ -10,10 +10,10 @@ defmodule Guard.Controller.Session do
     Application.get_env(:guard, Guard.Jwt)[:remember_user]
   end
 
-  defp remember_me(conn, %User{} = user, claims, opts) do
+  defp remember_me(conn, %User{} = user, claims) do
     if remember_user?(conn) do
       conn
-      |> Guard.Jwt.Plug.remember_me(user, claims, opts)
+      |> Guard.Jwt.Plug.remember_me(user, claims, token_type: @refresh_token, perms: user.perms)
     else
       conn
     end
@@ -22,7 +22,7 @@ defmodule Guard.Controller.Session do
   defp output_new_session(conn, user, claims) do
     with {:ok, session} <- Session.current_session(conn) do
       conn
-      |> remember_me(user, claims, token_type: @refresh_token)
+      |> remember_me(user, claims)
       |> put_status(:created)
       |> json(session)
     end
@@ -57,7 +57,8 @@ defmodule Guard.Controller.Session do
 
         conn
         |> put_status(:created)
-        |> remember_me(user, claims, token_type: @refresh_token)
+        |> Authenticator.sign_in(user, claims |> Map.take(@claim_whitelist))
+        |> remember_me(user, claims)
         |> json(
           Map.merge(%{jwt: jwt, user: user, perms: user.perms, root_user: root_user}, extra)
         )

@@ -338,7 +338,6 @@ defmodule Guard.Authenticator do
   def reset_user(conn) do
     case current_claims(conn) do
       {:ok, claims} ->
-
         case claims do
           %{"usr" => user_id} ->
             user = Users.get!(user_id)
