@@ -11,7 +11,7 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
   1. Add guard to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:guard, "~> 0.17.2"}]
+          [{:guard, "~> 0.18.0"}]
         end
 
   2. Ensure guard is started before your application:
