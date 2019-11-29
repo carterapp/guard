@@ -37,6 +37,23 @@ defmodule Guard.RegistrationTest do
       Users.get_by_confirmed_email("test@example.com")
   end
 
+  @tag request: true
+  test 'pass token in request parameter' do
+    {:ok, user} = Users.create_user(%{username: "emilia", password: "makrelitomat"})
+    {:ok, jwt, _claims} = Authenticator.generate_access_claim(user)
+
+    resp = send_json(:get, "/guard/session?_t=bad")
+    assert resp.status == 401
+
+    resp = send_json(:get, "/guard/session")
+    assert resp.status == 403
+
+
+    resp = send_json(:get, "/guard/session?_t=#{jwt}")
+    assert resp.status == 200
+
+  end
+
   test 'registering by email pin' do
     response =
       send_json(:post, "/guard/registration", %{"user" => %{"email" => "test@example.com"}})
