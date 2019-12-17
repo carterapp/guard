@@ -218,5 +218,18 @@ defmodule Guard.APITest do
     assert response.status == 200
     [k] = get_body(response)
     assert k == key3
+
+    resp = send_json(:get, "/guard/session?_k=bad")
+    assert resp.status == 401
+
+    resp = send_json(:get, "/guard/session")
+    assert resp.status == 403
+
+
+    encoded_key = URI.encode_www_form(k["key"])
+    resp = send_json(:get, "/guard/session?_k=#{encoded_key}")
+    assert resp.status == 200
+
+
   end
 end

@@ -14,5 +14,6 @@ defmodule Guard.ApiKeyPipeline do
   realm = if realm, do: realm, else: @default_realm
 
   plug(Guardian.Plug.VerifyHeader, realm: realm, key: @module_key, module: Guard.ApiKey)
+  plug(Guard.Plug.VerifyRequest, parameter: "_k", key: @module_key, realm: realm, module: Guard.ApiKey)
   plug(Guardian.Plug.LoadResource, allow_blank: true, key: @module_key, module: Guard.ApiKey)
 end
